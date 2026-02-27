@@ -1,0 +1,17 @@
+<div class="layout-root">
+  <header class="layout-header">
+    <div class="layout-brand">Mi Practica</div>
+    <div class="header-controls">
+      <button *ngIf="isHome" pButton type="button" class="hamburger p-button-text" icon="pi pi-bars" (click)="toggleSidebar()"></button>
+    </div>
+  </header>
+
+  <app-sidebar *ngIf="isHome" [visible]="showSidebar" (close)="closeSidebar()"></app-sidebar>
+  <div *ngIf="isHome && showSidebar" class="backdrop" (click)="closeSidebar()"></div>
+
+  <main class="layout-main">
+    <router-outlet></router-outlet>
+  </main>
+
+  <footer class="layout-footer">© 2026 — Mi Practica</footer>
+</div>

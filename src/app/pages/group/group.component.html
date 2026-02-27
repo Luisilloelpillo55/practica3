@@ -1,0 +1,18 @@
+<div class="page-frame">
+  <header class="page-header">
+    <h3>Grupo</h3>
+    <a routerLink="/home" class="p-button p-button-text">Volver</a>
+  </header>
+
+  <section class="page-body center">
+    <p-card>
+      <ng-template pTemplate="title">Información del grupo</ng-template>
+      <ng-template pTemplate="content">
+        <p>Total: <strong>{{ total }}</strong></p>
+        <button pButton type="button" label="Avanzar" (click)="advance()"></button>
+      </ng-template>
+    </p-card>
+  </section>
+
+  <p-toast></p-toast>
+</div>

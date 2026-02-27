@@ -1,0 +1,72 @@
+<div class="page-frame">
+  <header class="page-header">
+    <h3>Registro</h3>
+    <a routerLink="/home" class="p-button p-button-text">Inicio</a>
+  </header>
+
+  <section class="page-body">
+    <div class="p-fluid form">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="p-field">
+      <label>Usuario</label>
+      <input pInputText formControlName="usuario" />
+      <small *ngIf="form.controls.usuario.invalid && form.controls.usuario.touched">Requerido</small>
+    </div>
+
+    <div class="p-field">
+      <label>Email</label>
+      <input pInputText formControlName="email" />
+      <small *ngIf="form.controls.email.invalid && form.controls.email.touched">Email inválido</small>
+    </div>
+
+    <div formGroupName="pwGroup">
+      <div class="p-field">
+        <label>Contraseña</label>
+        <div class="p-inputgroup">
+          <input [type]="showPassword ? 'text' : 'password'" pInputText formControlName="password" />
+          <button pButton type="button" class="p-button-text" (click)="togglePassword()" [icon]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></button>
+        </div>
+        <small *ngIf="pw?.errors?.minlen">La contraseña debe tener al menos 10 caracteres.</small>
+        <small *ngIf="pw?.errors?.nospecial">La contraseña debe incluir al menos un símbolo (por ejemplo: ! @ # $ % ^ & *).</small>
+      </div>
+
+      <div class="p-field">
+        <label>Confirmar Contraseña</label>
+        <div class="p-inputgroup">
+          <input [type]="showConfirmPassword ? 'text' : 'password'" pInputText formControlName="confirmPassword" />
+          <button pButton type="button" class="p-button-text" (click)="toggleConfirmPassword()" [icon]="showConfirmPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></button>
+        </div>
+        <small *ngIf="form.get('pwGroup')?.errors?.nomatch">Las contraseñas no coinciden.</small>
+      </div>
+    </div>
+
+    <div class="p-field">
+      <label>Nombre completo</label>
+      <input pInputText formControlName="fullname" />
+    </div>
+
+    <div class="p-field">
+      <label>Dirección</label>
+      <input pInputText formControlName="address" />
+    </div>
+
+    <div class="p-field">
+      <label>Fecha de nacimiento</label>
+      <input type="date" pInputText formControlName="dob" />
+      <small *ngIf="form.controls.dob.errors?.underage">Debes ser mayor de edad.</small>
+    </div>
+
+    <div class="p-field">
+      <label>Teléfono</label>
+      <input pInputText formControlName="phone" />
+      <small *ngIf="form.controls.phone.errors?.pattern">Solo números permitidos.</small>
+    </div>
+
+        <button pButton type="submit" label="Registrar" [disabled]="form.invalid"></button>
+      </form>
+    </div>
+  </section>
+
+  <footer class="page-footer">¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a></footer>
+  <p-toast></p-toast>
+</div>

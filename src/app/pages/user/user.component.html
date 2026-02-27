@@ -1,0 +1,24 @@
+<div class="page-frame">
+  <header class="page-header">
+    <h3>Usuario</h3>
+    <a routerLink="/home" class="p-button p-button-text">Volver</a>
+  </header>
+
+  <section class="page-body center">
+    <p-card>
+      <ng-template pTemplate="title">Información del usuario</ng-template>
+      <ng-template pTemplate="content">
+        <div *ngIf="user; else noUser">
+          <p><strong>Usuario:</strong> {{ user.usuario }}</p>
+          <p><strong>Email:</strong> {{ user.email }}</p>
+          <p><strong>Nombre:</strong> {{ user.fullname }}</p>
+        </div>
+        <ng-template #noUser>
+          <p>No hay usuario registrado en sesión.</p>
+        </ng-template>
+      </ng-template>
+    </p-card>
+  </section>
+
+  <p-toast></p-toast>
+</div>

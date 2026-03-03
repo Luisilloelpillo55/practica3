@@ -22,6 +22,8 @@ export class SidebarComponent {
   items: MenuItem[] = [
     { label: 'Inicio', icon: 'pi pi-home', routerLink: ['/home'] },
     { label: 'Práctica: Botón', icon: 'pi pi-play', routerLink: ['/practice-button'] },
+    { label: 'Grupo', icon: 'pi pi-users', routerLink: ['/group'] },
+    { label: 'Usuario', icon: 'pi pi-user', routerLink: ['/user'] },
     { label: 'Registro', icon: 'pi pi-user-plus', routerLink: ['/register'] },
     { label: 'Login', icon: 'pi pi-sign-in', routerLink: ['/login'] }
   ];

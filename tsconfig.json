@@ -10,10 +10,11 @@
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "isolatedModules": true,
+    "moduleResolution": "node16",
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "ES2022",
-    "module": "preserve"
+    "module": "nodenext"
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

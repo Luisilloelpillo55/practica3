@@ -1,23 +1,88 @@
 <div class="page-frame">
   <header class="page-header">
-    <h3>Usuario</h3>
-    <a routerLink="/home" class="p-button p-button-text">Volver</a>
+    <h3>Mi Perfil</h3>
+    <div class="header-actions">
+      <button pButton type="button" label="Editar" class="purple-edit" icon="pi pi-pen" (click)="openEdit()" *ngIf="user"></button>
+      <button pButton type="button" class="p-button p-button-text" (click)="goBack()">Volver</button>
+    </div>
   </header>
 
-  <section class="page-body center">
-    <p-card>
-      <ng-template pTemplate="title">Información del usuario</ng-template>
-      <ng-template pTemplate="content">
-        <div *ngIf="user; else noUser">
-          <p><strong>Usuario:</strong> {{ user.usuario }}</p>
-          <p><strong>Email:</strong> {{ user.email }}</p>
-          <p><strong>Nombre:</strong> {{ user.fullname }}</p>
-        </div>
-        <ng-template #noUser>
-          <p>No hay usuario registrado en sesión.</p>
+  <section class="page-body">
+    <div *ngIf="user; else noUser" class="user-profile">
+      <p-card [style]="{'min-width': '320px'}">
+        <ng-template pTemplate="title">Información Personal</ng-template>
+        <ng-template pTemplate="content">
+          <div class="profile-row">
+            <span class="profile-label">Usuario:</span>
+            <span class="profile-value">{{ user.usuario }}</span>
+          </div>
+          <div class="profile-row">
+            <span class="profile-label">Email:</span>
+            <span class="profile-value">{{ user.email }}</span>
+          </div>
+          <div class="profile-row" *ngIf="user.fullname">
+            <span class="profile-label">Nombre Completo:</span>
+            <span class="profile-value">{{ user.fullname }}</span>
+          </div>
+          <div class="profile-row" *ngIf="user.address">
+            <span class="profile-label">Dirección:</span>
+            <span class="profile-value">{{ user.address }}</span>
+          </div>
+          <div class="profile-row" *ngIf="user.dob">
+            <span class="profile-label">Fecha de Nacimiento:</span>
+            <span class="profile-value">{{ user.dob }}</span>
+          </div>
+          <div class="profile-row" *ngIf="user.phone">
+            <span class="profile-label">Teléfono:</span>
+            <span class="profile-value">{{ user.phone }}</span>
+          </div>
+          <div class="profile-row" *ngIf="user.created_at">
+            <span class="profile-label">Miembro desde:</span>
+            <span class="profile-value">{{ user.created_at | date: 'long' }}</span>
+          </div>
         </ng-template>
+      </p-card>
+    </div>
+    
+    <p-dialog header="Editar perfil" styleClass="nubank-modal" [(visible)]="editDialog" [modal]="true" [style]="{width: '560px'}">
+      <div *ngIf="editingUser" class="form-grid">
+        <div class="p-field">
+          <label>Usuario</label>
+          <input pInputText [(ngModel)]="editingUser.usuario" />
+        </div>
+        <div class="p-field">
+          <label>Email</label>
+          <input pInputText [(ngModel)]="editingUser.email" />
+        </div>
+        <div class="p-field">
+          <label>Nombre completo</label>
+          <input pInputText [(ngModel)]="editingUser.fullname" />
+        </div>
+        <div class="p-field">
+          <label>Dirección</label>
+          <input pInputText [(ngModel)]="editingUser.address" />
+        </div>
+        <div class="p-field">
+          <label>Fecha de nacimiento</label>
+          <input type="date" pInputText [(ngModel)]="editingUser.dob" />
+        </div>
+        <div class="p-field">
+          <label>Teléfono</label>
+          <input pInputText [(ngModel)]="editingUser.phone" />
+        </div>
+      </div>
+      <ng-template pTemplate="footer">
+        <button pButton type="button" label="Cancelar" class="p-button-text" (click)="editDialog=false"></button>
+        <button pButton type="button" label="Guardar" class="purple-submit" (click)="saveEdit()"></button>
       </ng-template>
-    </p-card>
+    </p-dialog>
+    <ng-template #noUser>
+      <p-card>
+        <ng-template pTemplate="content">
+          <p class="text-center text-muted">No hay usuario en sesión. Por favor, <a routerLink="/login">inicia sesión</a>.</p>
+        </ng-template>
+      </p-card>
+    </ng-template>
   </section>
 
   <p-toast></p-toast>

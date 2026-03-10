@@ -1,7 +1,7 @@
 <div class="page-frame">
   <header class="page-header">
     <h3>Registro</h3>
-    <a routerLink="/home" class="p-button p-button-text">Inicio</a>
+    <button pButton type="button" class="p-button p-button-text" (click)="goBack()">Inicio</button>
   </header>
 
   <section class="page-body">
@@ -26,8 +26,8 @@
           <input [type]="showPassword ? 'text' : 'password'" pInputText formControlName="password" />
           <button pButton type="button" class="p-button-text" (click)="togglePassword()" [icon]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></button>
         </div>
-        <small *ngIf="pw?.errors?.minlen">La contraseña debe tener al menos 10 caracteres.</small>
-        <small *ngIf="pw?.errors?.nospecial">La contraseña debe incluir al menos un símbolo (por ejemplo: ! @ # $ % ^ & *).</small>
+        <small *ngIf="pw?.errors?.minlen && pw?.touched">La contraseña debe tener al menos 10 caracteres.</small>
+        <small *ngIf="pw?.errors?.nospecial && pw?.touched">La contraseña debe incluir al menos un símbolo (por ejemplo: ! @ # $ % ^ & *).</small>
       </div>
 
       <div class="p-field">
@@ -36,7 +36,7 @@
           <input [type]="showConfirmPassword ? 'text' : 'password'" pInputText formControlName="confirmPassword" />
           <button pButton type="button" class="p-button-text" (click)="toggleConfirmPassword()" [icon]="showConfirmPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></button>
         </div>
-        <small *ngIf="form.get('pwGroup')?.errors?.nomatch">Las contraseñas no coinciden.</small>
+        <small *ngIf="form.get('pwGroup')?.errors?.nomatch && form.get('pwGroup.password')?.touched">Las contraseñas no coinciden.</small>
       </div>
     </div>
 
@@ -56,13 +56,13 @@
       <small *ngIf="form.controls.dob.errors?.underage">Debes ser mayor de edad.</small>
     </div>
 
-    <div class="p-field">
+      <div class="p-field">
       <label>Teléfono</label>
       <input pInputText formControlName="phone" />
-      <small *ngIf="form.controls.phone.errors?.pattern">Solo números permitidos.</small>
+      <small *ngIf="form.controls.phone.errors?.pattern && form.controls.phone.touched">Solo números permitidos.</small>
     </div>
 
-        <button pButton type="submit" label="Registrar" [disabled]="form.invalid"></button>
+        <button type="submit" [disabled]="form.invalid" class="purple-submit">Registrar</button>
       </form>
     </div>
   </section>

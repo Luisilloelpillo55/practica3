@@ -1,2 +1,50 @@
-.page-frame { padding: 1rem; }
+.page-frame { padding: 1.5rem; max-width: 1200px; margin: 1.5rem auto; }
 .center { display:flex; justify-content:center; align-items:center; }
+
+.user-profile {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.profile-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.profile-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  margin-bottom: 1rem;
+  gap: 1.25rem;
+}
+.profile-label {
+  font-weight: 700;
+  color: var(--nu-muted);
+  font-size: 1rem;
+}
+
+.profile-value {
+  color: var(--nu-text);
+  word-break: break-word;
+}
+
+.header-actions { display:flex; gap:8px; align-items:center; }
+.purple-edit { background: linear-gradient(90deg,#5b2bd6,#7b3cff); color: #fff; border: none; }
+.purple-edit .p-button-icon { color: #fff; }
+
+:host ::ng-deep .p-dialog.nubank-modal .p-dialog-header {
+  background: linear-gradient(90deg,#5b2bd6,#7b3cff);
+  color: #fff;
+}
+:host ::ng-deep .p-dialog.nubank-modal .p-dialog-content {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+}
+
+.purple-submit { background: linear-gradient(90deg,#5b2bd6,#7b3cff); color: #fff; border: none; }
+.form-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-grid .p-field { margin-bottom: 0.6rem; }

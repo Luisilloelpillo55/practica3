@@ -1,15 +1,15 @@
-.layout-root { display: flex; flex-direction: column; min-height: 100vh; }
-.layout-header { display:flex; align-items:center; justify-content:space-between; padding: 0.75rem 1rem; background: linear-gradient(90deg, #ffffff 0%, #f1f5f9 100%); border-bottom: 1px solid rgba(0,0,0,0.06); }
-.layout-brand { font-weight:700; font-size:1.05rem; }
-.layout-main { flex: 1 1 auto; padding: 1.5rem; background: #f7f9fc; }
-.layout-footer { padding: 0.75rem 1rem; background: #fff; border-top: 1px solid rgba(0,0,0,0.06); text-align:center; font-size:0.95rem; color:#666; }
+.layout-root { display: flex; flex-direction: column; min-height: 100vh; background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.02) 100%); }
+.layout-header { display:flex; align-items:center; justify-content:space-between; padding: 1rem 1.5rem; background: linear-gradient(90deg, var(--nu-primary), var(--nu-accent)); border-bottom: 1px solid rgba(255,255,255,0.06); box-shadow: 0 6px 30px rgba(11,43,120,0.12); color: var(--nu-text); }
+.layout-brand { font-weight:800; font-size:1.125rem; color: var(--nu-text); }
+.layout-main { flex: 1 1 auto; padding: 2rem; background: var(--nu-bg); }
+.layout-footer { padding: 1rem 1.5rem; background: linear-gradient(90deg, var(--nu-primary), var(--nu-accent)) !important; border-top: 1px solid rgba(255,255,255,0.04); text-align:center; font-size:0.95rem; color:var(--nu-text) !important; }
 
 @media (max-width: 720px) {
 	.layout-header { flex-direction: column; gap: .5rem; align-items: stretch; }
 }
 
-.hamburger { background:transparent; border:0; font-size:1.25rem; cursor:pointer; }
-.backdrop { position:fixed; inset:0; background: rgba(0,0,0,0.35); z-index:1100; }
+.hamburger { background:transparent; border:0; font-size:1.25rem; cursor:pointer; color:var(--nu-text); }
+.backdrop { position:fixed; inset:0; background: rgba(0,0,0,0.45); z-index:1100; }
 .header-controls { display:flex; gap:.5rem; align-items:center; }
 
 /* keep hamburger visible on all screen sizes; backdrop shown only when sidebar visible */

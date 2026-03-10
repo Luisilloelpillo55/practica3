@@ -1,15 +1,18 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { AuthService } from '../services/auth.service';
 
 function passwordValidator(control: AbstractControl): ValidationErrors | null {
   const val: string = control.value || '';
-  const special = /[!@#$%^&*()_+\-=[]{};':"\\|,.<>\/?]/;
+  // require at least 10 chars and at least one non-alphanumeric (special) character
+  const special = /[^A-Za-z0-9]/;
   if (val.length < 10) return { minlen: true };
   if (!special.test(val)) return { nospecial: true };
   return null;
@@ -35,14 +38,14 @@ function adultValidator(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, ToastModule],
+  imports: [CommonModule, ReactiveFormsModule, InputTextModule, ButtonModule, ToastModule, HttpClientModule, RouterLink],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css']
 })
 export class RegisterComponent {
   form: any;
 
-  constructor(private fb: FormBuilder, private messageService: MessageService, private router: Router) {
+  constructor(private fb: FormBuilder, private messageService: MessageService, private router: Router, private http: HttpClient, private authService: AuthService, private location: Location) {
     this.form = this.fb.group({
       usuario: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -76,14 +79,24 @@ export class RegisterComponent {
         dob: this.form.value.dob,
         phone: this.form.value.phone
       };
-      // guardar usuario en localStorage (práctica)
-      localStorage.setItem('registeredUser', JSON.stringify(payload));
-      this.messageService.add({severity:'success', summary:'Registro', detail:'Registro exitoso'});
-      // limpiar formulario y navegar a login para probar acceso
-      this.form.reset();
-      this.router.navigate(['/login']);
+      // Enviar al API
+      this.http.post('/api/users', payload).subscribe({
+        next: (res: any) => {
+          this.messageService.add({severity:'success', summary:'Registro', detail:'Registro exitoso. Inicia sesión para continuar'});
+          this.form.reset();
+          this.router.navigate(['/login']);
+        },
+        error: (err) => {
+          const msg = err?.error?.error || 'Error al registrar';
+          this.messageService.add({severity:'error', summary:'Registro', detail: msg});
+        }
+      });
     } else {
       this.messageService.add({severity:'error', summary:'Registro', detail:'Complete correctamente el formulario'});
     }
+  }
+
+  goBack(): void {
+    this.location.back();
   }
 }

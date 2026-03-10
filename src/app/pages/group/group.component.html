@@ -1,18 +1,105 @@
 <div class="page-frame">
   <header class="page-header">
-    <h3>Grupo</h3>
-    <a routerLink="/home" class="p-button p-button-text">Volver</a>
+    <h3>Gestión de Grupos</h3>
+    <button pButton type="button" class="p-button p-button-text" (click)="goBack()">Volver</button>
   </header>
 
-  <section class="page-body center">
-    <p-card>
-      <ng-template pTemplate="title">Información del grupo</ng-template>
+  <section class="page-body">
+    <div class="actions-bar" *ngIf="hasPermission('group_create')">
+      <button pButton type="button" icon="pi pi-plus" label="Nuevo grupo" class="p-button-success" (click)="openNew()"></button>
+    </div>
+
+    <div *ngIf="!hasPermission('group_view')" style="padding: 20px; background: #f8d7da; border-radius: 4px; color: #721c24;">
+      No tienes permiso para ver esta sección. Contacta al administrador.
+    </div>
+
+    <p-card [style]="{'box-shadow': 'none'}" *ngIf="hasPermission('group_view')">
       <ng-template pTemplate="content">
-        <p>Total: <strong>{{ total }}</strong></p>
-        <button pButton type="button" label="Avanzar" (click)="advance()"></button>
+        <p-table #dt [value]="groups" [paginator]="true" [rows]="10" [tableStyle]="{ 'min-width': '100%' }" responsiveLayout="scroll" [scrollable]="true">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 15%">Nombre</th>
+              <th style="width: 12%">Autor</th>
+              <th style="width: 10%">Nivel</th>
+              <th style="width: 18%">Integrantes</th>
+              <th style="width: 12%">Tickets</th>
+              <th style="width: 8%; text-align: center;">Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>
+                <span class="badge badge-primary">{{ row.nombre }}</span>
+              </td>
+              <td>{{ getAuthorName(row) }}</td>
+              <td><span class="badge badge-info">{{ row.nivel }}</span></td>
+              <td>
+                <div *ngIf="row.integrantes">
+                  <span *ngFor="let member of (isArray(row.integrantes) ? row.integrantes : [row.integrantes]); let last = last" class="badge badge-secondary">
+                    {{ member }}<span *ngIf="!last">, </span>
+                  </span>
+                </div>
+              </td>
+              <td>
+                <div *ngIf="ticketsByGroup && ticketsByGroup[row.id] && ticketsByGroup[row.id].length; else noTickets">
+                  <span class="badge badge-primary">{{ ticketsByGroup[row.id].length }}</span>
+                  <div class="ticket-list" style="margin-top:6px;">
+                    <span *ngFor="let t of ticketsByGroup[row.id] | slice:0:3" class="badge badge-secondary" style="margin-right:6px;">{{ t.titulo }}</span>
+                    <span *ngIf="ticketsByGroup[row.id].length > 3" class="badge badge-info">+{{ ticketsByGroup[row.id].length - 3 }} más</span>
+                  </div>
+                </div>
+                <ng-template #noTickets>
+                  <span class="text-muted">0</span>
+                </ng-template>
+              </td>
+
+              <td style="text-align: center;">
+                <button pButton type="button" icon="pi pi-pen-to-square" class="p-button-rounded p-button-info p-button-sm action-icon" 
+                  (click)="edit(row)" *ngIf="hasPermission('group_edit')" pTooltip="Editar" tooltipPosition="top"></button>
+                <button pButton type="button" icon="pi pi-trash" class="p-button-rounded p-button-danger p-button-sm action-icon" 
+                  (click)="remove(row)" *ngIf="hasPermission('group_delete')" style="margin-left: 8px;" pTooltip="Eliminar" tooltipPosition="top"></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 20px;">No hay grupos registrados</td>
+            </tr>
+          </ng-template>
+        </p-table>
       </ng-template>
     </p-card>
-  </section>
 
-  <p-toast></p-toast>
+    <p-dialog header="Formulario de Grupo" styleClass="nubank-modal" [(visible)]="dialogVisible" [modal]="true" [style]="{width: '600px'}" *ngIf="hasPermission('group_create') || hasPermission('group_edit')">
+      <div *ngIf="editing" class="form-group">
+        <label for="nombre">Nombre <span class="text-danger">*</span></label>
+        <input id="nombre" pInputText [(ngModel)]="editing.nombre" class="w-100" />
+      </div>
+      <div *ngIf="editing" class="form-group">
+        <label for="autor">Autor</label>
+        <select id="autor" [(ngModel)]="editing.autor" class="form-control">
+          <option [value]="null">Seleccionar usuario</option>
+          <option *ngFor="let u of users" [value]="u.id">{{u.usuario}} ({{u.email}})</option>
+        </select>
+      </div>
+      <div *ngIf="editing" class="form-group">
+        <label for="nivel">Nivel</label>
+        <input id="nivel" pInputText [(ngModel)]="editing.nivel" placeholder="ej: básico, intermedio, avanzado" class="w-100" />
+      </div>
+      <div *ngIf="editing" class="form-group">
+        <label for="integrantes">Integrantes (coma separada)</label>
+        <input id="integrantes" pInputText [(ngModel)]="editing.integrantes" placeholder="usuario1,usuario2,usuario3" class="w-100" />
+      </div>
+      <div *ngIf="editing" class="form-group">
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" [(ngModel)]="editing.descripcion" rows="3" class="w-100" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: inherit;"></textarea>
+      </div>
+      <ng-template pTemplate="footer">
+        <button pButton type="button" label="Cancelar" class="p-button-text" (click)="dialogVisible=false"></button>
+        <button pButton type="button" label="Guardar" class="p-button-success" (click)="save()"></button>
+      </ng-template>
+    </p-dialog>
+
+    <p-toast></p-toast>
+  </section>
 </div>

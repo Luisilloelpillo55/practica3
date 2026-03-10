@@ -1,7 +1,7 @@
 <div class="page-frame">
   <header class="page-header">
     <h3>Login</h3>
-    <a routerLink="/home" class="p-button p-button-text">Inicio</a>
+    <button pButton type="button" class="p-button p-button-text" (click)="goBack()">Inicio</button>
   </header>
 
   <section class="page-body">
@@ -9,15 +9,21 @@
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
         <div class="p-field">
           <label for="username">Usuario</label>
-          <input id="username" pInputText formControlName="username" />
+          <div class="p-inputgroup input-styled">
+            <span class="p-inputgroup-addon"><i class="pi pi-user"></i></span>
+            <input id="username" pInputText formControlName="username" />
+          </div>
         </div>
 
         <div class="p-field">
           <label for="password">Contraseña</label>
-          <input id="password" type="password" pInputText formControlName="password" />
+          <div class="p-inputgroup input-styled">
+            <input id="password" [type]="showPassword ? 'text' : 'password'" pInputText formControlName="password" />
+            <button pButton type="button" class="p-button-text" (click)="togglePassword()" [icon]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></button>
+          </div>
         </div>
 
-        <button pButton type="submit" label="Entrar" [disabled]="form.invalid"></button>
+        <button pButton type="submit" label="Entrar" class="purple-submit" [disabled]="form.invalid"></button>
       </form>
     </div>
   </section>

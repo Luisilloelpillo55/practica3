@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -12,7 +12,11 @@ import { MessageService } from 'primeng/api';
   styleUrls: ['./practice-button.component.css']
 })
 export class PracticeButtonComponent {
-  constructor(private messageService: MessageService) {}
+  constructor(private messageService: MessageService, private location: Location) {}
+
+  goBack(): void {
+    this.location.back();
+  }
 
   onPractice() {
     this.messageService.add({severity: 'success', summary: 'Práctica', detail: 'Has pulsado el botón de práctica'});

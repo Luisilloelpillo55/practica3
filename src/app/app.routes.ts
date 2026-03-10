@@ -12,7 +12,7 @@ export const routes: Routes = [
 			{ path: 'register', loadComponent: () => import('./register/register.component.js').then(m => m.RegisterComponent) },
 			{ path: 'login', loadComponent: () => import('./login/login.component.js').then(m => m.LoginComponent) },
 			{ path: 'practice', redirectTo: 'practice-button', pathMatch: 'full' },
-			{ path: '', redirectTo: 'home', pathMatch: 'full' }
+			{ path: '', redirectTo: 'login', pathMatch: 'full' }
 		]
 	},
 	{ path: '**', redirectTo: 'login' }

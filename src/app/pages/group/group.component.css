@@ -1,2 +1,189 @@
-.page-frame { padding: 1rem; }
+.page-frame { padding: 1.5rem; max-width: 1300px; margin: 1.5rem auto; }
 .center { display:flex; justify-content:center; align-items:center; }
+
+.actions-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.w-100 { width: 100%; }
+.mr-2 { margin-right: 0.5rem; }
+.text-center { text-align: center; }
+.text-danger { color: #e74c3c; }
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  color: var(--nu-muted);
+}
+
+/* Ensure labels inside the nubank modal are visible (white) */
+:host ::ng-deep .p-dialog.nubank-modal .form-group label,
+:host ::ng-deep .p-dialog.nubank-modal label {
+  color: var(--nu-text) !important;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: rgba(255,255,255,0.03);
+  color: var(--nu-text);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.35rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.badge-primary { background: #3b82f6; color: #fff; }
+.badge-secondary { background: #6b7280; color: #fff; }
+.badge-success { background: #10b981; color: #fff; }
+.badge-danger { background: #ef4444; color: #fff; }
+.badge-warning { background: #f59e0b; color: #fff; }
+.badge-info { background: #06b6d4; color: #fff; }
+.badge-primary { background: linear-gradient(90deg,var(--nu-primary),var(--nu-accent)); color: #fff; }
+.badge-secondary { background: rgba(255,255,255,0.06); color: var(--nu-text); }
+.badge-success { background: var(--success); color: #fff; }
+.badge-danger { background: var(--danger); color: #fff; }
+.badge-warning { background: var(--warning); color: #fff; }
+.badge-info { background: var(--primary); color: #fff; }
+
+:host ::ng-deep .p-card {
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+:host ::ng-deep .p-card {
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.04);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  color: var(--nu-text);
+}
+:host ::ng-deep .p-dialog .p-dialog-header {
+  background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+:host ::ng-deep .p-table .p-datatable-thead > tr > th {
+  background: linear-gradient(90deg, rgba(123,60,255,0.12), rgba(91,43,214,0.08)) !important;
+  font-weight: 700;
+  color: var(--nu-text) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+}
+
+:host ::ng-deep .p-table .p-datatable-thead > tr > th {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+  font-weight: 700;
+  color: var(--nu-muted);
+  border-bottom: 2px solid rgba(255,255,255,0.03);
+}
+:host ::ng-deep .p-table .p-datatable-tbody > tr {
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: transform .12s ease, box-shadow .12s ease;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(11,43,120,0.04);
+}
+
+:host ::ng-deep .p-table .p-datatable-tbody > tr:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(11,43,120,0.08);
+  background: linear-gradient(90deg, rgba(123,60,255,0.02), rgba(91,43,214,0.01)) !important;
+}
+
+/* Make table wrapper look like a card */
+:host ::ng-deep .p-datatable-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  padding: 1rem !important;
+}
+
+:host ::ng-deep .p-table .p-datatable-tbody > tr:hover {
+  background: rgba(123,60,255,0.04) !important;
+}
+
+/* action icons inside tables */
+.action-icon {
+  display:inline-flex;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  align-items:center;
+  justify-content:center;
+  background: rgba(123,60,255,0.12);
+  color: var(--nu-text);
+  border: 1px solid rgba(123,60,255,0.06);
+  cursor: pointer;
+}
+.action-icon.primary { background: linear-gradient(90deg,var(--nu-primary),var(--nu-accent)); color: #fff; border: none; }
+.table-cell { padding: .75rem 1rem !important; color: var(--nu-text) !important; }
+
+/* NuBank-style modal for group form */
+:host ::ng-deep .p-dialog.nubank-modal {
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+:host ::ng-deep .p-dialog.nubank-modal .p-dialog-header {
+  background: linear-gradient(90deg, var(--nu-primary), var(--nu-accent)) !important;
+  color: var(--nu-text) !important;
+  padding: 1rem 1.25rem !important;
+}
+
+:host ::ng-deep .p-dialog.nubank-modal .p-dialog-content {
+  background: var(--nu-surface) !important;
+  color: var(--nu-text) !important;
+  padding: 1.25rem !important;
+}
+
+/* Inputs inside nubank modal should be dark-background + white text */
+:host ::ng-deep .p-dialog.nubank-modal .p-inputtext,
+:host ::ng-deep .p-dialog.nubank-modal input,
+:host ::ng-deep .p-dialog.nubank-modal textarea,
+:host ::ng-deep .p-dialog.nubank-modal select,
+:host ::ng-deep .p-dialog.nubank-modal .p-inputnumber {
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  color: var(--nu-text) !important;
+}
+
+:host ::ng-deep .p-dialog.nubank-modal .p-inputtext::placeholder,
+:host ::ng-deep .p-dialog.nubank-modal textarea::placeholder,
+:host ::ng-deep .p-dialog.nubank-modal input::placeholder {
+  color: rgba(255,255,255,0.45) !important;
+}
+
+:host ::ng-deep .p-dialog.nubank-modal .p-dialog-footer {
+  background: transparent !important;
+  border-top: 1px solid rgba(255,255,255,0.03) !important;
+  padding: 0.75rem 1.25rem !important;
+}
+
+:host ::ng-deep .p-dialog-mask {
+  background: rgba(3,2,11,0.6) !important;
+}
+
+:host ::ng-deep .p-dialog.nubank-modal .p-button {
+  border-radius: 10px !important;
+}

@@ -1,7 +1,30 @@
-<div class="app-container">
-  <div class="form">
-    <h2>Bienvenido</h2>
-    <p>Esta es la página principal (Home). Usa el menú lateral para navegar por la práctica.</p>
-    <button pButton type="button" label="Ir a la práctica" routerLink="/practice-button" class="p-button-outlined"></button>
+<div class="landing-hero">
+  <div class="landing-inner app-container">
+    <div class="hero-content">
+      <h1>Bienvenido a Mi Practica</h1>
+      <p class="lead">Aplicación demostrativa con autenticación, roles y CRUD — ahora con una UI moderna y vibrante.</p>
+      <div class="hero-cta">
+        <button pButton type="button" label="Comenzar" routerLink="/home" class="p-button-raised p-button-info"></button>
+        <button pButton type="button" label="Ver Grupos" routerLink="/pages/group" class="p-button-outlined p-button-success"></button>
+      </div>
+    </div>
+
+    <div class="hero-cards">
+      <div class="feature card">
+        <i class="pi pi-user"></i>
+        <h3>Usuarios</h3>
+        <p>Registro, login y perfil con permisos.</p>
+      </div>
+      <div class="feature card">
+        <i class="pi pi-users"></i>
+        <h3>Grupos</h3>
+        <p>Gestión completa de grupos y miembros.</p>
+      </div>
+      <div class="feature card">
+        <i class="pi pi-ticket"></i>
+        <h3>Tickets</h3>
+        <p>Crear y seguir incidencias con permisos.</p>
+      </div>
+    </div>
   </div>
 </div>

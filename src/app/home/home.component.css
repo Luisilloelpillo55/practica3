@@ -1,1 +1,23 @@
 .form { max-width:720px; margin:1.5rem auto; }
+
+/* Landing hero */
+.landing-hero {
+	padding: 4rem 0;
+	background: linear-gradient(135deg, rgba(11,92,255,0.06), rgba(16,185,129,0.03));
+}
+.landing-inner { display:flex; gap:2rem; align-items:center; justify-content:space-between; }
+.hero-content { flex: 1 1 55%; }
+.hero-content h1 { font-size: 2.75rem; margin:0 0 0.75rem; color: var(--nu-text) !important; }
+.hero-content .lead { font-size:1.125rem; color: var(--muted); margin-bottom:1rem; }
+.hero-cta { display:flex; gap:1rem; margin-top:1rem; }
+
+.hero-cards { display:flex; gap:1rem; flex: 1 1 40%; }
+.feature.card { padding:1.25rem; border-radius:12px; background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(255,255,255,0.7)); box-shadow: 0 8px 30px rgba(15,23,42,0.06); text-align:center; }
+.feature.card i { font-size:1.75rem; color: var(--primary); margin-bottom:0.5rem; }
+.feature.card h3 { margin:0.5rem 0; font-size:1.125rem; }
+.feature.card p { margin:0; color: var(--muted); font-size:0.95rem; }
+
+@media (max-width: 900px) {
+	.landing-inner { flex-direction: column; text-align:center; }
+	.hero-cards { width:100%; }
+}

@@ -1,6 +1,54 @@
-.page-frame { max-width:820px; margin:1.5rem auto; background:#fff; padding:1rem; border-radius:8px; box-shadow:0 6px 18px rgba(20,28,42,0.06); }
-.page-header { display:flex; justify-content:space-between; align-items:center; padding:0 0.5rem 0.75rem 0.5rem; border-bottom:1px solid rgba(0,0,0,0.06); }
-.page-body { padding:1rem 0.5rem; }
-.page-footer { padding-top:0.75rem; text-align:center; color:#666; }
-.form { max-width:640px; margin:0.75rem auto; }
-.p-field { margin-bottom:1rem; }
+.page-frame { max-width:860px; margin:1.5rem auto; background: linear-gradient(180deg, rgba(14,11,18,0.9), rgba(20,10,28,0.97)); padding:2rem; border-radius:14px; box-shadow:0 20px 60px rgba(11,8,18,0.7); color:var(--nu-text); }
+.page-header { display:flex; justify-content:space-between; align-items:center; padding:0 0.5rem 1rem 0.5rem; border-bottom:1px solid rgba(255,255,255,0.04); }
+.page-header h3 { margin:0; color:var(--nu-text); }
+.page-body { padding:1.25rem 0; }
+.page-footer { padding-top:1.5rem; margin-top:1.5rem; text-align:center; color:var(--nu-muted); border-top:1px solid rgba(255,255,255,0.03); }
+.form { max-width:100%; margin:0; }
+.p-field { margin-bottom:1.2rem; }
+
+.primary-submit {
+  display: inline-block;
+  width: 100%;
+  background: linear-gradient(90deg,var(--nu-primary),var(--nu-accent));
+  color: var(--nu-text);
+  border: none;
+  padding: 0.9rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: all 0.18s ease;
+  box-shadow: 0 8px 30px rgba(91,43,214,0.18);
+}
+
+.primary-submit:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 40px rgba(91,43,214,0.25);
+}
+
+.primary-submit[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+:host ::ng-deep .p-card { background: transparent; border: 1px solid rgba(255,255,255,0.04); }
+
+.purple-submit {
+  display: inline-block;
+  width: 100%;
+  background: linear-gradient(90deg,#5b2bd6,#7b3cff);
+  color: #fff;
+  border: none;
+  padding: 0.9rem 1.2rem;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 8px 30px rgba(91,43,214,0.22);
+}
+.purple-submit:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(91,43,214,0.28); }
+.purple-submit[disabled] { opacity: 0.6; cursor: not-allowed; transform: none; }

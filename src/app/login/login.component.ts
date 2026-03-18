@@ -7,7 +7,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../services/auth.service.js';
 
 @Component({
   selector: 'app-login',
@@ -31,11 +31,17 @@ export class LoginComponent {
     const { username, password } = this.form.value;
     this.http.post('/api/users/login', { username, password }).subscribe({
       next: (user: any) => {
+        console.log('Login successful. User:', user.usuario, 'Token:', user.token ? 'present' : 'missing');
         this.messageService.add({severity:'success', summary:'Login', detail:'Credenciales válidas'});
+        // Save user BEFORE navigation to ensure it's available immediately
         this.authService.saveUser(user);
-        this.router.navigate(['/home']);
+        // Small delay to ensure BehaviorSubject has emitted
+        setTimeout(() => {
+          this.router.navigate(['/home']);
+        }, 100);
       },
       error: (err) => {
+        console.error('Login failed:', err);
         this.messageService.add({severity:'error', summary:'Login', detail: err?.error?.error || 'Usuario o contraseña inválidos'});
       }
     });

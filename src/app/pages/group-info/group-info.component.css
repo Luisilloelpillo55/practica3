@@ -1,0 +1,147 @@
+/* Dark theme for group-info view */
+.page-frame {
+  max-width: 900px;
+  margin: 2rem auto;
+  background: #1a1a1a;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.page-header {
+  color: #ffffff;
+  margin-bottom: 2rem;
+}
+
+.page-header h3 {
+  color: #ffffff;
+  margin: 0;
+  text-align: center;
+}
+
+.page-body {
+  color: #ffffff;
+}
+
+/* Style select input */
+.group-select {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+  border: 2px solid #9c27b0 !important;
+  padding: 0.75rem !important;
+  border-radius: 6px !important;
+  width: 100% !important;
+  font-size: 1rem !important;
+}
+
+.group-select option {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+}
+
+.page-body select {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+  border: 2px solid #9c27b0 !important;
+  padding: 0.75rem !important;
+}
+
+.page-body label {
+  color: #ffffff !important;
+}
+
+/* PrimeNG Card customization */
+:host ::ng-deep .p-card {
+  background-color: #1a1a1a !important;
+  border: 2px solid #9c27b0 !important;
+}
+
+:host ::ng-deep .p-card .p-card-header {
+  background-color: #0d0d0d !important;
+  border-bottom: 2px solid #9c27b0 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-card .p-card-title {
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-card .p-card-content {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  padding: 1.25rem !important;
+}
+
+:host ::ng-deep .p-card .p-card-content div {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #9c27b0;
+  color: #ffffff;
+}
+
+:host ::ng-deep .p-card .p-card-content div:last-child {
+  border-bottom: none;
+}
+
+:host ::ng-deep .p-card .p-card-content strong {
+  color: #b39ddb;
+  font-weight: 600;
+}
+
+/* PrimeNG Table customization */
+:host ::ng-deep .p-datatable {
+  background-color: #1a1a1a !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-header {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+  border: 2px solid #9c27b0 !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+  border-color: #9c27b0 !important;
+  border-bottom: 2px solid #9c27b0 !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr {
+  background-color: #1a1a1a !important;
+  border-color: #333333 !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  color: #ffffff !important;
+  border-color: #333333 !important;
+  border-bottom: 1px solid #9c27b0 !important;
+  padding: 1rem !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+  background-color: #2a2a2a !important;
+}
+
+:host ::ng-deep .p-paginator {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-current {
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-paginator-pages .p-paginator-page {
+  color: #ffffff !important;
+  border-color: #9c27b0 !important;
+}
+
+:host ::ng-deep .p-paginator-pages .p-paginator-page.p-highlight {
+  background-color: #9c27b0 !important;
+  color: #ffffff !important;
+}
+
+/* No tickets message */
+:host ::ng-deep .p-card-content p {
+  color: #b39ddb !important;
+  text-align: center;
+}

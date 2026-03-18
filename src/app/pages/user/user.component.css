@@ -1,5 +1,34 @@
-.page-frame { padding: 1.5rem; max-width: 1200px; margin: 1.5rem auto; }
-.center { display:flex; justify-content:center; align-items:center; }
+.page-frame { 
+  max-width: 1200px; 
+  margin: 2rem auto; 
+  background: #030303;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  color: #000000;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1.5rem;
+  border-bottom: 3px solid #7b3cff;
+  margin-bottom: 2rem;
+}
+
+.page-header h3 {
+  margin: 0;
+  color: #000000;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.page-body {
+  padding: 0;
+}
+
+.center { display: flex; justify-content: center; align-items: center; }
 
 .user-profile {
   display: flex;
@@ -11,40 +40,213 @@
 
 .profile-row {
   display: grid;
-  grid-template-columns: 160px 1fr;
-  margin-bottom: 1rem;
-  gap: 1rem;
-}
-
-.profile-row {
-  display: grid;
   grid-template-columns: 200px 1fr;
   margin-bottom: 1rem;
   gap: 1.25rem;
 }
+
 .profile-label {
   font-weight: 700;
-  color: var(--nu-muted);
+  color: #5b2bd6;
   font-size: 1rem;
 }
 
 .profile-value {
-  color: var(--nu-text);
+  color: #333333;
   word-break: break-word;
 }
 
-.header-actions { display:flex; gap:8px; align-items:center; }
-.purple-edit { background: linear-gradient(90deg,#5b2bd6,#7b3cff); color: #fff; border: none; }
-.purple-edit .p-button-icon { color: #fff; }
+.header-actions { display: flex; gap: 8px; align-items: center; }
 
-:host ::ng-deep .p-dialog.nubank-modal .p-dialog-header {
-  background: linear-gradient(90deg,#5b2bd6,#7b3cff);
-  color: #fff;
-}
-:host ::ng-deep .p-dialog.nubank-modal .p-dialog-content {
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+/* ============================================ 
+   TABLE STYLING
+   ============================================ */
+:host ::ng-deep .p-card {
+  background: #ffffff !important;
+  border: 2px solid #e0e0e0 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+  border-radius: 8px !important;
 }
 
-.purple-submit { background: linear-gradient(90deg,#5b2bd6,#7b3cff); color: #fff; border: none; }
-.form-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.form-grid .p-field { margin-bottom: 0.6rem; }
+:host ::ng-deep .p-datatable {
+  width: 100% !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #e0e0e0 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+:host ::ng-deep .p-datatable-wrapper {
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+:host ::ng-deep .p-table .p-datatable-thead > tr {
+  background: linear-gradient(180deg, #5b2bd6 0%, #7b3cff 100%) !important;
+}
+
+:host ::ng-deep .p-table .p-datatable-thead > tr > th {
+  background: transparent !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border: none !important;
+  padding: 1.8rem 1.6rem !important;
+  text-align: left !important;
+  font-size: 0.97rem !important;
+}
+
+:host ::ng-deep .p-table .p-datatable-tbody > tr {
+  border-bottom: 2px solid #f0f0f0 !important;
+  background: #ffffff !important;
+  transition: background-color 0.15s ease !important;
+  margin-bottom: 0.8rem !important;
+}
+
+:host ::ng-deep .p-table .p-datatable-tbody > tr:nth-child(even) {
+  background: #f9f9f9 !important;
+}
+
+:host ::ng-deep .p-table .p-datatable-tbody > tr:hover {
+  background: #f5f5f5 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+}
+
+:host ::ng-deep .p-table .p-datatable-tbody > tr > td {
+  padding: 1.6rem 1.6rem !important;
+  border: none !important;
+  color: #333333 !important;
+  font-size: 0.95rem !important;
+}
+
+:host ::ng-deep .p-datatable-paginator {
+  background: transparent !important;
+  border-top: 2px solid #f0f0f0 !important;
+  padding: 1.5rem 0 !important;
+  color: #333333 !important;
+  margin-top: 1.5rem !important;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+  background: linear-gradient(90deg, #5b2bd6, #7b3cff) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+}
+
+/* ============================================ 
+   BADGE STYLING
+   ============================================ */
+.badge {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-right: 0.3rem;
+  margin-bottom: 0.3rem;
+}
+
+.badge-primary { background: linear-gradient(90deg, #5b2bd6, #7b3cff); color: #fff; }
+.badge-secondary { background: #e8e8e8; color: #333333; }
+.badge-success { background: #10b981; color: #fff; }
+.badge-danger { background: #ef4444; color: #fff; }
+.badge-info { background: #0b5cff; color: #fff; }
+
+/* ============================================ 
+   ACTION BUTTONS
+   ============================================ */
+.action-icon {
+  background: linear-gradient(90deg, #5b2bd6, #7b3cff) !important;
+  color: #ffffff !important;
+  border: none !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+  margin-right: 0.4rem;
+}
+
+.action-icon:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(123, 60, 255, 0.3) !important;
+}
+
+/* ============================================ 
+   MODAL STYLING
+   ============================================ */
+:host ::ng-deep .p-dialog {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-header {
+  background: linear-gradient(90deg, #5b2bd6, #7b3cff) !important;
+  color: #ffffff !important;
+  padding: 1.5rem !important;
+  border: none !important;
+  font-weight: 700 !important;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-content {
+  background: #ffffff !important;
+  color: #000000 !important;
+  padding: 2rem !important;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-footer {
+  background: #f8f8f8 !important;
+  border-top: 1px solid #e0e0e0 !important;
+  padding: 1rem 2rem !important;
+}
+
+:host ::ng-deep .p-dialog label {
+  color: #333333 !important;
+  font-weight: 600 !important;
+  display: block !important;
+  margin-bottom: 0.5rem !important;
+}
+
+:host ::ng-deep .p-dialog .p-inputtext,
+:host ::ng-deep .p-dialog input,
+:host ::ng-deep .p-dialog textarea {
+  background: #ffffff !important;
+  border: 2px solid #e0e0e0 !important;
+  color: #333333 !important;
+  padding: 0.8rem 1rem !important;
+  width: 100% !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+:host ::ng-deep .p-dialog .p-inputtext:focus,
+:host ::ng-deep .p-dialog input:focus,
+:host ::ng-deep .p-dialog textarea:focus {
+  outline: none !important;
+  border-color: #7b3cff !important;
+  box-shadow: 0 0 0 3px rgba(123, 60, 255, 0.1) !important;
+}
+
+/* ============================================ 
+   UTILITY CLASSES
+   ============================================ */
+.w-100 { width: 100%; }
+.text-center { text-align: center; }
+
+.purple-btn {
+  background: linear-gradient(90deg, #5b2bd6, #7b3cff) !important;
+  color: #ffffff !important;
+  border: none !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.purple-btn:hover:not(:disabled) {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(123, 60, 255, 0.3) !important;
+}

@@ -31,27 +31,28 @@ export class UserComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Ensure auth service has loaded any stored user
+    // Load user from localStorage first
     try { this.authService.loadUser(); } catch {}
-    // React to changes in the current user (works if login happens elsewhere)
+    
+    // Attempt 1: get from snapshot immediately
+    const snap = this.authService.getUser();
+    if (snap) {
+      this.user = snap;
+      if (snap.id) {
+        this.fetchProfile(snap.id, snap);
+      }
+    }
+    
+    // Attempt 2: subscribe to changes
     this.sub = this.authService.currentUser$.subscribe((val) => {
       const current = this.normalizeUser(val);
-      if (current && current.id) {
-        this.fetchProfile(current.id, current);
-      } else if (current) {
+      if (current) {
         this.user = current;
-      } else {
-        this.user = null;
+        if (current.id) {
+          this.fetchProfile(current.id, current);
+        }
       }
     });
-
-    // Also try snapshot in case subject already has value
-    const snap = this.authService.getUser();
-    if (snap && snap.id) {
-      this.fetchProfile(snap.id, snap);
-    } else if (snap) {
-      this.user = snap;
-    }
   }
 
   ngOnDestroy(): void {

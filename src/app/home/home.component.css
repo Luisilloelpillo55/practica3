@@ -21,3 +21,38 @@
 	.landing-inner { flex-direction: column; text-align:center; }
 	.hero-cards { width:100%; }
 }
+
+.home-dashboard { margin: 2.5rem auto; }
+.dashboard-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
+.dashboard-header h2 { margin:0; color: #d9f0ff; font-size:1.25rem; }
+.filters { display:flex; gap:0.5rem; align-items:center; }
+.filters input { padding:0.6rem 0.85rem; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.04); color: #ffffff; min-width:220px; }
+.filters input::placeholder { color: rgba(255,255,255,0.45); }
+.filters select { padding:0.5rem 0.7rem; border-radius:8px; background: rgba(255,255,255,0.03); color:#fff; border:1px solid rgba(255,255,255,0.04); }
+
+/* Force native option text color so dropdown options are readable on dark backgrounds */
+.filters select, .filters select option {
+	color: #000 !important;
+	background: #fff !important;
+}
+
+.dashboard-body { display:flex; gap:1.25rem; }
+.groups-list { width: 300px; display:flex; flex-direction:column; gap:0.75rem; }
+.group-card { padding:1rem; border-radius:10px; background: rgba(255,255,255,0.02); cursor:pointer; border:1px solid rgba(255,255,255,0.04); color:#e7f0ff; }
+.group-card.selected { box-shadow: 0 10px 30px rgba(11,92,255,0.12); border-color: rgba(11,92,255,0.2); transform: translateY(-2px); }
+.group-card h4 { margin:0 0 0.25rem; font-size:1.05rem; color:#fff; }
+.muted { color: rgba(255,255,255,0.6); font-size:0.9rem; margin:0; }
+
+.tickets-panel { flex:1; }
+.tickets-list { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:1rem; }
+.ticket-card { padding:0.9rem; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); border:1px solid rgba(255,255,255,0.04); color:#eaf6ff; }
+.ticket-header { display:flex; justify-content:space-between; align-items:center; gap:0.5rem; }
+.ticket-header .state { font-size:0.85rem; color:rgba(255,255,255,0.7); }
+.ticket-meta { display:flex; gap:1rem; justify-content:space-between; color:rgba(255,255,255,0.62); font-size:0.9rem; margin-top:0.5rem; }
+.empty { padding:1rem; color:rgba(255,255,255,0.6); }
+
+@media (max-width: 800px) {
+	.dashboard-body { flex-direction:column; }
+	.groups-list { width:100%; flex-direction:row; overflow:auto; }
+	.group-card { min-width:160px; }
+}

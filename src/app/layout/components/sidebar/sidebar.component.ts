@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { PanelMenuModule } from 'primeng/panelmenu';
 import { ButtonModule } from 'primeng/button';
 import { MenuItem } from 'primeng/api';
-import { AuthService } from '../../../services/auth.service';
+import { AuthService } from '../../../services/auth.service.js';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -38,14 +38,26 @@ export class SidebarComponent {
     const permiso = this.auth.getPermiso();
     const user = this.auth.getUser();
     const logged = !!user;
+    const isAdmin = this.auth.isAdmin();
     const items: MenuItem[] = [
       { label: 'Inicio', icon: 'pi pi-home', routerLink: ['/home'] },
       { label: 'Práctica: Botón', icon: 'pi pi-play', routerLink: ['/practice-button'] }
     ];
 
-    // Only show 'Grupo' when permiso === 2
-    if (permiso === 2) {
-      items.push({ label: 'Grupo', icon: 'pi pi-users', routerLink: ['/group'] });
+    // Show group-related links when user has explicit 'group_view' permission
+    if (this.auth.hasPermission('group_view')) {
+      items.push({ label: 'Grupos', icon: 'pi pi-users', routerLink: ['/group'] });
+      items.push({ label: 'Info grupo', icon: 'pi pi-info-circle', routerLink: ['/group-info'] });
+    }
+
+    // Show kanban when user can view tickets
+    if (this.auth.hasPermission('ticket_view')) {
+      items.push({ label: 'Kanban', icon: 'pi pi-th-large', routerLink: ['/kanban'] });
+    }
+
+    // Show 'Gestión de Usuarios' if admin or has 'user_view' permission
+    if (isAdmin || this.auth.hasPermission('user_view')) {
+      items.push({ label: 'Gestión de Usuarios', icon: 'pi pi-users', routerLink: ['/user-management'] });
     }
 
     // User-only items

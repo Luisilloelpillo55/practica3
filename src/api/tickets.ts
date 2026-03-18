@@ -4,6 +4,19 @@ import { verifyToken, loadPermissions, requirePermission } from './auth.js';
 
 const router = express.Router();
 
+// GET all tickets (requiere token)
+router.get('/', verifyToken, loadPermissions, async (req, res) => {
+  try {
+    const [tickets] = await pool.query(
+      'SELECT id, group_id, titulo, descripcion, estado, created_by, created_at FROM tickets ORDER BY created_at DESC'
+    );
+    return res.json(tickets);
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: 'db error' });
+  }
+});
+
 // GET all tickets for a group (público, requiere token)
 router.get('/group/:groupId', verifyToken, loadPermissions, async (req, res) => {
   const { groupId } = req.params;
@@ -58,19 +71,28 @@ router.post('/', verifyToken, loadPermissions, requirePermission('ticket_create'
 });
 
 // UPDATE ticket (requiere permisos)
-router.put('/:id', verifyToken, loadPermissions, requirePermission('ticket_edit'), async (req, res) => {
+router.put('/:id', verifyToken, loadPermissions, async (req, res) => {
   const { id } = req.params;
   const { titulo, descripcion, estado } = req.body || {};
-  if (!titulo) return res.status(400).json({ error: 'Missing fields' });
+  // permitir que usuarios con permiso 'ticket_edit' o 'ticket_move' actualicen el estado
+  const perms = Array.isArray((req as any).permissions) ? (req as any).permissions : [];
+  if (!perms.includes('ticket_edit') && !perms.includes('ticket_move')) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
   try {
-    const [ticketRows] = await pool.query('SELECT created_by FROM tickets WHERE id = ? LIMIT 1', [id]);
+    const [ticketRows] = await pool.query('SELECT * FROM tickets WHERE id = ? LIMIT 1', [id]);
     // @ts-ignore
     const ticket = (ticketRows as any)[0];
     if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
 
+    // Usar valores existentes si no se proporcionan en el payload
+    const newTitulo = typeof titulo !== 'undefined' && titulo !== null ? titulo : ticket.titulo;
+    const newDescripcion = typeof descripcion !== 'undefined' ? descripcion : ticket.descripcion;
+    const newEstado = typeof estado !== 'undefined' && estado !== null ? estado : ticket.estado;
+
     await pool.query(
       'UPDATE tickets SET titulo = ?, descripcion = ?, estado = ? WHERE id = ?',
-      [titulo, descripcion || null, estado || 'abierto', id]
+      [newTitulo, newDescripcion || null, newEstado || 'abierto', id]
     );
     const [rows] = await pool.query('SELECT * FROM tickets WHERE id = ? LIMIT 1', [id]);
     // @ts-ignore

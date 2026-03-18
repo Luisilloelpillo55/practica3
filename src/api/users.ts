@@ -1,7 +1,7 @@
 import express from 'express';
 import pool from './db.js';
 import bcrypt from 'bcryptjs';
-import { generateToken, verifyToken, loadPermissions, requirePermission } from './auth.js';
+import { generateToken, verifyToken, loadPermissions, requirePermission, requireAdmin } from './auth.js';
 
 const router = express.Router();
 
@@ -21,6 +21,21 @@ router.post('/', async (req, res) => {
     );
     // @ts-ignore
     const insertId = (result as any).insertId;
+    
+    // Asignar permisos por defecto al nuevo usuario
+    try {
+      const defaultPermissions = ['group_view', 'group_create', 'ticket_view', 'ticket_create', 'user_view', 'user_edit'];
+      for (const perm of defaultPermissions) {
+        await pool.query(
+          `INSERT IGNORE INTO user_permissions (user_id, permission_id)
+           SELECT ?, id FROM permissions WHERE nombre = ?`,
+          [insertId, perm]
+        );
+      }
+    } catch (pe) {
+      console.warn('Warning: Could not assign default permissions (table may not exist)');
+    }
+    
     const [rows] = await pool.query('SELECT id, usuario, email, fullname, address, dob, phone, permiso, created_at FROM users WHERE id = ? LIMIT 1', [insertId]);
     // @ts-ignore
     return res.status(201).json((rows as any)[0]);
@@ -46,14 +61,24 @@ router.post('/login', async (req, res) => {
     const token = generateToken(user.id, user.usuario);
     
     // Cargar permisos del usuario
-    const [permRows] = await pool.query(
-      `SELECT p.nombre FROM user_permissions up
-       JOIN permissions p ON up.permission_id = p.id
-       WHERE up.user_id = ?`,
-      [user.id]
-    );
-    // @ts-ignore
-    const permissions = (permRows as any[]).map((r: any) => r.nombre);
+    let permissions: string[] = [];
+    try {
+      const [permRows] = await pool.query(
+        `SELECT p.nombre FROM user_permissions up
+         JOIN permissions p ON up.permission_id = p.id
+         WHERE up.user_id = ?`,
+        [user.id]
+      );
+      // @ts-ignore
+      permissions = (permRows as any[]).map((r: any) => r.nombre);
+    } catch (pe) {
+      console.warn('Warning: Could not load permissions from DB');
+    }
+    
+    // Si no hay permisos en la BD, asignar permisos por defecto
+    if (!permissions || permissions.length === 0) {
+      permissions = ['group_view', 'group_create', 'ticket_view', 'ticket_create', 'user_view', 'user_edit'];
+    }
     
     // remove password
     delete user.password;
@@ -65,8 +90,9 @@ router.post('/login', async (req, res) => {
 });
 
 // Get all users
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, loadPermissions, requireAdmin, async (req, res) => {
   try {
+    // No asumimos que la columna `is_admin` exista en todas las instalaciones.
     const [rows] = await pool.query('SELECT id, usuario, email, fullname, address, dob, phone, permiso, created_at FROM users');
     return res.json(rows);
   } catch (e) {
@@ -75,9 +101,62 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get all available permissions
+router.get('/permissions', verifyToken, loadPermissions, requireAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT id, nombre, descripcion FROM permissions ORDER BY nombre');
+    return res.json(rows);
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: 'db error' });
+  }
+});
+
+// Get permissions for a specific user
+router.get('/:id/permissions', verifyToken, loadPermissions, requireAdmin, async (req, res) => {
+  const id = req.params['id'];
+  try {
+    const [rows] = await pool.query(
+      `SELECT p.nombre FROM user_permissions up
+       JOIN permissions p ON up.permission_id = p.id
+       WHERE up.user_id = ?`,
+      [id]
+    );
+    // @ts-ignore
+    const perms = Array.isArray(rows) ? (rows as any[]).map((r: any) => r.nombre) : [];
+    return res.json(perms);
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: 'db error' });
+  }
+});
+
+// Replace permissions for a specific user
+router.put('/:id/permissions', verifyToken, loadPermissions, requireAdmin, async (req, res) => {
+  const id = req.params['id'];
+  const { permissions } = req.body || {};
+  if (!Array.isArray(permissions)) return res.status(400).json({ error: 'Invalid payload' });
+  try {
+    await pool.query('DELETE FROM user_permissions WHERE user_id = ?', [id]);
+    for (const nombre of permissions) {
+      await pool.query(
+        `INSERT IGNORE INTO user_permissions (user_id, permission_id)
+         SELECT ?, id FROM permissions WHERE nombre = ?`,
+        [id, nombre]
+      );
+    }
+    const [rows] = await pool.query('SELECT id, usuario, email, fullname, address, dob, phone, created_at FROM users WHERE id = ? LIMIT 1', [id]);
+    // @ts-ignore
+    return res.json((rows as any)[0]);
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: 'db error' });
+  }
+});
+
 // Get single user
-router.get('/:id', async (req, res) => {
-  const id = req.params.id;
+router.get('/:id', verifyToken, loadPermissions, async (req, res) => {
+  const id = req.params['id'];
   try {
     const [rows] = await pool.query('SELECT id, usuario, email, fullname, address, dob, phone, permiso, created_at FROM users WHERE id = ? LIMIT 1', [id]);
     // @ts-ignore
@@ -91,8 +170,8 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update user
-router.put('/:id', async (req, res) => {
-  const id = req.params.id;
+router.put('/:id', verifyToken, loadPermissions, async (req, res) => {
+  const id = req.params['id'];
   const { usuario, email, password, fullname, address, dob, phone } = req.body || {};
   try {
     let hashed = null;
@@ -117,8 +196,8 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete user
-router.delete('/:id', async (req, res) => {
-  const id = req.params.id;
+router.delete('/:id', verifyToken, loadPermissions, async (req, res) => {
+  const id = req.params['id'];
   try {
     await pool.query('DELETE FROM users WHERE id = ?', [id]);
     return res.json({ ok: true });

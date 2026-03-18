@@ -1,6 +1,82 @@
 
 @import 'primeicons/primeicons.css';
 @import 'primeflex/primeflex.css';
+@import 'styles/buttons-global.css';
+
+/* ================== MODALES Y DIÁLOGOS ================== */
+/* Fondo oscuro del modal */
+.p-dialog-mask {
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Contenedor del modal */
+.p-dialog {
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+/* Header del modal */
+.p-dialog .p-dialog-header {
+  background: linear-gradient(90deg, #7b3cff, #5b2bd6) !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 1rem 1.25rem !important;
+}
+
+/* Contenido del modal */
+.p-dialog .p-dialog-content {
+  background: #ffffff !important;
+  color: #000000 !important;
+  padding: 1.5rem !important;
+}
+
+/* Footer del modal */
+.p-dialog .p-dialog-footer {
+  background: #f5f5f5 !important;
+  border-top: 1px solid #ddd !important;
+  padding: 1rem 1.25rem !important;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+/* Inputs dentro de modales */
+.p-dialog .p-inputtext,
+.p-dialog input[type="text"],
+.p-dialog input[type="email"],
+.p-dialog input[type="password"],
+.p-dialog input[type="date"],
+.p-dialog input[type="number"],
+.p-dialog textarea,
+.p-dialog select {
+  background: #ffffff !important;
+  border: 1px solid #cccccc !important;
+  color: #000000 !important;
+  padding: 0.6rem 0.8rem !important;
+  border-radius: 6px !important;
+}
+
+.p-dialog input::placeholder,
+.p-dialog textarea::placeholder {
+  color: #999999 !important;
+}
+
+/* Labels dentro de modales */
+.p-dialog label,
+.p-dialog .p-field label {
+  color: #000000 !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.5rem !important;
+  display: block !important;
+}
+
+/* Card (estilos de tarjetas) */
+.p-card {
+  background: white !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 12px !important;
+  padding: 1.5rem !important;
+}
 
 :root{
   --bg-1: #f8fafc;

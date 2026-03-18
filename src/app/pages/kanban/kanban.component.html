@@ -1,0 +1,143 @@
+<div class="page-frame">
+  <header class="page-header">
+    <h3>Kanban</h3>
+    <div class="header-actions">
+      <button pButton type="button" class="purple-btn" (click)="goBack()">Volver</button>
+    </div>
+  </header>
+
+  <div class="kanban-container">
+  <div class="column">
+    <p-card class="column-card">
+      <ng-template pTemplate="header">
+        <div class="col-header">
+          <div class="col-title">No iniciado</div>
+          <div class="col-desc">Tareas nuevas / por empezar</div>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div cdkDropList id="backlog-list" [cdkDropListData]="backlog" [cdkDropListConnectedTo]="['progress-list','done-list','cancelled-list','delete-drop']" (cdkDropListDropped)="drop($event)" class="kanban-column">
+          <div *ngFor="let ticket of backlog" cdkDrag [cdkDragData]="ticket" class="kanban-item">
+            <div class="item-title">{{ ticket.titulo }}</div>
+            <div class="item-description">{{ ticket.descripcion || 'Sin descripción' }}</div>
+            <div class="item-footer">
+              <small>ID: {{ ticket.id }}</small>
+              <button pButton type="button" icon="pi pi-history" class="p-button-sm p-button-text" (click)="viewHistory(ticket)" pTooltip="Ver historial" tooltipPosition="top"></button>
+            </div>
+          </div>
+          <div *ngIf="backlog.length === 0" class="empty-column">
+            <p>Sin tareas</p>
+          </div>
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+
+  <div class="column">
+    <p-card class="column-card">
+      <ng-template pTemplate="header">
+        <div class="col-header">
+          <div class="col-title">En progreso</div>
+          <div class="col-desc">Tareas activas siendo trabajadas</div>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div cdkDropList id="progress-list" [cdkDropListData]="progress" [cdkDropListConnectedTo]="['backlog-list','done-list','cancelled-list','delete-drop']" (cdkDropListDropped)="drop($event)" class="kanban-column">
+          <div *ngFor="let ticket of progress" cdkDrag [cdkDragData]="ticket" class="kanban-item">
+            <div class="item-title">{{ ticket.titulo }}</div>
+            <div class="item-description">{{ ticket.descripcion || 'Sin descripción' }}</div>
+            <div class="item-footer">
+              <small>ID: {{ ticket.id }}</small>
+              <button pButton type="button" icon="pi pi-history" class="p-button-sm p-button-text" (click)="viewHistory(ticket)" pTooltip="Ver historial" tooltipPosition="top"></button>
+            </div>
+          </div>
+          <div *ngIf="progress.length === 0" class="empty-column">
+            <p>Sin tareas</p>
+          </div>
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+
+  <div class="column">
+    <p-card class="column-card">
+      <ng-template pTemplate="header">
+        <div class="col-header">
+          <div class="col-title">Finalizado</div>
+          <div class="col-desc">Tareas completadas</div>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div cdkDropList id="done-list" [cdkDropListData]="done" [cdkDropListConnectedTo]="['backlog-list','progress-list','cancelled-list','delete-drop']" (cdkDropListDropped)="drop($event)" class="kanban-column">
+          <div *ngFor="let ticket of done" cdkDrag [cdkDragData]="ticket" class="kanban-item">
+            <div class="item-title">{{ ticket.titulo }}</div>
+            <div class="item-description">{{ ticket.descripcion || 'Sin descripción' }}</div>
+            <div class="item-footer">
+              <small>ID: {{ ticket.id }}</small>
+              <button pButton type="button" icon="pi pi-history" class="p-button-sm p-button-text" (click)="viewHistory(ticket)" pTooltip="Ver historial" tooltipPosition="top"></button>
+            </div>
+          </div>
+          <div *ngIf="done.length === 0" class="empty-column">
+            <p>Sin tareas</p>
+          </div>
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+
+  <div class="column">
+    <p-card class="column-card">
+      <ng-template pTemplate="header">
+        <div class="col-header">
+          <div class="col-title">Cancelado</div>
+          <div class="col-desc">Tareas descartadas</div>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="content">
+        <div cdkDropList id="cancelled-list" [cdkDropListData]="cancelled" [cdkDropListConnectedTo]="['backlog-list','progress-list','done-list','delete-drop']" (cdkDropListDropped)="drop($event)" class="kanban-column">
+          <div *ngFor="let ticket of cancelled" cdkDrag [cdkDragData]="ticket" class="kanban-item">
+            <div class="item-title">{{ ticket.titulo }}</div>
+            <div class="item-description">{{ ticket.descripcion || 'Sin descripción' }}</div>
+            <div class="item-footer">
+              <small>ID: {{ ticket.id }}</small>
+              <button pButton type="button" icon="pi pi-history" class="p-button-sm p-button-text" (click)="viewHistory(ticket)" pTooltip="Ver historial" tooltipPosition="top"></button>
+            </div>
+          </div>
+          <div *ngIf="cancelled.length === 0" class="empty-column">
+            <p>Sin tareas</p>
+          </div>
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+<!-- Zona de eliminación: arrastra aquí para borrar una tarea -->
+ 
+  </div>
+
+<!-- Zona de eliminación: arrastra aquí para borrar una tarea -->
+<div class="delete-container">
+  <div cdkDropList id="delete-drop" [cdkDropListData]="deleteListData" [cdkDropListConnectedTo]="['backlog-list','progress-list','done-list','cancelled-list']" (cdkDropListDropped)="deleteDrop($event)" class="delete-zone">
+    <div class="delete-label">Eliminar</div>
+  </div>
+</div>
+
+<p-dialog [(visible)]="showHistoryDialog" [modal]="true" [header]="'Historial: ' + (selectedForHistory?.titulo || '')" [style]="{ width: '50vw' }" (onHide)="closeHistoryDialog()">
+  <div *ngIf="selectedForHistory" class="history-content">
+    <p-table [value]="historyTickets" [paginator]="true" [rows]="10">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Estado Anterior</th>
+          <th>Estado Nuevo</th>
+          <th>Fecha de Cambio</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-h>
+        <tr>
+          <td>{{ h.estado_anterior || 'N/A' }}</td>
+          <td>{{ h.estado_nuevo }}</td>
+          <td>{{ h.changed_at | date:'short' }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</p-dialog>

@@ -1,0 +1,198 @@
+.kanban-container {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding: 1.5rem;
+  background: #0d0d0d;
+  border-radius: 12px;
+  border: 2px solid #9c27b0;
+}
+
+.column {
+  flex: 1 1 280px;
+  min-width: 280px;
+}
+
+.column-card {
+  min-height: 400px;
+}
+
+:host ::ng-deep .column-card.p-card {
+  background-color: #1a1a1a !important;
+  border: 2px solid #9c27b0 !important;
+}
+
+:host ::ng-deep .column-card .p-card-header {
+  background-color: #0d0d0d !important;
+  border-bottom: 2px solid #9c27b0 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .column-card .p-card-content {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  padding: 0.5rem;
+}
+
+.kanban-column {
+  min-height: 300px;
+  border-radius: 4px;
+  padding: 0.5rem;
+}
+
+.kanban-item {
+  background: #2a2a2a;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 6px;
+  border-left: 4px solid #9c27b0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  cursor: grab;
+  user-select: none;
+}
+
+.kanban-item:hover {
+  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
+}
+
+.kanban-item.cdk-drag-preview {
+  box-shadow: 0 5px 15px rgba(156, 39, 176, 0.6);
+  opacity: 0.9;
+  background: #9c27b0;
+  border-left: 4px solid #fff;
+}
+
+.kanban-item.cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
+.kanban-column.cdk-drop-list-dragging .kanban-item:last-child {
+  display: none;
+}
+
+.item-title {
+  font-weight: 600;
+  color: #ffffff;
+  word-break: break-word;
+}
+
+.item-description {
+  font-size: 0.85rem;
+  color: #cccccc;
+  word-break: break-word;
+}
+
+.item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #999999;
+  margin-top: 0.5rem;
+}
+
+.empty-column {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #666666;
+  font-style: italic;
+}
+
+:host ::ng-deep .p-button-text {
+  padding: 0.25rem 0.5rem !important;
+}
+
+/* Dialog customization */
+:host ::ng-deep .p-dialog {
+  background-color: #1a1a1a !important;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-header {
+  background-color: #0d0d0d !important;
+  border-bottom: 2px solid #9c27b0 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-title {
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-content {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+.history-content {
+  color: #ffffff;
+}
+
+:host ::ng-deep .p-datatable.history {
+  background-color: #1a1a1a !important;
+}
+
+:host ::ng-deep .history .p-datatable-thead > tr > th {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+  border-color: #9c27b0 !important;
+  border-bottom: 2px solid #9c27b0 !important;
+}
+
+:host ::ng-deep .history .p-datatable-tbody > tr {
+  background-color: #1a1a1a !important;
+}
+
+:host ::ng-deep .history .p-datatable-tbody > tr > td {
+  color: #ffffff !important;
+  border-color: #333333 !important;
+  border-bottom: 1px solid #9c27b0 !important;
+}
+
+:host ::ng-deep .history .p-datatable-tbody > tr:hover {
+  background-color: #2a2a2a !important;
+}
+
+/* Column header styling */
+.col-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.col-title {
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 1rem;
+}
+.col-desc {
+  font-size: 0.75rem;
+  color: #cccccc;
+}
+
+/* Delete drop zone */
+.delete-container {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0 2rem 0;
+}
+
+.delete-zone {
+  width: 260px;
+  height: 64px;
+  border: 2px dashed #ff1744;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff1744;
+  background: rgba(255,23,68,0.03);
+  font-weight: 600;
+}
+
+.delete-zone.cdk-drop-list-dragging {
+  background: rgba(255,23,68,0.06);
+  box-shadow: 0 6px 18px rgba(255,23,68,0.12);
+}

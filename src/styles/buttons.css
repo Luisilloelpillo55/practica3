@@ -1,0 +1,38 @@
+/* Global purple button styling */
+:host ::ng-deep .p-button.purple-btn,
+:host ::ng-deep .p-button-primary.purple-btn,
+:host ::ng-deep button.purple-btn {
+  background: linear-gradient(90deg, #5b2bd6, #7b3cff) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+  box-shadow: 0 8px 30px rgba(91, 43, 214, 0.22) !important;
+}
+
+:host ::ng-deep .p-button.purple-btn:hover:not(:disabled),
+button.purple-btn:hover:not(:disabled) {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 12px 40px rgba(91, 43, 214, 0.28) !important;
+}
+
+:host ::ng-deep .p-button.purple-btn:disabled,
+button.purple-btn:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Override PrimeNG button colors for purple style */
+:host ::ng-deep .p-button.p-button-primary,
+:host ::ng-deep .p-button.p-button-info {
+  background: linear-gradient(90deg, #5b2bd6, #7b3cff) !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+:host ::ng-deep .p-button.p-button-primary:hover,
+:host ::ng-deep .p-button.p-button-info:hover {
+  background: linear-gradient(90deg, #4a1fb8, #6a2ee6) !important;
+}

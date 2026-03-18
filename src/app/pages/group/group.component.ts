@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -12,6 +12,8 @@ import { CardModule } from 'primeng/card';
 import { MessageService } from 'primeng/api';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { Subscription, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-group',
@@ -20,14 +22,31 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './group.component.html',
   styleUrls: ['./group.component.css']
 })
-export class GroupComponent implements OnInit {
+export class GroupComponent implements OnInit, OnDestroy {
   groups: any[] = [];
   ticketsByGroup: Record<string, any[]> = {};
   users: any[] = [];
+  // Tickets UI state
+  ticketsDialog: boolean = false;
+  selectedTickets: any[] = [];
+  ticketDetailDialog: boolean = false;
+  selectedTicket: any = null;
   dialogVisible = false;
   editing: any = null;
+  // ticket creation
+  ticketDialog: boolean = false;
+  newTicket: any = { group_id: null, titulo: '', descripcion: '', estado: 'abierto' };
+  private sub: Subscription | null = null;
+  private destroy$ = new Subject<void>();
 
-  constructor(private messageService: MessageService, private http: HttpClient, private authService: AuthService, private location: Location, private router: Router) {}
+  constructor(
+    private messageService: MessageService,
+    private http: HttpClient,
+    private authService: AuthService,
+    private location: Location,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   goBack(): void {
     try {
@@ -48,9 +67,67 @@ export class GroupComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.load();
-    this.loadUsers();
-    this.loadTickets();
+    // Ensure user is loaded from storage immediately
+    const currentUser = this.authService.getUser();
+    console.log('Component init - Current user:', currentUser?.usuario ? 'loaded' : 'not loaded');
+    
+    if (!currentUser || !currentUser.token) {
+      console.log('No current user or token, loading from storage...');
+      this.authService.loadUser();
+    }
+    
+    // Load data with current user
+    const userToUse = this.authService.getUser();
+    console.log('Loading data for user:', userToUse?.usuario, 'Token:', userToUse?.token ? 'YES' : 'NO');
+    
+    if (userToUse && userToUse.token) {
+      this.loadAll();
+    }
+    
+    // Listen for future auth changes
+    this.sub = this.authService.currentUser$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((user) => {
+        console.log('Auth changed:', user?.usuario ? 'logged in' : 'logged out', 'Token:', user?.token ? 'YES' : 'NO');
+        if (user && user.token) {
+          this.loadAll();
+        } else {
+          this.groups = [];
+          this.ticketsByGroup = {};
+          this.users = [];
+        }
+      });
+
+    // watch router navigations to reload if returning to this page
+    this.router.events.pipe(takeUntil(this.destroy$)).subscribe((ev: any) => {
+      if (ev instanceof NavigationEnd) {
+        const url = ev.urlAfterRedirects || ev.url || '';
+        if (url.includes('/group')) {
+          console.log('router nav to', url, '-> calling loadAll');
+          const u = this.authService.getUser();
+          if (!u || !u.token) {
+            this.authService.loadUser();
+          } else {
+            this.loadAll();
+          }
+        }
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.sub?.unsubscribe();
+  }
+
+  private loadAll(): void {
+    // defer to next tick to avoid change detection conflicts
+    Promise.resolve().then(() => {
+      this.load();
+      this.loadUsers();
+      this.loadTickets();
+    });
   }
 
   hasPermission(permission: string | string[]): boolean {
@@ -58,9 +135,24 @@ export class GroupComponent implements OnInit {
   }
 
   load() {
-    this.http.get('/api/groups', { headers: this.authService.getAuthHeaders() }).subscribe({ 
-      next: (res: any) => this.groups = Array.isArray(res) ? res : [], 
-      error: (e) => console.error(e) 
+    const headers = this.authService.getAuthHeaders();
+    const auth = headers.get('Authorization');
+    console.log('Loading groups with token:', auth ? auth.substr(0,20) + '...' : 'missing', headers);
+    
+    this.http.get<any[]>('/api/groups', { headers }).subscribe({ 
+      next: (res: any) => {
+        console.log('Groups loaded successfully:', res ? res.length : 0);
+        // assign in next microtask to avoid ExpressionChangedAfterItHasBeenChecked
+        Promise.resolve().then(() => {
+          this.groups = Array.isArray(res) ? res : [];
+          // update view if needed
+          try { this.cdr.detectChanges(); } catch {}
+        });
+      }, 
+      error: (e) => {
+        console.error('Error loading groups:', e);
+        this.groups = [];
+      }
     });
   }
 
@@ -74,6 +166,24 @@ export class GroupComponent implements OnInit {
       }
       this.ticketsByGroup = map;
     }, error: () => { this.ticketsByGroup = {}; } });
+  }
+
+  openTickets(g: any) {
+    if (!g || !g.id) return;
+    const arr = this.ticketsByGroup[String(g.id)] || [];
+    this.selectedTickets = Array.isArray(arr) ? arr : [];
+    this.ticketsDialog = true;
+  }
+
+  openTicketDetail(t: any) {
+    if (!t) return;
+    this.selectedTicket = t;
+    this.ticketDetailDialog = true;
+  }
+
+  closeTicketDetail() {
+    this.selectedTicket = null;
+    this.ticketDetailDialog = false;
   }
 
   loadUsers() {
@@ -94,6 +204,26 @@ export class GroupComponent implements OnInit {
   openNew(): void {
     this.editing = { nivel: '', autor: null, nombre: '', integrantes: [], descripcion: '' };
     this.dialogVisible = true;
+  }
+
+  // Nuevo ticket
+  openNewTicket(): void {
+    this.newTicket = { group_id: (this.groups && this.groups[0]) ? this.groups[0].id : null, titulo: '', descripcion: '', estado: 'abierto' };
+    this.ticketDialog = true;
+  }
+
+  saveTicket(): void {
+    if (!this.newTicket || !this.newTicket.titulo || !this.newTicket.group_id) return;
+    const payload = { ...this.newTicket };
+    const headers = this.authService.getAuthHeaders();
+    this.http.post('/api/tickets', payload, { headers }).subscribe({ next: (res: any) => {
+      this.messageService.add({ severity: 'success', summary: 'Ticket', detail: 'Creado' });
+      this.ticketDialog = false;
+      this.loadTickets();
+      this.load();
+    }, error: (e: any) => {
+      this.messageService.add({ severity: 'error', summary: 'Ticket', detail: 'Error: ' + (e?.error?.error || 'permiso denegado') });
+    } });
   }
 
   edit(g: any): void {

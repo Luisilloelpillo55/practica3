@@ -1,0 +1,105 @@
+<div class="page-frame">
+  <header class="page-header">
+    <h3>Gestión de Usuarios</h3>
+    <div class="header-actions">
+      <button pButton type="button" class="purple-btn" (click)="goBack()">Volver</button>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <p-card header="Usuarios del Sistema">
+      <ng-template pTemplate="content">
+        <p-table [value]="users" [paginator]="true" [rows]="10" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>ID</th>
+              <th>Usuario</th>
+              <th>Email</th>
+              <th>Nombre Completo</th>
+              <th>Teléfono</th>
+              <th>Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-u>
+            <tr>
+              <td>{{ u.id }}</td>
+              <td>{{ u.usuario }}</td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.fullname || 'N/A' }}</td>
+              <td>{{ u.phone || 'N/A' }}</td>
+              <td>
+                <button pButton type="button" icon="pi pi-pencil" class="p-button-sm p-button-info" 
+                  (click)="openEditDialog(u)" pTooltip="Editar" tooltipPosition="top"></button>
+                <button pButton type="button" icon="pi pi-lock" class="p-button-sm p-button-warning" 
+                  (click)="openPermsDialog(u)" pTooltip="Permisos" tooltipPosition="top" style="margin-left:6px"></button>
+                <button pButton type="button" icon="pi pi-trash" class="p-button-sm p-button-danger" 
+                  (click)="deleteUser(u)" pTooltip="Eliminar" tooltipPosition="top" style="margin-left:6px"></button>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </ng-template>
+    </p-card>
+  </div>
+</div>
+
+<p-dialog [(visible)]="displayDialog" [modal]="true" header="Editar Usuario" [style]="{ width: '50vw' }" (onHide)="closeDialog()">
+  <div *ngIf="selectedUser" class="edit-form">
+    <div class="form-group">
+      <label>Usuario</label>
+      <input pInputText [(ngModel)]="editForm.usuario" type="text" />
+    </div>
+    <div class="form-group">
+      <label color>Email</label>
+      <input pInputText [(ngModel)]="editForm.email" type="email" />
+    </div>
+    <div class="form-group">
+      <label>Nombre Completo</label>
+      <input pInputText [(ngModel)]="editForm.fullname" type="text" />
+    </div>
+    <div class="form-group">
+      <label>Teléfono</label>
+      <input pInputText [(ngModel)]="editForm.phone" type="text" />
+    </div>
+    <div class="form-group">
+      <label>Dirección</label>
+      <input pInputText [(ngModel)]="editForm.address" type="text" />
+    </div>
+    <div class="form-group permissions-group">
+      <label>Permisos</label>
+      <div class="permissions-list">
+        <div *ngFor="let p of availablePermissions" class="perm-row">
+          <input type="checkbox" [checked]="selectedPermissions.includes(p.nombre)" (change)="onTogglePermission(p.nombre, $event.target.checked)" />
+          <label class="perm-label">{{ p.nombre }} — {{ p.descripcion }}</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" (click)="closeDialog()" class="p-button-secondary"></button>
+    <button pButton type="button" label="Guardar" (click)="saveUser()" class="p-button-success"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Permisos dialog dedicado -->
+<p-dialog [(visible)]="showPermsDialog" [modal]="true" header="Editar Permisos" [style]="{ width: '40vw' }" (onHide)="showPermsDialog = false">
+  <div *ngIf="selectedUserForPerms" class="edit-form">
+    <div class="form-group">
+      <label>Usuario</label>
+      <div>{{ selectedUserForPerms.usuario }}</div>
+    </div>
+    <div class="form-group permissions-group">
+      <label>Permisos</label>
+      <div class="permissions-list">
+        <div *ngFor="let p of availablePermissions" class="perm-row">
+          <input type="checkbox" [checked]="selectedPermissions.includes(p.nombre)" (change)="onTogglePermission(p.nombre, $event.target.checked)" />
+          <label class="perm-label">{{ p.nombre }} — {{ p.descripcion }}</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" (click)="showPermsDialog = false" class="p-button-secondary"></button>
+    <button pButton type="button" label="Guardar" (click)="savePermissions()" class="p-button-success"></button>
+  </ng-template>
+</p-dialog>

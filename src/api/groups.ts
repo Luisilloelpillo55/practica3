@@ -1,5 +1,6 @@
 import express from 'express';
 import pool from './db.js';
+import { verifyToken, loadPermissions, requirePermission } from './auth.js';
 
 const router = express.Router();
 
@@ -82,10 +83,22 @@ router.put('/:id', async (req, res) => {
 
 // Delete group
 router.delete('/:id', async (req, res) => {
-  const id = req.params.id;
+  const id = req.params['id'];
   try {
     await pool.query('DELETE FROM groups WHERE id = ?', [id]);
     return res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: 'db error' });
+  }
+});
+
+// Tickets for a group (route added here)
+router.get('/:id/tickets', verifyToken, loadPermissions, requirePermission('ticket_view'), async (req, res) => {
+  const id = req.params['id'];
+  try {
+    const [rows] = await pool.query('SELECT id, group_id, titulo, descripcion, estado, created_by, created_at FROM tickets WHERE group_id = ? ORDER BY created_at DESC', [id]);
+    return res.json(rows);
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: 'db error' });

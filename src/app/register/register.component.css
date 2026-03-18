@@ -4,51 +4,136 @@
 .page-body { padding:1.25rem 0; }
 .page-footer { padding-top:1.5rem; margin-top:1.5rem; text-align:center; color:var(--nu-muted); border-top:1px solid rgba(255,255,255,0.03); }
 .form { max-width:100%; margin:0; }
-.p-field { margin-bottom:1.2rem; }
+.p-field { margin-bottom:1.5rem; }
+
+.p-field label {
+	display: block;
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+	color: rgba(255,255,255,0.9);
+	font-size: 0.95rem;
+}
+
+.p-field small {
+	display: block;
+	margin-top: 0.35rem;
+	color: #ef4444;
+	font-size: 0.85rem;
+}
+
+/* Regular inputs (not in inputgroup) */
+.page-frame .p-inputtext,
+.page-frame input[type="text"],
+.page-frame input[type="email"],
+.page-frame input[type="password"],
+.page-frame input[type="date"],
+.page-frame input[type="number"] {
+	background: #ffffff !important;
+	border: 2px solid #cccccc !important;
+	color: #000000 !important;
+	padding: 0.85rem 1rem !important;
+	border-radius: 10px !important;
+	width: 100% !important;
+	font-size: 1rem !important;
+	transition: all 0.2s ease !important;
+}
+
+.page-frame .p-inputtext::placeholder,
+.page-frame input[type="text"]::placeholder,
+.page-frame input[type="email"]::placeholder,
+.page-frame input[type="password"]::placeholder {
+	color: #999999 !important;
+}
+
+.page-frame .p-inputtext:focus,
+.page-frame input[type="text"]:focus,
+.page-frame input[type="email"]:focus,
+.page-frame input[type="password"]:focus,
+.page-frame input[type="date"]:focus,
+.page-frame input[type="number"]:focus {
+	outline: none !important;
+	border-color: #7b3cff !important;
+	box-shadow: 0 0 0 3px rgba(123,60,255,0.15) !important;
+	background: #ffffff !important;
+}
+
+/* Input groups (with buttons like password toggle) */
+.page-frame .p-inputgroup {
+	display: flex !important;
+	align-items: center !important;
+	gap: 0 !important;
+	width: 100% !important;
+}
+
+.page-frame .p-inputgroup .p-inputtext {
+	border-radius: 10px 0 0 10px !important;
+	flex: 1 !important;
+	margin: 0 !important;
+	background: #ffffff !important;
+	border: 2px solid #cccccc !important;
+}
+
+.page-frame .p-inputgroup .p-button {
+	border-radius: 0 10px 10px 0 !important;
+	border: 2px solid #cccccc !important;
+	border-left: none !important;
+	background: linear-gradient(90deg, #7b3cff, #5b2bd6) !important;
+	color: #fff !important;
+	padding: 0.75rem 1rem !important;
+	min-width: 45px !important;
+	flex-shrink: 0 !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	height: auto !important;
+	margin: 0 !important;
+}
+
+.page-frame .p-inputgroup .p-button:hover:not(:disabled) {
+	transform: none !important;
+	background: linear-gradient(90deg, #8b4cff, #7b3ce6) !important;
+	box-shadow: 0 4px 15px rgba(123,60,255,0.3) !important;
+}
+
+.page-frame .p-inputgroup .p-button .p-button-icon {
+	color: #fff !important;
+}
 
 .primary-submit {
   display: inline-block;
   width: 100%;
-  background: linear-gradient(90deg,var(--nu-primary),var(--nu-accent));
-  color: var(--nu-text);
-  border: none;
-  padding: 0.9rem 1.5rem;
-  border-radius: 10px;
-  font-weight: 800;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-top: 1rem;
-  transition: all 0.18s ease;
-  box-shadow: 0 8px 30px rgba(91,43,214,0.18);
+  background: linear-gradient(90deg,#5b2bd6,#7b3cff) !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 0.95rem 1.5rem !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  cursor: pointer !important;
+  margin-top: 1.5rem !important;
+  transition: all 0.18s ease !important;
+  box-shadow: 0 8px 30px rgba(91,43,214,0.25) !important;
 }
 
 .primary-submit:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 40px rgba(91,43,214,0.25);
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 40px rgba(91,43,214,0.35) !important;
 }
 
 .primary-submit[disabled] {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.purple-btn {
+	background: linear-gradient(90deg, #7b3cff, #5b2bd6) !important;
+	color: #fff !important;
+	border: none !important;
+	padding: 0.6rem 1.2rem !important;
+	border-radius: 8px !important;
+	font-weight: 600 !important;
+	cursor: pointer !important;
 }
 
 :host ::ng-deep .p-card { background: transparent; border: 1px solid rgba(255,255,255,0.04); }
-
-.purple-submit {
-  display: inline-block;
-  width: 100%;
-  background: linear-gradient(90deg,#5b2bd6,#7b3cff);
-  color: #fff;
-  border: none;
-  padding: 0.9rem 1.2rem;
-  border-radius: 10px;
-  font-weight: 800;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-top: 1rem;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-  box-shadow: 0 8px 30px rgba(91,43,214,0.22);
-}
-.purple-submit:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(91,43,214,0.28); }
-.purple-submit[disabled] { opacity: 0.6; cursor: not-allowed; transform: none; }

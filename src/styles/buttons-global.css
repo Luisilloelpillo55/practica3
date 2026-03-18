@@ -1,0 +1,161 @@
+/* ============================================
+   ESTILOS GLOBALES DE BOTONES - TODOS MORADOS
+   ============================================ */
+
+/* Aplicar al componente p-button de PrimeNG */
+.p-button {
+  background: linear-gradient(90deg, #7b3cff, #5b2bd6) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-weight: 800 !important;
+  font-size: 0.95rem !important;
+  padding: 0.85rem 1.25rem !important;
+  transition: all 0.18s ease !important;
+  box-shadow: 0 8px 30px rgba(123, 60, 255, 0.2) !important;
+}
+
+.p-button:hover:not(:disabled) {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 40px rgba(123, 60, 255, 0.3) !important;
+  background: linear-gradient(90deg, #6a2ee6, #4a1fb8) !important;
+}
+
+.p-button:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Botones nativos de HTML */
+button[type="button"],
+button[type="submit"] {
+  background: linear-gradient(90deg, #7b3cff, #5b2bd6) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-weight: 800 !important;
+  padding: 0.85rem 1.25rem !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  box-shadow: 0 8px 30px rgba(123, 60, 255, 0.2) !important;
+}
+
+button[type="button"]:hover:not(:disabled),
+button[type="submit"]:hover:not(:disabled) {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 40px rgba(123, 60, 255, 0.3) !important;
+}
+
+button[type="button"]:disabled,
+button[type="submit"]:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+}
+
+/* Excepción: Botones de texto NO deben tener fondo */
+.p-button-text {
+  background: transparent !important;
+  color: #7b3cff !important;
+  box-shadow: none !important;
+  padding: 0.5rem !important;
+}
+
+.p-button-text:hover {
+  background: rgba(123, 60, 255, 0.1) !important;
+  box-shadow: none !important;
+}
+
+/* Excepción: Botones redondeados (iconos de acción) */
+.p-button-rounded {
+  background: #7b3cff !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.p-button-rounded:hover:not(:disabled) {
+  background: #6a2ee6 !important;
+}
+
+/* Clases específicas de PrimeNG */
+.p-button-primary,
+.p-button-info {
+  background: linear-gradient(90deg, #7b3cff, #5b2bd6) !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.p-button-primary:hover,
+.p-button-info:hover {
+  background: linear-gradient(90deg, #6a2ee6, #4a1fb8) !important;
+}
+
+.p-button-raised {
+  background: linear-gradient(90deg, #7b3cff, #5b2bd6) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 8px 30px rgba(123, 60, 255, 0.2) !important;
+}
+
+.p-button-raised:hover:not(:disabled) {
+  box-shadow: 0 10px 40px rgba(123, 60, 255, 0.3) !important;
+  transform: translateY(-3px) !important;
+}
+
+/* Clase personalizada purple-btn */
+.purple-btn {
+  background: linear-gradient(90deg, #7b3cff, #5b2bd6) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-weight: 800 !important;
+  padding: 0.85rem 1.25rem !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  box-shadow: 0 8px 30px rgba(123, 60, 255, 0.2) !important;
+}
+
+.purple-btn:hover:not(:disabled) {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 40px rgba(123, 60, 255, 0.3) !important;
+}
+
+.purple-btn:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+}
+
+/* Botón de submit morado */
+.purple-submit {
+  display: inline-block;
+  width: 100%;
+  background: linear-gradient(90deg, #7b3cff, #5b2bd6) !important;
+  color: #fff !important;
+  border: none !important;
+  padding: 0.9rem 1.5rem !important;
+  border-radius: 10px !important;
+  font-weight: 800 !important;
+  font-size: 1rem !important;
+  cursor: pointer !important;
+  margin-top: 1rem !important;
+  transition: all 0.18s ease !important;
+  box-shadow: 0 8px 30px rgba(123, 60, 255, 0.2) !important;
+}
+
+.purple-submit:hover:not(:disabled) {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 40px rgba(123, 60, 255, 0.3) !important;
+}
+
+.purple-submit:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.purple-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}

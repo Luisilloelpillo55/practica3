@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   dob DATE,
   phone VARCHAR(50),
   permiso INT DEFAULT 1,
+  is_admin BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS groups (
   nombre VARCHAR(255) NOT NULL,
   integrantes TEXT,
   descripcion TEXT,
+  estado VARCHAR(50) DEFAULT 'No iniciado',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_groups_autor FOREIGN KEY (autor) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -35,11 +37,23 @@ CREATE TABLE IF NOT EXISTS tickets (
   group_id INT NOT NULL,
   titulo VARCHAR(255) NOT NULL,
   descripcion TEXT,
-  estado VARCHAR(50) DEFAULT 'abierto',
+  estado VARCHAR(50) DEFAULT 'No iniciado',
   created_by INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_tickets_group FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
   CONSTRAINT fk_tickets_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Ticket history table for tracking estado changes
+CREATE TABLE IF NOT EXISTS ticket_history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_id INT NOT NULL,
+  estado_anterior VARCHAR(50),
+  estado_nuevo VARCHAR(50),
+  changed_by INT,
+  changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_th_ticket FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE,
+  CONSTRAINT fk_th_user FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Permissions table
@@ -78,6 +92,7 @@ INSERT IGNORE INTO permissions (nombre, descripcion) VALUES
   ('ticket_view', 'Ver tickets de grupos'),
   ('ticket_create', 'Crear tickets'),
   ('ticket_edit', 'Editar tickets'),
+  ('ticket_move', 'Mover tickets entre columnas'),
   ('ticket_delete', 'Eliminar tickets'),
   ('user_view', 'Ver información de usuarios'),
   ('user_edit', 'Editar información de usuarios'),

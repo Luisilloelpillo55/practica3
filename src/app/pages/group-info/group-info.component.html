@@ -1,0 +1,62 @@
+<div class="page-frame">
+  <header class="page-header">
+    <h3>Información de Grupo</h3>
+    <div class="header-actions">
+      <button pButton type="button" class="purple-btn" (click)="goBack()">Volver</button>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <div style="margin-bottom: 1.5rem;">
+      <label for="group-select" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #ffffff;">Seleccionar grupo:</label>
+      <select id="group-select" (change)="onGroupSelect($event)" class="group-select">
+        <option value="">-- Selecciona un grupo --</option>
+        <option *ngFor="let g of groups" [value]="g.id">{{ g.nombre }}</option>
+      </select>
+    </div>
+
+    <div *ngIf="selectedGroup" style="display: grid; gap: 1.5rem;">
+      <p-card header="{{ selectedGroup.nombre }}">
+        <ng-template pTemplate="content">
+          <div style="display: grid; gap: 1rem;">
+            <div><strong>Nivel:</strong> {{ selectedGroup.nivel }}</div>
+            <div><strong>Autor:</strong> {{ selectedGroup.autor }}</div>
+            <div><strong>Integrantes:</strong> 
+              <span *ngIf="selectedGroup.integrantes && selectedGroup.integrantes.length; else noIntegrants">
+                {{ (selectedGroup.integrantes | json) }}
+              </span>
+              <ng-template #noIntegrants>Sin integrantes</ng-template>
+            </div>
+            <div><strong>Descripción:</strong> {{ selectedGroup.descripcion || 'Sin descripción' }}</div>
+          </div>
+        </ng-template>
+      </p-card>
+
+      <p-card header="Tickets asociados">
+        <ng-template pTemplate="content">
+          <p-table [value]="tickets" [paginator]="true" [rows]="5" *ngIf="tickets.length; else noTickets">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Estado</th>
+                <th>Creado</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-t>
+              <tr>
+                <td>{{ t.id }}</td>
+                <td>{{ t.titulo }}</td>
+                <td>{{ t.estado }}</td>
+                <td>{{ t.created_at | date:'short' }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+          <ng-template #noTickets>
+            <p style="text-align: center; color: #999;">No hay tickets registrados</p>
+          </ng-template>
+        </ng-template>
+      </p-card>
+    </div>
+  </div>
+</div>

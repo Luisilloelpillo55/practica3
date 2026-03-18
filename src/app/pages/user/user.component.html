@@ -2,8 +2,8 @@
   <header class="page-header">
     <h3>Mi Perfil</h3>
     <div class="header-actions">
-      <button pButton type="button" label="Editar" class="purple-edit" icon="pi pi-pen" (click)="openEdit()" *ngIf="user"></button>
-      <button pButton type="button" class="p-button p-button-text" (click)="goBack()">Volver</button>
+      <button pButton type="button" label="Editar" class="purple-btn" icon="pi pi-pen" (click)="openEdit()" *ngIf="user"></button>
+      <button pButton type="button" class="purple-btn" (click)="goBack()">Volver</button>
     </div>
   </header>
 
@@ -73,7 +73,7 @@
       </div>
       <ng-template pTemplate="footer">
         <button pButton type="button" label="Cancelar" class="p-button-text" (click)="editDialog=false"></button>
-        <button pButton type="button" label="Guardar" class="purple-submit" (click)="saveEdit()"></button>
+        <button pButton type="button" label="Guardar" class="purple-btn" (click)="saveEdit()"></button>
       </ng-template>
     </p-dialog>
     <ng-template #noUser>

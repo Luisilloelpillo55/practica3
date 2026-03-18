@@ -1,0 +1,197 @@
+/* Dark theme for user-management view */
+.page-frame {
+  max-width: 1000px;
+  margin: 2rem auto;
+  background: #1a1a1a;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.page-header {
+  color: #ffffff;
+  margin-bottom: 2rem;
+}
+
+.page-header h3 {
+  color: #ffffff;
+  margin: 0;
+  text-align: center;
+}
+
+.page-body {
+  color: #ffffff;
+}
+
+/* PrimeNG Card customization */
+:host ::ng-deep .p-card {
+  background-color: #1a1a1a !important;
+  border: 2px solid #9c27b0 !important;
+}
+
+:host ::ng-deep .p-card .p-card-header {
+  background-color: #0d0d0d !important;
+  border-bottom: 2px solid #9c27b0 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-card .p-card-title {
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-card .p-card-content {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  padding: 1.25rem !important;
+}
+
+/* PrimeNG Table customization */
+:host ::ng-deep .p-datatable {
+  background-color: #1a1a1a !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-header {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+  border: 2px solid #9c27b0 !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+  border-color: #9c27b0 !important;
+  border-bottom: 2px solid #9c27b0 !important;
+  padding: 1rem !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr {
+  background-color: #1a1a1a !important;
+  border-color: #333333 !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  color: #ffffff !important;
+  border-color: #333333 !important;
+  border-bottom: 1px solid #9c27b0 !important;
+  padding: 1rem !important;
+}
+
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+  background-color: #2a2a2a !important;
+}
+
+:host ::ng-deep .p-paginator {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-current {
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-paginator-pages .p-paginator-page {
+  color: #ffffff !important;
+  border-color: #9c27b0 !important;
+}
+
+:host ::ng-deep .p-paginator-pages .p-paginator-page.p-highlight {
+  background-color: #9c27b0 !important;
+  color: #ffffff !important;
+}
+
+/* Dialog customization */
+:host ::ng-deep .p-dialog {
+  background-color: #1a1a1a !important;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-header {
+  background-color: #0d0d0d !important;
+  border-bottom: 2px solid #9c27b0 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-title {
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-content {
+  background-color: #191819 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-dialog .p-dialog-footer {
+  background-color: #0d0d0d !important;
+  border-top: 2px solid #9c27b0 !important;
+}
+
+/* Form inputs in dialog */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.permissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.perm-label {
+  margin-left: 0.5rem;
+  color: #ffffff !important;
+}
+
+/* Ensure dialog labels are white even if other styles override */
+.edit-form label, .permissions-group label {
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .p-inputtext {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+  border: 2px solid #9c27b0 !important;
+  border-radius: 6px !important;
+  padding: 0.75rem !important;
+}
+
+:host ::ng-deep .p-inputtext:focus {
+  border-color: #d946ef !important;
+  box-shadow: 0 0 0 0.2rem rgba(247, 245, 248, 0.25) !important;
+}
+
+/* Button customization */
+:host ::ng-deep .p-button {
+  margin: 0.25rem;
+}
+
+:host ::ng-deep .p-button.p-button-info {
+  background-color: #2196F3 !important;
+  border-color: #2196F3 !important;
+}
+
+:host ::ng-deep .p-button.p-button-danger {
+  background-color: #f44336 !important;
+  border-color: #f44336 !important;
+}
+
+:host ::ng-deep .p-button.p-button-success {
+  background-color: #4CAF50 !important;
+  border-color: #4CAF50 !important;
+}
+
+:host ::ng-deep .p-button.p-button-secondary {
+  background-color: #666666 !important;
+  border-color: #666666 !important;
+}

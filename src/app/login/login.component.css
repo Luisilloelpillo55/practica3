@@ -24,23 +24,71 @@
 .input-styled .p-inputgroup {
 	display: flex;
 	align-items: center;
+	gap: 0;
+	width: 100%;
 }
-.input-styled .p-inputtext {
-	background: rgba(255,255,255,0.04);
-	border: 1px solid rgba(255,255,255,0.08);
-	padding: 0.75rem 0.9rem;
-	border-radius: 10px;
-	transition: box-shadow 0.15s ease, border-color 0.15s ease;
-}
-.input-styled .p-inputtext:focus { outline: none; border-color: #7b3cff; box-shadow: 0 8px 24px rgba(123,60,255,0.08); }
-.input-styled .p-inputgroup-addon { background: rgba(255,255,255,0.03); border: none; color: rgba(255,255,255,0.7); border-radius: 8px 0 0 8px; padding: 0.6rem 0.8rem; }
 
-.purple-submit {
-	background: linear-gradient(90deg,#5b2bd6,#7b3cff) !important;
+.input-styled .p-inputtext {
+	background: #ffffff !important;
+	border: 2px solid #cccccc !important;
+	padding: 0.85rem 1rem !important;
+	border-radius: 10px 0 0 10px !important;
+	transition: box-shadow 0.15s ease, border-color 0.15s ease !important;
+	color: #000000 !important;
+	flex: 1;
+	font-size: 1rem !important;
+}
+
+.input-styled .p-inputtext::placeholder {
+	color: #999999 !important;
+}
+
+.input-styled .p-inputtext:focus { 
+	outline: none !important; 
+	border-color: #7b3cff !important; 
+	box-shadow: 0 0 0 3px rgba(123,60,255,0.1) !important;
+	background: #ffffff !important;
+}
+
+.input-styled .p-inputgroup-addon { 
+	background: #ffffff !important; 
+	border: 2px solid #cccccc !important;
+	border-left: none !important;
+	color: #7b3cff !important; 
+	border-radius: 0 10px 10px 0 !important; 
+	padding: 0.85rem 1rem !important;
+	min-width: auto;
+}
+
+.input-styled .p-button {
+	border-radius: 0 10px 10px 0 !important;
+	border: 2px solid #cccccc !important;
+	border-left: none !important;
+	background: linear-gradient(90deg, #7b3cff, #5b2bd6) !important;
 	color: #fff !important;
-	border: none !important;
-	padding: 0.7rem 1rem !important;
-	border-radius: 10px !important;
+	padding: 0.75rem 1rem !important;
+	min-width: 45px !important;
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.input-styled .p-button:hover:not(:disabled) {
+	transform: none !important;
+	background: linear-gradient(90deg, #8b4cff, #7b3ce6) !important;
+	box-shadow: 0 4px 15px rgba(123,60,255,0.3) !important;
+}
+
+.input-styled .p-button.p-button-text {
+	background: linear-gradient(90deg, #7b3cff, #5b2bd6) !important;
+	color: #fff !important;
+	border: 2px solid rgba(255,255,255,0.15) !important;
+	border-left: none !important;
+}
+
+.input-styled .p-button .p-button-icon {
+	color: #fff !important;
 }
 
 :host ::ng-deep .p-card { background: transparent; border: 1px solid rgba(255,255,255,0.04); }

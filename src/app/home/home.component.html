@@ -4,8 +4,8 @@
       <h1>Bienvenido a Mi Practica</h1>
       <p class="lead">Aplicación demostrativa con autenticación, roles y CRUD — ahora con una UI moderna y vibrante.</p>
       <div class="hero-cta">
-        <button pButton type="button" label="Comenzar" routerLink="/home" class="p-button-raised p-button-info"></button>
-        <button pButton type="button" label="Ver Grupos" routerLink="/pages/group" class="p-button-outlined p-button-success"></button>
+        <button *ngIf="hasPermission('group_view')" pButton type="button" label="Ver Grupos" (click)="navigate('/pages/group')" class="p-button-raised purple-btn"></button>
+        <button *ngIf="!hasPermission('group_view')" pButton type="button" label="Inicia sesión para continuar" (click)="navigate('/login')" class="p-button-raised purple-btn"></button>
       </div>
     </div>
 
@@ -27,4 +27,53 @@
       </div>
     </div>
   </div>
+
+    <div class="home-dashboard app-container">
+      <div class="dashboard-header">
+        <h2>Mis Grupos</h2>
+        <div class="filters">
+          <input placeholder="Filtrar grupos..." [(ngModel)]="groupFilter" (ngModelChange)="filterMyGroups()" />
+          <select [(ngModel)]="ticketStateFilter">
+            <option value="">Todos los estados</option>
+            <option value="backlog">Backlog</option>
+            <option value="in_progress">En progreso</option>
+            <option value="done">Completado</option>
+            <option value="cancelled">Cancelado</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="dashboard-body">
+        <div class="groups-list">
+          <div *ngFor="let g of myGroups" class="group-card" [class.selected]="selectedGroup?.id === g.id" (click)="selectGroup(g)">
+            <h4>{{g.nombre}}</h4>
+            <p class="muted">Miembros: {{ (g.integrantes && (g.integrantes.length || (g.integrantes | json).length)) || '—' }}</p>
+            <p class="muted">Autor: {{g.autor}}</p>
+          </div>
+        </div>
+
+        <div class="tickets-panel">
+          <div *ngIf="!selectedGroup" class="empty">Selecciona un grupo para ver sus tickets</div>
+          <div *ngIf="selectedGroup">
+            <h3>{{selectedGroup.nombre}} — Tickets</h3>
+            <div *ngIf="tickets.length === 0" class="empty">No hay tickets en este grupo</div>
+            <div class="tickets-list">
+              <ng-container *ngFor="let t of tickets | slice:0:100">
+                <div class="ticket-card" *ngIf="!ticketStateFilter || t.estado === ticketStateFilter">
+                  <div class="ticket-header">
+                    <strong>{{t.titulo || ('#' + t.id)}}</strong>
+                    <span class="state">{{formatStateLabel(t.estado)}}</span>
+                  </div>
+                  <p class="desc">{{t.descripcion}}</p>
+                  <div class="ticket-meta">
+                    <small>Autor: {{t.autor}}</small>
+                    <small>Prioridad: {{t.prioridad || 'media'}}</small>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 </div>

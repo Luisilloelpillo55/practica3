@@ -77,3 +77,19 @@ export function requirePermission(requiredPermissions: string | string[]) {
     return next();
   };
 }
+
+// Middleware: Verificar si usuario es administrador
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.user) {
+    return res.status(401).json({ error: 'User not authenticated' });
+  }
+
+  // Verificar si el usuario es admin
+  // Por ahora, asumimos que los usuarios con permiso user_delete son admins
+  // O podemos cargar el flag is_admin de la BD
+  if (!req.permissions || !req.permissions.includes('user_delete')) {
+    return res.status(403).json({ error: 'Only administrators can access this resource' });
+  }
+  
+  return next();
+}

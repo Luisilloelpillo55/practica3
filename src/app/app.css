@@ -1,5 +1,6 @@
 :host {
 	display: block;
+	background: #000000;
 }
 
 .app-main {
@@ -8,6 +9,7 @@
 	justify-content: center;
 	min-height: 80vh;
 	padding: 2rem;
+	background: #000000;
 }
 
 .container {

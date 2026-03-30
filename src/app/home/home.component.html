@@ -45,35 +45,120 @@
 
       <div class="dashboard-body">
         <div class="groups-list">
-          <div *ngFor="let g of myGroups" class="group-card" [class.selected]="selectedGroup?.id === g.id" (click)="selectGroup(g)">
-            <h4>{{g.nombre}}</h4>
-            <p class="muted">Miembros: {{ (g.integrantes && (g.integrantes.length || (g.integrantes | json).length)) || '—' }}</p>
-            <p class="muted">Autor: {{g.autor}}</p>
-          </div>
+          <p-card class="group-selector-card">
+            <ng-template pTemplate="title">
+              <div class="selector-title">Mis Grupos</div>
+            </ng-template>
+            <ng-template pTemplate="content">
+              <div class="group-select-wrapper">
+                <select class="group-selector" [(ngModel)]="selectedGroup" (ngModelChange)="selectGroup($event)">
+                  <option [ngValue]="null" disabled *ngIf="!selectedGroup && myGroups && myGroups.length > 0">Selecciona un grupo...</option>
+                  <option *ngFor="let g of myGroups" [ngValue]="g">{{ g.nombre }} (ID: {{g.id}})</option>
+                </select>
+              </div>
+              <div class="group-help muted">Selecciona un grupo para cargar sus tickets. Solo aparecen los grupos asociados a tu cuenta.</div>
+            </ng-template>
+          </p-card>
         </div>
 
         <div class="tickets-panel">
-          <div *ngIf="!selectedGroup" class="empty">Selecciona un grupo para ver sus tickets</div>
-          <div *ngIf="selectedGroup">
-            <h3>{{selectedGroup.nombre}} — Tickets</h3>
-            <div *ngIf="tickets.length === 0" class="empty">No hay tickets en este grupo</div>
-            <div class="tickets-list">
-              <ng-container *ngFor="let t of tickets | slice:0:100">
-                <div class="ticket-card" *ngIf="!ticketStateFilter || t.estado === ticketStateFilter">
-                  <div class="ticket-header">
-                    <strong>{{t.titulo || ('#' + t.id)}}</strong>
-                    <span class="state">{{formatStateLabel(t.estado)}}</span>
+          <div *ngIf="!hasPermission('ticket_view')" class="no-permission">No tienes permiso para ver tickets.</div>
+          <div *ngIf="hasPermission('ticket_view')">
+            <div *ngIf="!selectedGroup" class="empty">Selecciona un grupo para ver sus tickets</div>
+            <div *ngIf="selectedGroup">
+              <p-card class="tickets-card">
+                <ng-template pTemplate="title">
+                  <div class="tickets-card-header">
+                    <h3 class="tickets-title">{{selectedGroup.nombre}} — Tickets</h3>
+                    <div>
+                      <button *ngIf="hasPermission('ticket_create')" pButton type="button" icon="pi pi-ticket" label="Agregar ticket" class="purple-btn" (click)="openNewTicket()"></button>
+                    </div>
                   </div>
-                  <p class="desc">{{t.descripcion}}</p>
-                  <div class="ticket-meta">
-                    <small>Autor: {{t.autor}}</small>
-                    <small>Prioridad: {{t.prioridad || 'media'}}</small>
-                  </div>
-                </div>
-              </ng-container>
+                </ng-template>
+                <ng-template pTemplate="content">
+                  <div *ngIf="tickets.length === 0" class="empty">No hay tickets en este grupo</div>
+
+                  <p-table *ngIf="tickets.length > 0" [value]="tickets" [paginator]="true" [rows]="10" class="styled-table">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th>Título</th>
+                        <th>Estado</th>
+                        <th>Autor</th>
+                        <th>Creado</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-t>
+                      <tr *ngIf="!ticketStateFilter || t.estado === ticketStateFilter">
+                        <td>{{ t.titulo || ('#' + t.id) }}</td>
+                        <td>{{ formatStateLabel(t.estado) }}</td>
+                        <td>{{ t.created_by || t.autor }}</td>
+                        <td>{{ t.created_at | date:'short' }}</td>
+                        <td>
+                          <button pButton type="button" icon="pi pi-eye" class="p-button-text" (click)="openTicketDetail(t)"></button>
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                </ng-template>
+              </p-card>
             </div>
-          </div>
         </div>
       </div>
     </div>
 </div>
+
+<!-- Dialog: Crear ticket (migrado desde Group) -->
+<p-dialog header="Agregar ticket" styleClass="nubank-modal" [(visible)]="ticketDialog" [modal]="true" [style]="{width: '560px'}">
+  <div class="form-group">
+    <label for="ticket-group">Grupo</label>
+    <select id="ticket-group" [(ngModel)]="newTicket.group_id" class="form-control">
+      <option [value]="null">Seleccionar grupo</option>
+      <option *ngFor="let g of groups" [value]="g.id">{{ g.nombre }} (ID: {{ g.id }})</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="ticket-title">Título</label>
+    <input id="ticket-title" pInputText [(ngModel)]="newTicket.titulo" class="w-100" />
+  </div>
+  <div class="form-group">
+    <label for="ticket-desc">Descripción</label>
+    <textarea id="ticket-desc" [(ngModel)]="newTicket.descripcion" rows="4" class="w-100" style="padding:8px;border-radius:6px;"></textarea>
+  </div>
+  <div class="form-group">
+    <label for="ticket-estado">Estado</label>
+    <select id="ticket-estado" [(ngModel)]="newTicket.estado" class="form-control">
+      <option value="abierto">abierto</option>
+      <option value="cerrado">cerrado</option>
+    </select>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="ticketDialog=false"></button>
+    <button pButton type="button" label="Crear" class="purple-btn" (click)="saveTicket()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: Ticket detail -->
+<p-dialog header="Detalle del ticket" styleClass="nubank-modal" [(visible)]="ticketDetailDialog" [modal]="true" [style]="{width: '640px'}">
+  <div *ngIf="selectedTicket; else noTicketSel">
+    <div class="p-field"><label>ID</label><div>{{ selectedTicket.id }}</div></div>
+    <div class="p-field"><label>Título</label><div>{{ selectedTicket.titulo }}</div></div>
+    <div class="p-field"><label>Estado</label><div>{{ selectedTicket.estado }}</div></div>
+    <div class="p-field"><label>Descripción</label><div style="white-space:pre-wrap;">{{ selectedTicket.descripcion }}</div></div>
+    <div class="p-field"><label>Creado por</label><div>{{ selectedTicket.created_by }}</div></div>
+    <div class="p-field"><label>Creado</label><div>{{ selectedTicket.created_at | date:'long' }}</div></div>
+  </div>
+  <ng-template #noTicketSel>
+    <p>No se ha seleccionado ningún ticket.</p>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cerrar" class="p-button-text" (click)="closeTicketDetail()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Kanban integrado al final del dashboard (el componente ya tiene su encabezado) -->
+<div class="home-kanban-section" style="margin-top:28px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.03);">
+  <app-kanban></app-kanban>
+</div>
+
+<p-toast></p-toast>

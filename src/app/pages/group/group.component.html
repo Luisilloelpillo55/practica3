@@ -11,7 +11,6 @@
 
     <div *ngIf="hasPermission('group_view')" class="actions-bar">
       <button *ngIf="hasPermission('group_create')" pButton type="button" icon="pi pi-plus" label="Nuevo grupo" class="purple-btn" (click)="openNew()"></button>
-      <button *ngIf="hasPermission('ticket_create')" pButton type="button" icon="pi pi-ticket" label="Agregar ticket" class="purple-btn" style="margin-left:8px;" (click)="openNewTicket()"></button>
     </div>
 
     <p-card [style]="{'box-shadow': 'none'}" *ngIf="hasPermission('group_view')">
@@ -103,89 +102,7 @@
       </ng-template>
     </p-dialog>
 
-    <!-- Dialog: Crear ticket -->
-    <p-dialog header="Agregar ticket" styleClass="nubank-modal" [(visible)]="ticketDialog" [modal]="true" [style]="{width: '560px'}">
-      <div class="form-group">
-        <label for="ticket-group">Grupo</label>
-        <select id="ticket-group" [(ngModel)]="newTicket.group_id" class="form-control">
-          <option [value]="null">Seleccionar grupo</option>
-          <option *ngFor="let g of groups" [value]="g.id">{{ g.nombre }} (ID: {{ g.id }})</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="ticket-title">Título</label>
-        <input id="ticket-title" pInputText [(ngModel)]="newTicket.titulo" class="w-100" />
-      </div>
-      <div class="form-group">
-        <label for="ticket-desc">Descripción</label>
-        <textarea id="ticket-desc" [(ngModel)]="newTicket.descripcion" rows="4" class="w-100" style="padding:8px;border-radius:6px;"></textarea>
-      </div>
-      <div class="form-group">
-        <label for="ticket-estado">Estado</label>
-        <select id="ticket-estado" [(ngModel)]="newTicket.estado" class="form-control">
-          <option value="abierto">abierto</option>
-          <option value="cerrado">cerrado</option>
-        </select>
-      </div>
-      <ng-template pTemplate="footer">
-        <button pButton type="button" label="Cancelar" class="p-button-text" (click)="ticketDialog=false"></button>
-        <button pButton type="button" label="Crear" class="purple-btn" (click)="saveTicket()"></button>
-      </ng-template>
-    </p-dialog>
-
-    <!-- Dialog: Tickets list for a group -->
-    <p-dialog header="Tickets del grupo" styleClass="nubank-modal" [(visible)]="ticketsDialog" [modal]="true" [style]="{width: '760px'}">
-      <div *ngIf="selectedTickets && selectedTickets.length; else noTicketsList">
-        <p-table [value]="selectedTickets" [paginator]="true" [rows]="10">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>ID</th>
-              <th>Título</th>
-              <th>Estado</th>
-              <th>Creado por</th>
-              <th>Creado</th>
-              <th>Acciones</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-t>
-            <tr>
-              <td>{{ t.id }}</td>
-              <td>{{ t.titulo }}</td>
-              <td>{{ t.estado }}</td>
-              <td>{{ t.created_by }}</td>
-              <td>{{ t.created_at | date:'short' }}</td>
-              <td>
-                <button pButton type="button" label="Ver" class="p-button-text" (click)="openTicketDetail(t)"></button>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
-      <ng-template #noTicketsList>
-        <p>Este grupo no tiene tickets asociados.</p>
-      </ng-template>
-      <ng-template pTemplate="footer">
-        <button pButton type="button" label="Cerrar" class="p-button-text" (click)="ticketsDialog=false"></button>
-      </ng-template>
-    </p-dialog>
-
-    <!-- Dialog: Ticket detail -->
-    <p-dialog header="Detalle del ticket" styleClass="nubank-modal" [(visible)]="ticketDetailDialog" [modal]="true" [style]="{width: '640px'}">
-      <div *ngIf="selectedTicket; else noTicketSel">
-        <div class="p-field"><label>ID</label><div>{{ selectedTicket.id }}</div></div>
-        <div class="p-field"><label>Título</label><div>{{ selectedTicket.titulo }}</div></div>
-        <div class="p-field"><label>Estado</label><div>{{ selectedTicket.estado }}</div></div>
-        <div class="p-field"><label>Descripción</label><div style="white-space:pre-wrap;">{{ selectedTicket.descripcion }}</div></div>
-        <div class="p-field"><label>Creado por</label><div>{{ selectedTicket.created_by }}</div></div>
-        <div class="p-field"><label>Creado</label><div>{{ selectedTicket.created_at | date:'long' }}</div></div>
-      </div>
-      <ng-template #noTicketSel>
-        <p>No se ha seleccionado ningún ticket.</p>
-      </ng-template>
-      <ng-template pTemplate="footer">
-        <button pButton type="button" label="Cerrar" class="p-button-text" (click)="closeTicketDetail()"></button>
-      </ng-template>
-    </p-dialog>
+    <!-- Tickets ahora se gestionan desde Home: redirige allí para ver/crear tickets -->
 
     <p-toast></p-toast>
   </section>

@@ -26,16 +26,10 @@ export class GroupComponent implements OnInit, OnDestroy {
   groups: any[] = [];
   ticketsByGroup: Record<string, any[]> = {};
   users: any[] = [];
-  // Tickets UI state
-  ticketsDialog: boolean = false;
-  selectedTickets: any[] = [];
-  ticketDetailDialog: boolean = false;
-  selectedTicket: any = null;
+  // Ticket UI is handled in Home now; Group will redirect to Home for ticket actions
   dialogVisible = false;
   editing: any = null;
-  // ticket creation
-  ticketDialog: boolean = false;
-  newTicket: any = { group_id: null, titulo: '', descripcion: '', estado: 'abierto' };
+  // ticket creation moved to Home
   private sub: Subscription | null = null;
   private destroy$ = new Subject<void>();
 
@@ -170,20 +164,18 @@ export class GroupComponent implements OnInit, OnDestroy {
 
   openTickets(g: any) {
     if (!g || !g.id) return;
-    const arr = this.ticketsByGroup[String(g.id)] || [];
-    this.selectedTickets = Array.isArray(arr) ? arr : [];
-    this.ticketsDialog = true;
+    this.router.navigate(['/'], { queryParams: { group: g.id } });
   }
 
   openTicketDetail(t: any) {
     if (!t) return;
-    this.selectedTicket = t;
-    this.ticketDetailDialog = true;
+    // navigate to home and open ticket detail via query params
+    const gid = t.group_id || (t.groupId || null);
+    this.router.navigate(['/'], { queryParams: { group: gid, ticket: t.id } });
   }
 
   closeTicketDetail() {
-    this.selectedTicket = null;
-    this.ticketDetailDialog = false;
+    // placeholder (no-op) — Home maneja cierre
   }
 
   loadUsers() {
@@ -206,25 +198,7 @@ export class GroupComponent implements OnInit, OnDestroy {
     this.dialogVisible = true;
   }
 
-  // Nuevo ticket
-  openNewTicket(): void {
-    this.newTicket = { group_id: (this.groups && this.groups[0]) ? this.groups[0].id : null, titulo: '', descripcion: '', estado: 'abierto' };
-    this.ticketDialog = true;
-  }
-
-  saveTicket(): void {
-    if (!this.newTicket || !this.newTicket.titulo || !this.newTicket.group_id) return;
-    const payload = { ...this.newTicket };
-    const headers = this.authService.getAuthHeaders();
-    this.http.post('/api/tickets', payload, { headers }).subscribe({ next: (res: any) => {
-      this.messageService.add({ severity: 'success', summary: 'Ticket', detail: 'Creado' });
-      this.ticketDialog = false;
-      this.loadTickets();
-      this.load();
-    }, error: (e: any) => {
-      this.messageService.add({ severity: 'error', summary: 'Ticket', detail: 'Error: ' + (e?.error?.error || 'permiso denegado') });
-    } });
-  }
+  // ticket creation handled in Home component now
 
   edit(g: any): void {
     this.editing = { ...g };

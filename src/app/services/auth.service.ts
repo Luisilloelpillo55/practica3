@@ -86,6 +86,23 @@ export class AuthService {
   getToken(): string | null {
     const stored = this.currentUserSubject.value;
     if (!stored) {
+      // Try to load from localStorage as fallback
+      if (this.isBrowser()) {
+        try {
+          const raw = window.localStorage.getItem(this.STORAGE_KEY);
+          if (raw) {
+            const u = JSON.parse(raw);
+            if (u && u.token) {
+              // also populate BehaviorSubject for future calls
+              this.ngZone.run(() => this.currentUserSubject.next(u));
+              console.log('getToken: loaded user from localStorage');
+              return u.token;
+            }
+          }
+        } catch (e) {
+          console.error('getToken: error reading from storage', e);
+        }
+      }
       console.warn('getToken: No user in BehaviorSubject');
       return null;
     }
@@ -97,8 +114,37 @@ export class AuthService {
   // Obtener permisos del usuario
   getPermissions(): string[] {
     const stored = this.currentUserSubject.value;
-    if (!stored) return [];
-    return stored.permissions || [];
+    // If there's no stored user, try to recover from localStorage (only in browser)
+    if (!stored) {
+      if (this.isBrowser()) {
+        try {
+          const raw = window.localStorage.getItem(this.STORAGE_KEY);
+          if (raw) {
+            const u = JSON.parse(raw);
+            if (u) {
+              // populate BehaviorSubject for future calls
+              this.ngZone.run(() => this.currentUserSubject.next(u));
+              let perms: any = u.permissions ?? [];
+              if (typeof perms === 'string') {
+                try { perms = JSON.parse(perms); } catch { perms = perms.split(',').map((s: string) => s.trim()).filter(Boolean); }
+              }
+              return Array.isArray(perms) ? perms : [];
+            }
+          }
+        } catch (e) {
+          console.error('getPermissions: error reading from storage', e);
+        }
+      }
+      // No user available (SSR or not logged) -> return empty array
+      return [];
+    }
+
+    // Normalize stored.permissions into an array safely
+    let perms: any = stored.permissions ?? [];
+    if (typeof perms === 'string') {
+      try { perms = JSON.parse(perms); } catch { perms = perms.split(',').map((s: string) => s.trim()).filter(Boolean); }
+    }
+    return Array.isArray(perms) ? perms : [];
   }
 
   // Obtener permiso numérico (nuevo campo 'permiso')
@@ -111,7 +157,11 @@ export class AuthService {
 
   // Verificar si usuario tiene permiso específico
   hasPermission(permission: string | string[]): boolean {
-    const permissions = this.getPermissions();
+    // If user has numeric admin permiso, treat as full access
+    const permiso = this.getPermiso();
+    if (permiso === 2) return true;
+
+    const permissions = this.getPermissions() || [];
     const perms = Array.isArray(permission) ? permission : [permission];
     return perms.some(perm => permissions.includes(perm));
   }
@@ -120,7 +170,11 @@ export class AuthService {
   isAdmin(): boolean {
     const stored = this.currentUserSubject.value;
     if (!stored) return false;
-    return stored.is_admin === true || this.hasPermission('user_delete');
+    if (stored.is_admin === true) return true;
+    // numeric permiso flag (2 == admin)
+    const permiso = this.getPermiso();
+    if (permiso === 2) return true;
+    return this.hasPermission('user_delete');
   }
 
   // Obtener headers con JWT para peticiones HTTP

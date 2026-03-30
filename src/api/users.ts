@@ -24,7 +24,8 @@ router.post('/', async (req, res) => {
     
     // Asignar permisos por defecto al nuevo usuario
     try {
-      const defaultPermissions = ['group_view', 'group_create', 'ticket_view', 'ticket_create', 'user_view', 'user_edit'];
+      // Assign only 'view' permissions by default (no create/edit)
+      const defaultPermissions = ['group_view', 'ticket_view', 'user_view'];
       for (const perm of defaultPermissions) {
         await pool.query(
           `INSERT IGNORE INTO user_permissions (user_id, permission_id)
@@ -60,24 +61,65 @@ router.post('/login', async (req, res) => {
     // Generar JWT
     const token = generateToken(user.id, user.usuario);
     
-    // Cargar permisos del usuario
+    // Cargar permisos del usuario: soportar users.permissions (JSON/text), permiso numérico, o user_permissions legacy
     let permissions: string[] = [];
     try {
-      const [permRows] = await pool.query(
-        `SELECT p.nombre FROM user_permissions up
-         JOIN permissions p ON up.permission_id = p.id
-         WHERE up.user_id = ?`,
-        [user.id]
+      // Check if users.permissions column exists before selecting it
+      const [colInfo] = await pool.query(
+        `SELECT COUNT(*) as cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'permissions'`
       );
       // @ts-ignore
-      permissions = (permRows as any[]).map((r: any) => r.nombre);
-    } catch (pe) {
-      console.warn('Warning: Could not load permissions from DB');
+      const hasPermissionsCol = Array.isArray(colInfo) && (colInfo as any)[0] && (colInfo as any)[0].cnt > 0;
+
+      let uRec: any = null;
+      if (hasPermissionsCol) {
+        const [userRows] = await pool.query('SELECT permiso, permissions FROM users WHERE id = ? LIMIT 1', [user.id]);
+        // @ts-ignore
+        uRec = Array.isArray(userRows) && (userRows as any)[0] ? (userRows as any)[0] : null;
+      } else {
+        const [userRows] = await pool.query('SELECT permiso FROM users WHERE id = ? LIMIT 1', [user.id]);
+        // @ts-ignore
+        uRec = Array.isArray(userRows) && (userRows as any)[0] ? (userRows as any)[0] : null;
+      }
+
+      if (uRec && uRec.permissions) {
+        try {
+          if (typeof uRec.permissions === 'string') permissions = JSON.parse(uRec.permissions);
+          else if (Array.isArray(uRec.permissions)) permissions = uRec.permissions;
+        } catch (pe) {
+          console.warn('Could not parse users.permissions JSON, falling back to legacy table');
+        }
+      }
+
+      // If permiso numeric indicates admin (2), grant all permissions
+      if ((!permissions || permissions.length === 0) && uRec && (uRec.permiso === 2 || String(uRec.permiso) === '2')) {
+        const [all] = await pool.query('SELECT nombre FROM permissions');
+        // @ts-ignore
+        permissions = Array.isArray(all) ? (all as any[]).map((r: any) => r.nombre) : [];
+      }
+
+      // Fallback to legacy user_permissions table
+      if (!permissions || permissions.length === 0) {
+        try {
+          const [permRows] = await pool.query(
+            `SELECT p.nombre FROM user_permissions up
+             JOIN permissions p ON up.permission_id = p.id
+             WHERE up.user_id = ?`,
+            [user.id]
+          );
+          // @ts-ignore
+          permissions = (permRows as any[]).map((r: any) => r.nombre);
+        } catch (pe) {
+          console.warn('Warning: Could not load permissions from DB');
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load user permissions, falling back to defaults:', e);
     }
-    
-    // Si no hay permisos en la BD, asignar permisos por defecto
+
+    // Si todavía no hay permisos, asignar permisos por defecto (solo view)
     if (!permissions || permissions.length === 0) {
-      permissions = ['group_view', 'group_create', 'ticket_view', 'ticket_create', 'user_view', 'user_edit'];
+      permissions = ['group_view', 'ticket_view', 'user_view'];
     }
     
     // remove password
@@ -89,8 +131,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Get all users
-router.get('/', verifyToken, loadPermissions, requireAdmin, async (req, res) => {
+// Get all users (requires 'user_view' permission)
+router.get('/', verifyToken, loadPermissions, requirePermission('user_view'), async (req, res) => {
   try {
     // No asumimos que la columna `is_admin` exista en todas las instalaciones.
     const [rows] = await pool.query('SELECT id, usuario, email, fullname, address, dob, phone, permiso, created_at FROM users');
@@ -145,6 +187,10 @@ router.put('/:id/permissions', verifyToken, loadPermissions, requireAdmin, async
         [id, nombre]
       );
     }
+    // Also update users.permissions JSON column if present
+    try {
+      await pool.query('UPDATE users SET permissions = ? WHERE id = ?', [JSON.stringify(permissions), id]);
+    } catch (e) { /* ignore if column not present */ }
     const [rows] = await pool.query('SELECT id, usuario, email, fullname, address, dob, phone, created_at FROM users WHERE id = ? LIMIT 1', [id]);
     // @ts-ignore
     return res.json((rows as any)[0]);

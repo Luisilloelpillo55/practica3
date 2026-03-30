@@ -50,10 +50,7 @@ export class SidebarComponent {
       items.push({ label: 'Info grupo', icon: 'pi pi-info-circle', routerLink: ['/group-info'] });
     }
 
-    // Show kanban when user can view tickets
-    if (this.auth.hasPermission('ticket_view')) {
-      items.push({ label: 'Kanban', icon: 'pi pi-th-large', routerLink: ['/kanban'] });
-    }
+    // Kanban removed from sidebar (managed from Home)
 
     // Show 'Gestión de Usuarios' if admin or has 'user_view' permission
     if (isAdmin || this.auth.hasPermission('user_view')) {

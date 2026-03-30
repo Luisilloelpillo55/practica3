@@ -45,8 +45,50 @@ export async function loadPermissions(req: Request, res: Response, next: NextFun
   if (!req.user) {
     return res.status(401).json({ error: 'User not authenticated' });
   }
-
   try {
+    // Check if users.permissions column exists before selecting it
+    const [colInfo] = await pool.query(
+      `SELECT COUNT(*) as cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'permissions'`
+    );
+    // @ts-ignore
+    const hasPermissionsCol = Array.isArray(colInfo) && (colInfo as any)[0] && (colInfo as any)[0].cnt > 0;
+
+    let userRec: any = null;
+    if (hasPermissionsCol) {
+      const [userRows] = await pool.query('SELECT permiso, permissions FROM users WHERE id = ? LIMIT 1', [req.user.id]);
+      // @ts-ignore
+      userRec = Array.isArray(userRows) && (userRows as any)[0] ? (userRows as any)[0] : null;
+    } else {
+      const [userRows] = await pool.query('SELECT permiso FROM users WHERE id = ? LIMIT 1', [req.user.id]);
+      // @ts-ignore
+      userRec = Array.isArray(userRows) && (userRows as any)[0] ? (userRows as any)[0] : null;
+    }
+
+    // If there's an explicit JSON/text `permissions` column, use it
+    if (userRec && userRec.permissions) {
+      try {
+        if (typeof userRec.permissions === 'string') {
+          req.permissions = JSON.parse(userRec.permissions);
+        } else if (Array.isArray(userRec.permissions)) {
+          req.permissions = userRec.permissions;
+        } else {
+          req.permissions = [];
+        }
+        return next();
+      } catch (e) {
+        console.warn('Could not parse users.permissions JSON, falling back to legacy table');
+      }
+    }
+
+    // If there is a numeric permiso flag and it's 2 (admin), grant all permissions
+    if (userRec && (userRec.permiso === 2 || String(userRec.permiso) === '2')) {
+      const [all] = await pool.query('SELECT nombre FROM permissions');
+      // @ts-ignore
+      req.permissions = Array.isArray(all) ? (all as any[]).map((r: any) => r.nombre) : [];
+      return next();
+    }
+
+    // Fallback: legacy user_permissions join
     const [rows] = await pool.query(
       `SELECT p.nombre FROM user_permissions up
        JOIN permissions p ON up.permission_id = p.id

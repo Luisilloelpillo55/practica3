@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -12,10 +13,10 @@ import { MessageService } from 'primeng/api';
   styleUrls: ['./practice-button.component.css']
 })
 export class PracticeButtonComponent {
-  constructor(private messageService: MessageService, private location: Location) {}
+  constructor(private messageService: MessageService, private router: Router) {}
 
   goBack(): void {
-    this.location.back();
+    this.router.navigate(['/home']);
   }
 
   onPractice() {

@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { FormsModule } from '@angular/forms';
@@ -37,22 +37,12 @@ export class GroupComponent implements OnInit, OnDestroy {
     private messageService: MessageService,
     private http: HttpClient,
     private authService: AuthService,
-    private location: Location,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
   goBack(): void {
-    try {
-      // If there is browser history, go back, otherwise navigate to home
-      if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
-        this.location.back();
-      } else {
-        this.router.navigateByUrl('/');
-      }
-    } catch (e) {
-      this.router.navigateByUrl('/');
-    }
+    this.router.navigateByUrl('/home');
   }
 
   // helper for templates – global Array is not visible under strict templates
@@ -164,14 +154,14 @@ export class GroupComponent implements OnInit, OnDestroy {
 
   openTickets(g: any) {
     if (!g || !g.id) return;
-    this.router.navigate(['/'], { queryParams: { group: g.id } });
+    this.router.navigate(['/home'], { queryParams: { group: g.id } });
   }
 
   openTicketDetail(t: any) {
     if (!t) return;
     // navigate to home and open ticket detail via query params
     const gid = t.group_id || (t.groupId || null);
-    this.router.navigate(['/'], { queryParams: { group: gid, ticket: t.id } });
+    this.router.navigate(['/home'], { queryParams: { group: gid, ticket: t.id } });
   }
 
   closeTicketDetail() {

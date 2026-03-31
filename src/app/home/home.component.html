@@ -4,7 +4,7 @@
       <h1>Bienvenido a Mi Practica</h1>
       <p class="lead">Aplicación demostrativa con autenticación, roles y CRUD — ahora con una UI moderna y vibrante.</p>
       <div class="hero-cta">
-        <button *ngIf="hasPermission('group_view')" pButton type="button" label="Ver Grupos" (click)="navigate('/pages/group')" class="p-button-raised purple-btn"></button>
+        <button *ngIf="hasPermission('group_view')" pButton type="button" [label]="dashboardVisible ? 'Ocultar grupos' : 'Ver Grupos'" (click)="toggleDashboard()" class="p-button-raised purple-btn"></button>
         <button *ngIf="!hasPermission('group_view')" pButton type="button" label="Inicia sesión para continuar" (click)="navigate('/login')" class="p-button-raised purple-btn"></button>
       </div>
     </div>
@@ -28,7 +28,7 @@
     </div>
   </div>
 
-    <div class="home-dashboard app-container">
+    <div *ngIf="loggedIn && dashboardVisible" class="home-dashboard app-container">
       <div class="dashboard-header">
         <h2>Mis Grupos</h2>
         <div class="filters">
@@ -157,7 +157,7 @@
 </p-dialog>
 
 <!-- Kanban integrado al final del dashboard (el componente ya tiene su encabezado) -->
-<div class="home-kanban-section" style="margin-top:28px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.03);">
+<div *ngIf="loggedIn && dashboardVisible" class="home-kanban-section" style="margin-top:28px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.03);">
   <app-kanban></app-kanban>
 </div>
 

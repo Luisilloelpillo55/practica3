@@ -250,14 +250,6 @@ export class KanbanComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    try {
-      if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
-        window.history.back();
-      } else {
-        this.router.navigateByUrl('/');
-      }
-    } catch (e) {
-      this.router.navigateByUrl('/');
-    }
+    this.router.navigateByUrl('/home');
   }
 }

@@ -102,3 +102,51 @@
 	color: #111827 !important;
 	box-shadow: 0 12px 35px rgba(0,0,0,0.04) !important;
 }
+
+/* Invert backgrounds: make group and tickets cards black/dark when inside Home */
+.home-dashboard .group-selector-card,
+.home-dashboard .group-selector-card .p-card-body,
+.home-dashboard p-card.group-selector-card,
+.home-dashboard .p-card.group-selector-card,
+.home-dashboard .p-card.group-selector-card .p-card-body {
+	background: linear-gradient(180deg,#070707 0%, #0d0d0d 100%) !important;
+	color: #ffffff !important;
+	border: 1px solid rgba(255,255,255,0.04) !important;
+	box-shadow: 0 12px 40px rgba(0,0,0,0.6) !important;
+}
+
+.home-dashboard .tickets-card,
+.home-dashboard .tickets-card .p-card-body,
+.home-dashboard p-card.tickets-card,
+.home-dashboard .p-card.tickets-card,
+.home-dashboard .p-card.tickets-card .p-card-body {
+	background: linear-gradient(180deg,#070707 0%, #0d0d0d 100%) !important;
+	color: #ffffff !important;
+	border: 1px solid rgba(255,255,255,0.04) !important;
+	box-shadow: 0 12px 40px rgba(0,0,0,0.6) !important;
+}
+
+/* Adjust table text for dark cards */
+.home-dashboard .tickets-card .p-table thead th { color: #fff !important; }
+.home-dashboard .tickets-card .p-table tbody td { color: #e9eef6 !important; }
+
+/* Force all text inside the Home dashboard to be white for readability */
+.home-dashboard,
+.home-dashboard * {
+	color: #ffffff !important;
+}
+
+/* Make placeholders visible on dark backgrounds */
+.home-dashboard input::placeholder,
+.home-dashboard textarea::placeholder,
+.home-dashboard select::placeholder {
+	color: rgba(255,255,255,0.75) !important;
+}
+
+/* Keep interactive controls accessible */
+.home-dashboard .group-selector,
+.home-dashboard .p-button,
+.home-dashboard button,
+.home-dashboard .p-paginator .p-button {
+	color: #fff !important;
+}

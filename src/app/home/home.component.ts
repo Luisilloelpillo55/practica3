@@ -36,8 +36,19 @@ export class HomeComponent implements OnInit {
   selectedTicket: any = null;
   private pendingQueryGroup: any = null;
   private pendingQueryTicket: any = null;
+  // Controls whether the dashboard (groups/tickets/kanban) is shown
+  dashboardVisible: boolean = true;
 
   constructor(public authService: AuthService, private router: Router, private route: ActivatedRoute, private http: HttpClient, private cdr: ChangeDetectorRef) {}
+
+  // Expose logged-in state for templates
+  get loggedIn(): boolean {
+    try { return this.authService.isLoggedIn(); } catch { return false; }
+  }
+
+  toggleDashboard(): void {
+    this.dashboardVisible = !this.dashboardVisible;
+  }
 
   ngOnInit(): void {
     // capture query params (possible navigation from Group component)

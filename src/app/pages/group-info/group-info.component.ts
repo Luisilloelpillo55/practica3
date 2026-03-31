@@ -9,7 +9,6 @@ import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service.js';
 import { filter, takeUntil } from 'rxjs';
 import { Subject } from 'rxjs';
-import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-group-info',
@@ -29,7 +28,6 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private auth: AuthService,
     private router: Router,
-    private location: Location,
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
@@ -137,14 +135,6 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    try {
-      if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
-        this.location.back();
-      } else {
-        this.router.navigateByUrl('/');
-      }
-    } catch (e) {
-      this.router.navigateByUrl('/');
-    }
+    this.router.navigateByUrl('/home');
   }
 }

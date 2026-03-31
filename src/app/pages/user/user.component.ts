@@ -1,9 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ToastModule } from 'primeng/toast';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
 import { DialogModule } from 'primeng/dialog';
@@ -24,10 +24,10 @@ export class UserComponent implements OnInit, OnDestroy {
   editDialog: boolean = false;
   editingUser: any = null;
 
-  constructor(private authService: AuthService, private http: HttpClient, private location: Location) {}
+  constructor(private authService: AuthService, private http: HttpClient, private router: Router) {}
 
   goBack(): void {
-    this.location.back();
+    this.router.navigate(['/home']);
   }
 
   ngOnInit(): void {

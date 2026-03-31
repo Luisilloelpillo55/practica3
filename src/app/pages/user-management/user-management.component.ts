@@ -121,7 +121,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       // Verificar que el usuario es administrador (tiene permiso user_delete)
       if (!this.auth.hasPermission('user_delete')) {
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No tienes permisos para acceder a esta sección' });
-        this.router.navigateByUrl('/');
+        this.router.navigateByUrl('/home');
         return;
       }
       this.loadUsers();
@@ -132,9 +132,9 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       .subscribe((user) => {
         if (user && user.token) {
           // Verificar permisos al cambiar usuario
-          if (!this.auth.hasPermission('user_delete')) {
+            if (!this.auth.hasPermission('user_delete')) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No tienes permisos para acceder a esta sección' });
-            this.router.navigateByUrl('/');
+            this.router.navigateByUrl('/home');
             return;
           }
           this.loadUsers();
@@ -153,9 +153,9 @@ export class UserManagementComponent implements OnInit, OnDestroy {
           this.auth.loadUser();
         } else {
           // Verificar permisos antes de cargar usuarios
-          if (!this.auth.hasPermission('user_delete')) {
+            if (!this.auth.hasPermission('user_delete')) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No tienes permisos para acceder a esta sección' });
-            this.router.navigateByUrl('/');
+            this.router.navigateByUrl('/home');
             return;
           }
           this.loadUsers();
@@ -171,11 +171,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    try {
-      this.router.navigateByUrl('/');
-    } catch (e) {
-      window.history.back();
-    }
+    this.router.navigateByUrl('/home');
   }
 
   loadUsers(): void {

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
@@ -20,7 +20,7 @@ export class LoginComponent {
   form: any;
   showPassword: boolean = false;
 
-  constructor(private fb: FormBuilder, private messageService: MessageService, private router: Router, private http: HttpClient, private authService: AuthService, private location: Location) {
+  constructor(private fb: FormBuilder, private messageService: MessageService, private router: Router, private http: HttpClient, private authService: AuthService) {
     this.form = this.fb.group({
       username: ['', Validators.required],
       password: ['', Validators.required]
@@ -48,7 +48,7 @@ export class LoginComponent {
   }
 
   goBack(): void {
-    this.location.back();
+    this.router.navigate(['/home']);
   }
 
   togglePassword() {

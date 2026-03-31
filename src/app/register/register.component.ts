@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
@@ -45,7 +45,7 @@ function adultValidator(control: AbstractControl): ValidationErrors | null {
 export class RegisterComponent {
   form: any;
 
-  constructor(private fb: FormBuilder, private messageService: MessageService, private router: Router, private http: HttpClient, private authService: AuthService, private location: Location) {
+  constructor(private fb: FormBuilder, private messageService: MessageService, private router: Router, private http: HttpClient, private authService: AuthService) {
     this.form = this.fb.group({
       usuario: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -97,6 +97,6 @@ export class RegisterComponent {
   }
 
   goBack(): void {
-    this.location.back();
+    this.router.navigate(['/home']);
   }
 }

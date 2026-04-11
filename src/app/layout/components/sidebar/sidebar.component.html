@@ -1,8 +1,21 @@
 <aside class="sidebar" [class.open]="visible">
   <div class="sidebar-header">
     <strong>Menú</strong>
-    <button pButton type="button" class="p-button-text close-btn" icon="pi pi-times" (click)="closeSidebar()"></button>
+    <button type="button" class="close-btn" (click)="closeSidebar()">
+      <i class="pi pi-times"></i>
+    </button>
   </div>
 
-  <p-panelMenu [model]="items" styleClass="sidebar-panel" (onItemClick)="onLink()"></p-panelMenu>
+  <nav class="sidebar-nav">
+    <button 
+      *ngFor="let item of items" 
+      class="nav-item" 
+      [routerLink]="item.routerLink"
+      [routerLinkActive]="item.routerLink ? 'active' : ''"
+      (click)="item.command ? item.command() : onLink()"
+    >
+      <i [class]="item.icon"></i>
+      {{ item.label }}
+    </button>
+  </nav>
 </aside>

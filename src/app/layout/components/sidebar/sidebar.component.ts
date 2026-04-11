@@ -1,16 +1,20 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { PanelMenuModule } from 'primeng/panelmenu';
-import { ButtonModule } from 'primeng/button';
-import { MenuItem } from 'primeng/api';
 import { AuthService } from '../../../services/auth.service.js';
 import { Subscription } from 'rxjs';
+
+interface NavItem {
+  label: string;
+  icon: string;
+  routerLink?: string[];
+  command?: () => void;
+}
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, PanelMenuModule, ButtonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css']
 })
@@ -18,7 +22,7 @@ export class SidebarComponent {
   @Input() visible = false;
   @Output() close = new EventEmitter<void>();
   private sub: Subscription | null = null;
-  items: MenuItem[] = [];
+  items: NavItem[] = [];
 
   constructor(private auth: AuthService) {}
 
@@ -39,7 +43,7 @@ export class SidebarComponent {
     const user = this.auth.getUser();
     const logged = !!user;
     const isAdmin = this.auth.isAdmin();
-    const items: MenuItem[] = [
+    const items: NavItem[] = [
       { label: 'Inicio', icon: 'pi pi-home', routerLink: ['/home'] },
       { label: 'Práctica: Botón', icon: 'pi pi-play', routerLink: ['/practice-button'] }
     ];

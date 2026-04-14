@@ -9,16 +9,19 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ToastModule } from 'primeng/toast';
 import { CardModule } from 'primeng/card';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { MessageService } from 'primeng/api';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { ApiHttpService } from '../../services/api-http.service';
+import { API_ENDPOINTS } from '../../config/api.config';
 import { Subscription, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-group',
   standalone: true,
-  imports: [CommonModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule, ToastModule, CardModule, HttpClientModule, FormsModule],
+  imports: [CommonModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule, ToastModule, CardModule, HttpClientModule, FormsModule, MultiSelectModule],
   templateUrl: './group.component.html',
   styleUrls: ['./group.component.css']
 })
@@ -36,6 +39,7 @@ export class GroupComponent implements OnInit, OnDestroy {
   constructor(
     private messageService: MessageService,
     private http: HttpClient,
+    private apiHttpService: ApiHttpService,
     private authService: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef
@@ -121,9 +125,10 @@ export class GroupComponent implements OnInit, OnDestroy {
   load() {
     const headers = this.authService.getAuthHeaders();
     const auth = headers.get('Authorization');
-    console.log('Loading groups with token:', auth ? auth.substr(0,20) + '...' : 'missing', headers);
+    const groupsUrl = `${API_ENDPOINTS.GROUPS}`;
+    console.log('Loading groups from:', groupsUrl, 'with token:', auth ? auth.substr(0,20) + '...' : 'missing');
     
-    this.http.get<any[]>('/api/groups', { headers }).subscribe({ 
+    this.http.get<any[]>(groupsUrl, { headers }).subscribe({ 
       next: (res: any) => {
         console.log('Groups loaded successfully:', res ? res.length : 0);
         // assign in next microtask to avoid ExpressionChangedAfterItHasBeenChecked
@@ -141,7 +146,8 @@ export class GroupComponent implements OnInit, OnDestroy {
   }
 
   loadTickets() {
-    this.http.get('/api/tickets', { headers: this.authService.getAuthHeaders() }).subscribe({ next: (res: any) => {
+    const ticketsUrl = `${API_ENDPOINTS.TICKETS}`;
+    this.http.get(ticketsUrl, { headers: this.authService.getAuthHeaders() }).subscribe({ next: (res: any) => {
       const arr = Array.isArray(res) ? res : [];
       const map: Record<string, any[]> = {};
       for (const t of arr) {
@@ -169,7 +175,8 @@ export class GroupComponent implements OnInit, OnDestroy {
   }
 
   loadUsers() {
-    this.http.get('/api/users', { headers: this.authService.getAuthHeaders() }).subscribe({ 
+    const usersUrl = 'http://localhost:3000/api/users';
+    this.http.get(usersUrl, { headers: this.authService.getAuthHeaders() }).subscribe({ 
       next: (res: any) => this.users = Array.isArray(res) ? res : [], 
       error: () => {} 
     });
@@ -184,30 +191,87 @@ export class GroupComponent implements OnInit, OnDestroy {
   }
 
   openNew(): void {
-    this.editing = { nivel: '', autor: null, nombre: '', integrantes: [], descripcion: '' };
+    const currentUser = this.authService.getUser();
+    console.log('🆕 openNew - Current user:', currentUser?.usuario);
+    
+    this.editing = { 
+      nivel: '', 
+      autor: currentUser?.id || null,  // Auto-assign current user as author
+      nombre: '', 
+      integrantes: [],  // Array of user IDs
+      descripcion: '' 
+    };
     this.dialogVisible = true;
   }
 
   // ticket creation handled in Home component now
 
   edit(g: any): void {
-    this.editing = { ...g };
+    // Convert integrantes to array of IDs if needed
+    let integrantesArr: any[] = [];
+    if (Array.isArray(g.integrantes)) {
+      integrantesArr = g.integrantes.map((u: any) => typeof u === 'object' ? u.id : u);
+    } else if (typeof g.integrantes === 'string') {
+      integrantesArr = g.integrantes.split(',').map((s: any) => {
+        const id = s.trim();
+        return isNaN(id) ? id : Number(id);
+      }).filter(Boolean);
+    }
+    
+    this.editing = { 
+      ...g, 
+      integrantes: integrantesArr 
+    };
     this.dialogVisible = true;
+  }
+
+  getAvailableMembers(): any[] {
+    // Return all users except the author
+    if (!this.users || !Array.isArray(this.users)) return [];
+    
+    const authorId = this.editing?.autor;
+    return this.users.filter(u => u && u.id !== authorId);
+  }
+
+  getMemberName(userId: any): string {
+    if (!this.users || !Array.isArray(this.users)) return userId;
+    const user = this.users.find(u => u && u.id === userId);
+    return (user && (user.usuario || user.email)) || userId;
   }
 
   save(): void {
     if (!this.editing) return;
+    
+    // Ensure integrantes is an array of IDs
     let integrantesArr: any[] = [];
     if (Array.isArray(this.editing.integrantes)) {
-      integrantesArr = this.editing.integrantes;
+      integrantesArr = this.editing.integrantes.map((item: any) => 
+        typeof item === 'object' ? item.id : item
+      );
     } else if (typeof this.editing.integrantes === 'string') {
-      integrantesArr = this.editing.integrantes.split(',').map((s: any) => s.trim()).filter(Boolean);
+      integrantesArr = this.editing.integrantes
+        .split(',')
+        .map((s: any) => s.trim())
+        .filter(Boolean)
+        .map((id: string) => isNaN(Number(id)) ? id : Number(id));
     }
-    const payload = { ...this.editing, integrantes: integrantesArr };
+    
+    console.log('💾 Saving group:', {
+      nombre: this.editing.nombre,
+      autor: this.editing.autor,
+      integrantes: integrantesArr,
+      nivel: this.editing.nivel
+    });
+    
+    const payload = { 
+      ...this.editing, 
+      integrantes: integrantesArr 
+    };
     const headers = this.authService.getAuthHeaders();
     
     if (payload.id) {
-      this.http.put(`/api/groups/${payload.id}`, payload, { headers }).subscribe({ 
+      const updateUrl = `${API_ENDPOINTS.GROUPS}/${payload.id}`;
+      this.http.put(updateUrl, payload, { headers }).subscribe({ 
         next: () => { 
           this.messageService.add({ severity: 'success', summary: 'Grupo', detail: 'Actualizado' }); 
           this.dialogVisible = false; 
@@ -218,7 +282,8 @@ export class GroupComponent implements OnInit, OnDestroy {
         } 
       });
     } else {
-      this.http.post('/api/groups', payload, { headers }).subscribe({ 
+      const createUrl = `${API_ENDPOINTS.GROUPS}`;
+      this.http.post(createUrl, payload, { headers }).subscribe({ 
         next: () => { 
           this.messageService.add({ severity: 'success', summary: 'Grupo', detail: 'Creado' }); 
           this.dialogVisible = false; 
@@ -232,7 +297,8 @@ export class GroupComponent implements OnInit, OnDestroy {
   remove(g: any): void {
     if (!g?.id) return;
     const headers = this.authService.getAuthHeaders();
-    this.http.delete(`/api/groups/${g.id}`, { headers }).subscribe({ 
+    const deleteUrl = `${API_ENDPOINTS.GROUPS}/${g.id}`;
+    this.http.delete(deleteUrl, { headers }).subscribe({ 
       next: () => { 
         this.messageService.add({ severity: 'success', summary: 'Grupo', detail: 'Eliminado' }); 
         this.load(); 

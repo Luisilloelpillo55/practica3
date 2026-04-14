@@ -48,7 +48,7 @@ export class SidebarComponent {
       { label: 'Práctica: Botón', icon: 'pi pi-play', routerLink: ['/practice-button'] }
     ];
 
-    // Show group-related links when user has explicit 'group_view' permission
+    // Show group-related links when user has 'group_view' permission
     if (this.auth.hasPermission('group_view')) {
       items.push({ label: 'Grupos', icon: 'pi pi-users', routerLink: ['/group'] });
       items.push({ label: 'Info grupo', icon: 'pi pi-info-circle', routerLink: ['/group-info'] });
@@ -56,8 +56,8 @@ export class SidebarComponent {
 
     // Kanban removed from sidebar (managed from Home)
 
-    // Show 'Gestión de Usuarios' if admin or has 'user_view' permission
-    if (isAdmin || this.auth.hasPermission('user_view')) {
+    // Show 'Gestión de Usuarios' ONLY if admin (not based on user_view permission)
+    if (isAdmin) {
       items.push({ label: 'Gestión de Usuarios', icon: 'pi pi-users', routerLink: ['/user-management'] });
     }
 

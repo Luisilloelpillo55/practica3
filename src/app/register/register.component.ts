@@ -68,31 +68,54 @@ export class RegisterComponent {
   togglePassword() { this.showPassword = !this.showPassword; }
   toggleConfirmPassword() { this.showConfirmPassword = !this.showConfirmPassword; }
 
-  onSubmit() {
+  async onSubmit() {
     if (this.form.valid) {
-      const payload = {
-        usuario: this.form.value.usuario,
-        email: this.form.value.email,
-        password: this.form.value.pwGroup.password,
-        fullname: this.form.value.fullname,
-        address: this.form.value.address,
-        dob: this.form.value.dob,
-        phone: this.form.value.phone
-      };
-      // Enviar al API
-      this.http.post('/api/users', payload).subscribe({
-        next: (res: any) => {
-          this.messageService.add({severity:'success', summary:'Registro', detail:'Registro exitoso. Inicia sesión para continuar'});
+      const { usuario, email, fullname, address, dob, phone } = this.form.value;
+      const password = this.form.value.pwGroup.password;
+
+      try {
+        // Use direct registration via API Gateway (avoids Supabase Auth rate limits)
+        const result = await this.authService.registerDirect({ 
+          usuario, 
+          email, 
+          password, 
+          fullname, 
+          address, 
+          dob, 
+          phone 
+        });
+        
+        if (result.success) {
+          this.messageService.add({ 
+            severity: 'success', 
+            summary: 'Registro', 
+            detail: 'Registro exitoso. Redirigiendo al login...'
+          });
           this.form.reset();
-          this.router.navigate(['/login']);
-        },
-        error: (err) => {
-          const msg = err?.error?.error || 'Error al registrar';
-          this.messageService.add({severity:'error', summary:'Registro', detail: msg});
+          setTimeout(() => {
+            this.router.navigate(['/login']);
+          }, 1500);
+        } else {
+          this.messageService.add({ 
+            severity: 'error', 
+            summary: 'Registro', 
+            detail: result.error || 'Error al registrar'
+          });
         }
-      });
+      } catch (error: any) {
+        console.error('Register error:', error);
+        this.messageService.add({ 
+          severity: 'error', 
+          summary: 'Registro', 
+          detail: error.message || 'Error al registrar. Intenta de nuevo.'
+        });
+      }
     } else {
-      this.messageService.add({severity:'error', summary:'Registro', detail:'Complete correctamente el formulario'});
+      this.messageService.add({ 
+        severity: 'error', 
+        summary: 'Registro', 
+        detail: 'Complete correctamente el formulario'
+      });
     }
   }
 

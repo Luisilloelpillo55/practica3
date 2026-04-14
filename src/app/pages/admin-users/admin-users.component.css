@@ -1,0 +1,65 @@
+.page-frame {
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #f54927;
+  padding-bottom: 1rem;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  color: #333;
+  margin: 0;
+}
+
+.table-container {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.permissions-container {
+  padding: 1rem 0;
+}
+
+.permissions-container h4 {
+  margin-top: 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.permissions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.permission-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.permission-item p-checkbox {
+  flex-shrink: 0;
+}
+
+.permission-item label {
+  cursor: pointer;
+  margin: 0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.ml-2 {
+  margin-left: 0.5rem;
+}
+
+.text-center {
+  text-align: center;
+}

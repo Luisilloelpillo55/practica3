@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
+import { InputTextModule } from 'primeng/inputtext';
 import { HttpClientModule } from '@angular/common/http';
 import { DragDropModule, CdkDragDrop, transferArrayItem, moveItemInArray } from '@angular/cdk/drag-drop';
 import { TicketService } from '../../services/ticket.service.js';
@@ -19,16 +20,21 @@ import { ToastModule } from 'primeng/toast';
 @Component({
   selector: 'app-kanban',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule, DialogModule, TableModule, TooltipModule, HttpClientModule, ToastModule, DragDropModule],
+  imports: [CommonModule, CardModule, ButtonModule, DialogModule, TableModule, TooltipModule, HttpClientModule, ToastModule, DragDropModule, InputTextModule],
   templateUrl: './kanban.component.html',
   styleUrls: ['./kanban.component.css'],
   providers: [MessageService]
 })
 export class KanbanComponent implements OnInit, OnDestroy {
+  // Kanban columns
   backlog: any[] = [];
   progress: any[] = [];
   done: any[] = [];
   cancelled: any[] = [];
+  
+  // List view
+  allTickets: any[] = [];
+  viewMode: 'kanban' | 'list' = 'kanban';
   
   showHistoryDialog = false;
   selectedForHistory: any = null;
@@ -36,6 +42,8 @@ export class KanbanComponent implements OnInit, OnDestroy {
   
   private destroy$ = new Subject<void>();
   canMove = false;
+  canAdd = false;
+  canDelete = false;
   // datos para la zona de eliminación (evita inference a `never[]` en template)
   deleteListData: any[] = [];
 
@@ -62,6 +70,8 @@ export class KanbanComponent implements OnInit, OnDestroy {
     }
     // permiso para mover tickets
     this.canMove = this.auth.hasPermission('ticket_move') || this.auth.isAdmin();
+    this.canAdd = this.auth.hasPermission('ticket_add') || this.auth.isAdmin();
+    this.canDelete = this.auth.hasPermission('ticket_delete') || this.auth.isAdmin();
     
     this.auth.currentUser$
       .pipe(takeUntil(this.destroy$))
@@ -69,6 +79,8 @@ export class KanbanComponent implements OnInit, OnDestroy {
         if (user && user.token) {
           this.loadAll();
           this.canMove = this.auth.hasPermission('ticket_move') || this.auth.isAdmin();
+          this.canAdd = this.auth.hasPermission('ticket_add') || this.auth.isAdmin();
+          this.canDelete = this.auth.hasPermission('ticket_delete') || this.auth.isAdmin();
         } else {
           this.clearKanban();
         }
@@ -141,6 +153,7 @@ export class KanbanComponent implements OnInit, OnDestroy {
 
   private distribute(tickets: any[]): void {
     this.clearKanban();
+    this.allTickets = [...tickets]; // Store all tickets for list view
     for (const t of tickets) {
       const estado = (t.estado || 'No iniciado').toLowerCase();
       if (estado.includes('progres')) {
@@ -202,7 +215,7 @@ export class KanbanComponent implements OnInit, OnDestroy {
   }
 
   // Drop en zona de eliminación
-  deleteDrop(event: CdkDragDrop<any[]>): void {
+  deleteDrop(event: any): void {
     // require permiso de eliminación específico
     if (!(this.auth.hasPermission('ticket_delete') || this.auth.isAdmin())) {
       this.messageService.add({ severity: 'error', summary: 'Permiso', detail: 'No tienes permiso para eliminar tareas' });
@@ -246,6 +259,25 @@ export class KanbanComponent implements OnInit, OnDestroy {
       case 'done': return 'Finalizado';
       case 'cancelled': return 'Cancelado';
       default: return '';
+    }
+  }
+
+  toggleViewMode(mode: 'kanban' | 'list'): void {
+    this.viewMode = mode;
+  }
+
+  onGlobalFilter(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const searchValue = input?.value?.toLowerCase() || '';
+    if (!searchValue) {
+      this.allTickets = [...this.backlog, ...this.progress, ...this.done, ...this.cancelled];
+    } else {
+      const all = [...this.backlog, ...this.progress, ...this.done, ...this.cancelled];
+      this.allTickets = all.filter(t =>
+        (t.titulo?.toLowerCase().includes(searchValue)) ||
+        (t.descripcion?.toLowerCase().includes(searchValue)) ||
+        (t.estado?.toLowerCase().includes(searchValue))
+      );
     }
   }
 

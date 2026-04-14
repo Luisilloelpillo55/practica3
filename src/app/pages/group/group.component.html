@@ -77,25 +77,38 @@
         <label for="nombre">Nombre <span class="text-danger">*</span></label>
         <input id="nombre" pInputText [(ngModel)]="editing.nombre" class="w-100" />
       </div>
+
       <div *ngIf="editing" class="form-group">
         <label for="autor">Autor</label>
-        <select id="autor" [(ngModel)]="editing.autor" class="form-control">
-          <option [value]="null">Seleccionar usuario</option>
-          <option *ngFor="let u of users" [value]="u.id">{{u.usuario}} ({{u.email}})</option>
-        </select>
+        <div id="autor" style="padding: 8px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px;">
+          <strong>{{ getAuthorName(editing) }}</strong> (asignado a ti automáticamente)
+        </div>
       </div>
+
       <div *ngIf="editing" class="form-group">
         <label for="nivel">Nivel</label>
         <input id="nivel" pInputText [(ngModel)]="editing.nivel" placeholder="ej: básico, intermedio, avanzado" class="w-100" />
       </div>
+
       <div *ngIf="editing" class="form-group">
-        <label for="integrantes">Integrantes (coma separada)</label>
-        <input id="integrantes" pInputText [(ngModel)]="editing.integrantes" placeholder="usuario1,usuario2,usuario3" class="w-100" />
+        <label for="integrantes">Integrantes</label>
+        <p-multiSelect 
+          id="integrantes"
+          [(ngModel)]="editing.integrantes" 
+          [options]="getAvailableMembers()" 
+          optionLabel="usuario" 
+          optionValue="id"
+          placeholder="Selecciona integrantes..."
+          [maxSelectedLabels]="3"
+          class="w-100">
+        </p-multiSelect>
       </div>
+
       <div *ngIf="editing" class="form-group">
         <label for="descripcion">Descripción</label>
         <textarea id="descripcion" [(ngModel)]="editing.descripcion" rows="3" class="w-100" style="padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-family: inherit;"></textarea>
       </div>
+
       <ng-template pTemplate="footer">
         <button pButton type="button" label="Cancelar" class="p-button-text" (click)="dialogVisible=false"></button>
         <button pButton type="button" label="Guardar" class="purple-btn" (click)="save()"></button>

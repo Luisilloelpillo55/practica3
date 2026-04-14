@@ -5,6 +5,7 @@ import { ToastModule } from 'primeng/toast';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { API_ENDPOINTS } from '../../config/api.config';
 import { Subscription } from 'rxjs';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
@@ -78,7 +79,8 @@ export class UserComponent implements OnInit, OnDestroy {
     }
     // send update to server
     const headers = this.authService.getAuthHeaders();
-    this.http.put(`/api/users/${id}`, this.editingUser, { headers }).subscribe({ next: (res: any) => {
+    const updateUrl = `${API_ENDPOINTS.USERS}/${id}`;
+    this.http.put(updateUrl, this.editingUser, { headers }).subscribe({ next: (res: any) => {
       this.user = res;
       // update stored user snapshot if it matches
       try { this.authService.saveUser(res); } catch {}
@@ -98,6 +100,7 @@ export class UserComponent implements OnInit, OnDestroy {
 
   private fetchProfile(id: any, fallback: any) {
     const headers = this.authService.getAuthHeaders();
-    this.http.get(`/api/users/${id}`, { headers }).subscribe({ next: (res: any) => this.user = res, error: () => this.user = fallback });
+    const profileUrl = `${API_ENDPOINTS.USERS}/${id}`;
+    this.http.get(profileUrl, { headers }).subscribe({ next: (res: any) => this.user = res, error: () => this.user = fallback });
   }
 }

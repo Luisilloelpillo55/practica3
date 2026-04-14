@@ -7,9 +7,6 @@ import {
 import express from 'express';
 import { join } from 'node:path';
 import cors from 'cors';
-import usersRouter from './api/users.js';
-import groupsRouter from './api/groups.js';
-import ticketsRouter from './api/tickets.js';
 
 // avoid import.meta which isn't allowed under our tsconfig module settings
 const browserDistFolder = join(process.cwd(), 'browser');
@@ -17,14 +14,23 @@ const browserDistFolder = join(process.cwd(), 'browser');
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
-// Middleware for API
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Mount API routes before the Angular renderer
-app.use('/api/users', usersRouter);
-app.use('/api/groups', groupsRouter);
-app.use('/api/tickets', ticketsRouter);
+// Block API routes - they should go to the Gateway (port 3000)
+app.use('/api', (req, res) => {
+  console.warn(`[SSR] API request blocked: ${req.method} ${req.path}`);
+  res.status(503).json({ 
+    error: 'API Gateway unavailable', 
+    message: 'Please ensure the API Gateway is running on port 3000',
+    hint: 'Run: npm run start:gateway'
+  });
+  return;
+});
+
+// NOTE: API routes are handled by the microservices architecture (Gateway on port 3000)
+// This SSR server only serves the Angular frontend
 
 /**
  * Example Express Rest API endpoints can be defined here.

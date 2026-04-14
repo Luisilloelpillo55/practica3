@@ -13,6 +13,8 @@
   ],
   "exclude": [
     "src/**/*.spec.ts",
-    "src/server.ts"
+    "src/server.ts",
+    "src/api/**",
+    "src/services/**"
   ]
 }

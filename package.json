@@ -8,7 +8,11 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:mi-practica": "node dist/mi-practica/server/server.mjs"
+    "serve:ssr:mi-practica": "node dist/mi-practica/server/server.mjs",
+    "start:gateway": "tsx src/services/gateway/server.ts",
+    "start:users": "tsx src/services/users-service/server.ts",
+    "start:groups": "tsx src/services/groups-service/server.ts",
+    "start:tickets": "tsx src/services/tickets-service/server.ts"
   },
   "prettier": {
     "printWidth": 100,
@@ -35,12 +39,16 @@
     "@angular/platform-server": "^21.1.0",
     "@angular/router": "^21.1.0",
     "@angular/ssr": "^21.1.5",
+    "@fastify/http-proxy": "^11.4.3",
+    "@supabase/supabase-js": "^2.103.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.1.0",
+    "express-http-proxy": "^2.1.2",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.18.2",
+    "pg": "^8.20.0",
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
     "primeng": "^21.1.1",
@@ -54,9 +62,13 @@
     "@types/bcryptjs": "^3.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.1",
+    "@types/express-http-proxy": "^1.6.7",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.17.19",
+    "@types/pg": "^8.20.0",
     "jsdom": "^27.1.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
   }

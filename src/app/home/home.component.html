@@ -28,8 +28,8 @@
     </div>
   </div>
 
-    <div *ngIf="loggedIn && dashboardVisible" class="home-dashboard app-container">
-      <div class="dashboard-header">
+    <div *ngIf="loggedIn && dashboardVisible" class="home-dashboard app-container" [@pageEnter]>
+      <div class="dashboard-header" [ngClass]="{ 'hidden': headerHidden }">
         <h2>Mis Grupos</h2>
         <div class="filters">
           <input placeholder="Filtrar grupos..." [(ngModel)]="groupFilter" (ngModelChange)="filterMyGroups()" />
@@ -50,13 +50,20 @@
               <div class="selector-title">Mis Grupos</div>
             </ng-template>
             <ng-template pTemplate="content">
-              <div class="group-select-wrapper">
+              <div *ngIf="myGroups && myGroups.length === 0" class="empty">
+                <p><i class="pi pi-inbox"></i></p>
+                <p>No tienes grupos aún. Crea uno o pide que te agreguen a un grupo existente.</p>
+              </div>
+              <div *ngIf="myGroups && myGroups.length > 0" class="group-select-wrapper">
                 <select class="group-selector" [(ngModel)]="selectedGroup" (ngModelChange)="selectGroup($event)">
                   <option [ngValue]="null" disabled *ngIf="!selectedGroup && myGroups && myGroups.length > 0">Selecciona un grupo...</option>
-                  <option *ngFor="let g of myGroups" [ngValue]="g">{{ g.nombre }} (ID: {{g.id}})</option>
+                  <option *ngFor="let g of myGroups" [ngValue]="g">{{ g.nombre }} {{ selectedGroup?.id === g.id ? '✓' : '' }}</option>
                 </select>
+                <div class="group-help muted">
+                  <span *ngIf="selectedGroup">📌 Grupo seleccionado: <strong>{{ selectedGroup.nombre }}</strong></span>
+                  <span *ngIf="!selectedGroup">Selecciona un grupo para cargar sus tickets</span>
+                </div>
               </div>
-              <div class="group-help muted">Selecciona un grupo para cargar sus tickets. Solo aparecen los grupos asociados a tu cuenta.</div>
             </ng-template>
           </p-card>
         </div>
@@ -76,12 +83,17 @@
                   </div>
                 </ng-template>
                 <ng-template pTemplate="content">
-                  <div *ngIf="tickets.length === 0" class="empty">No hay tickets en este grupo</div>
+                  <div *ngIf="tickets.length === 0" class="empty">
+                    <i class="pi pi-ticket"></i>
+                    <p>No hay tickets en este grupo</p>
+                    <p *ngIf="hasPermission('ticket_create')" style="font-size: 0.85rem; opacity: 0.8;">Crea el primer ticket haciendo clic en "Agregar ticket"</p>
+                  </div>
 
                   <p-table *ngIf="tickets.length > 0" [value]="tickets" [paginator]="true" [rows]="10" class="styled-table">
                     <ng-template pTemplate="header">
                       <tr>
                         <th>Título</th>
+                        <th>Prioridad</th>
                         <th>Estado</th>
                         <th>Autor</th>
                         <th>Creado</th>
@@ -89,13 +101,21 @@
                       </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-t>
-                      <tr *ngIf="!ticketStateFilter || t.estado === ticketStateFilter">
+                      <tr *ngIf="!ticketStateFilter || t.estado === ticketStateFilter" [@listItem]>
                         <td>{{ t.titulo || ('#' + t.id) }}</td>
+                        <td>
+                          <span *ngIf="t.priority === 'alta'" class="priority-badge priority-alta">🔴 Alta</span>
+                          <span *ngIf="t.priority === 'moderada'" class="priority-badge priority-moderada">🟡 Moderada</span>
+                          <span *ngIf="t.priority === 'baja'" class="priority-badge priority-baja">🟢 Baja</span>
+                          <span *ngIf="!t.priority" class="priority-badge priority-moderada">🟡 Moderada</span>
+                        </td>
                         <td>{{ formatStateLabel(t.estado) }}</td>
                         <td>{{ t.created_by || t.autor }}</td>
                         <td>{{ t.created_at | date:'short' }}</td>
                         <td>
-                          <button pButton type="button" icon="pi pi-eye" class="p-button-text" (click)="openTicketDetail(t)"></button>
+                          <button pButton type="button" icon="pi pi-eye" class="p-button-text" title="Ver" (click)="openTicketDetail(t)"></button>
+                          <button *ngIf="hasPermission('ticket_edit')" pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-warning" title="Editar" (click)="editTicket(t)"></button>
+                          <button *ngIf="hasPermission('ticket_delete')" pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger" title="Borrar" (click)="deleteTicket(t)"></button>
                         </td>
                       </tr>
                     </ng-template>
@@ -130,6 +150,14 @@
     <select id="ticket-estado" [(ngModel)]="newTicket.estado" class="form-control">
       <option value="abierto">abierto</option>
       <option value="cerrado">cerrado</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="ticket-priority">Prioridad</label>
+    <select id="ticket-priority" [(ngModel)]="newTicket.priority" class="form-control">
+      <option value="baja">🟢 Baja</option>
+      <option value="moderada">🟡 Moderada</option>
+      <option value="alta">🔴 Alta</option>
     </select>
   </div>
   <ng-template pTemplate="footer">

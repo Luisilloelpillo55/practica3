@@ -1,46 +1,41 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AuthService } from './auth.service';
+import { ApiHttpService } from './api-http.service.js';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  constructor(private apiHttp: ApiHttpService) {}
 
   getAll(): Observable<any[]> {
-    return this.http.get<any[]>('/api/users', {
-      headers: this.auth.getAuthHeaders()
-    });
+    return this.apiHttp.get('http://localhost:3000/api/users') as unknown as Observable<any[]>;
   }
 
   getById(id: any): Observable<any> {
-    return this.http.get<any>(`/api/users/${id}`, {
-      headers: this.auth.getAuthHeaders()
-    });
+    return this.apiHttp.getUser(id) as unknown as Observable<any>;
+  }
+
+  create(payload: any): Observable<any> {
+    return this.apiHttp.post('http://localhost:3000/api/users', payload) as unknown as Observable<any>;
   }
 
   update(id: any, payload: any): Observable<any> {
-    return this.http.put<any>(`/api/users/${id}`, payload, {
-      headers: this.auth.getAuthHeaders()
-    });
+    return this.apiHttp.updateUser(id, payload) as unknown as Observable<any>;
   }
 
   delete(id: any): Observable<any> {
-    return this.http.delete<any>(`/api/users/${id}`, {
-      headers: this.auth.getAuthHeaders()
-    });
+    return this.apiHttp.delete(`http://localhost:3000/api/users/${id}`) as unknown as Observable<any>;
   }
 
   // Permissions management
   getAllPermissions(): Observable<any[]> {
-    return this.http.get<any[]>('/api/users/permissions', { headers: this.auth.getAuthHeaders() });
+    return this.apiHttp.get('http://localhost:3000/api/users/permissions') as unknown as Observable<any[]>;
   }
 
   getUserPermissions(id: any): Observable<string[]> {
-    return this.http.get<string[]>(`/api/users/${id}/permissions`, { headers: this.auth.getAuthHeaders() });
+    return this.apiHttp.get(`http://localhost:3000/api/users/${id}/permissions`) as unknown as Observable<string[]>;
   }
 
   setUserPermissions(id: any, permissions: string[]): Observable<any> {
-    return this.http.put<any>(`/api/users/${id}/permissions`, { permissions }, { headers: this.auth.getAuthHeaders() });
+    return this.apiHttp.put(`http://localhost:3000/api/users/${id}/permissions`, { permissions });
   }
 }

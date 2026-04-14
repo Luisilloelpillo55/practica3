@@ -1,0 +1,62 @@
+<div class="page-frame">
+  <header class="page-header">
+    <h1>Gestión de Usuarios y Permisos</h1>
+  </header>
+
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <div class="table-container">
+    <p-table [value]="users" [paginator]="true" [rows]="10" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>ID</th>
+          <th>Usuario</th>
+          <th>Email</th>
+          <th>Nombre Completo</th>
+          <th>Teléfono</th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-user>
+        <tr>
+          <td>{{ user.id }}</td>
+          <td><strong>{{ user.usuario }}</strong></td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.fullname || 'N/A' }}</td>
+          <td>{{ user.phone || 'N/A' }}</td>
+          <td>
+            <button *ngIf="auth.hasPermission('user_manage') || auth.isAdmin()" pButton type="button" icon="pi pi-lock" 
+                    class="p-button-sm p-button-info" (click)="editPermissions(user)" pTooltip="Gestionar permisos" tooltipPosition="top"></button>
+            <button *ngIf="auth.hasPermission('user_delete') || auth.isAdmin()" pButton type="button" icon="pi pi-trash" 
+                    class="p-button-sm p-button-danger ml-2" (click)="deleteUser(user)" pTooltip="Eliminar" tooltipPosition="top"></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">No hay usuarios</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Dialog para gestionar permisos -->
+  <p-dialog [(visible)]="showPermissionsDialog" [header]="'Permisos de ' + (selectedUser?.usuario || '')" 
+            [modal]="true" [style]="{ width: '50vw' }" (onHide)="closeDialog()">
+    <div *ngIf="selectedUser" class="permissions-container">
+      <h4>Selecciona los permisos para este usuario:</h4>
+      <div class="permissions-grid">
+        <div *ngFor="let perm of availablePermissions" class="permission-item">
+          <p-checkbox [(ngModel)]="selectedPermissions[perm]" [binary]="true"></p-checkbox>
+          <label>{{ getPermissionLabel(perm) }}</label>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 2rem;">
+        <button pButton type="button" label="Cancelar" (click)="closeDialog()" class="p-button-secondary"></button>
+        <button pButton type="button" label="Guardar" (click)="savePermissions()" class="p-button-success"></button>
+      </div>
+    </div>
+  </p-dialog>
+</div>

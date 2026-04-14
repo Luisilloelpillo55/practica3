@@ -19,7 +19,7 @@ declare global {
 
 // Generar JWT
 export function generateToken(userId: number, usuario: string): string {
-  return jwt.sign({ id: userId, usuario }, JWT_SECRET, { expiresIn: '24h' });
+  return jwt.sign({ userId, usuario, permissions: [] }, JWT_SECRET, { expiresIn: '24h' });
 }
 
 // Middleware: Verificar JWT
@@ -46,22 +46,18 @@ export async function loadPermissions(req: Request, res: Response, next: NextFun
     return res.status(401).json({ error: 'User not authenticated' });
   }
   try {
-    // Check if users.permissions column exists before selecting it
-    const [colInfo] = await pool.query(
-      `SELECT COUNT(*) as cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'permissions'`
+    const userId = req.user.userId || req.user.id; // Support both field names
+
+    // Try to load user with permissions
+    const [userRows] = await pool.query(
+      'SELECT permiso, permissions FROM users WHERE id = ? LIMIT 1',
+      [userId]
     );
     // @ts-ignore
-    const hasPermissionsCol = Array.isArray(colInfo) && (colInfo as any)[0] && (colInfo as any)[0].cnt > 0;
+    const userRec = Array.isArray(userRows) && userRows[0] ? userRows[0] : null;
 
-    let userRec: any = null;
-    if (hasPermissionsCol) {
-      const [userRows] = await pool.query('SELECT permiso, permissions FROM users WHERE id = ? LIMIT 1', [req.user.id]);
-      // @ts-ignore
-      userRec = Array.isArray(userRows) && (userRows as any)[0] ? (userRows as any)[0] : null;
-    } else {
-      const [userRows] = await pool.query('SELECT permiso FROM users WHERE id = ? LIMIT 1', [req.user.id]);
-      // @ts-ignore
-      userRec = Array.isArray(userRows) && (userRows as any)[0] ? (userRows as any)[0] : null;
+    if (!userRec) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
     // If there's an explicit JSON/text `permissions` column, use it
@@ -93,7 +89,7 @@ export async function loadPermissions(req: Request, res: Response, next: NextFun
       `SELECT p.nombre FROM user_permissions up
        JOIN permissions p ON up.permission_id = p.id
        WHERE up.user_id = ?`,
-      [req.user.id]
+      [userId]
     );
     // @ts-ignore
     req.permissions = (rows as any[]).map((r: any) => r.nombre);

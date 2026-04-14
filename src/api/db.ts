@@ -1,16 +1,22 @@
-import mysql from 'mysql2/promise';
+import pg from 'pg';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const pool = mysql.createPool({
-  host: process.env['DB_HOST'] || '127.0.0.1',
-  port: Number(process.env['DB_PORT'] || 3306),
-  user: process.env['DB_USER'] || 'root',
-  password: process.env['DB_PASSWORD'] || '',
-  database: process.env['DB_NAME'] || 'mi_practica',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+const { Pool } = pg;
+
+// Supabase PostgreSQL connection
+const pool = new Pool({
+  host: process.env['SUPABASE_HOST'] || 'cehhyegczbdoiuztsxpk.supabase.co',
+  port: Number(process.env['SUPABASE_PORT'] || 5432),
+  user: process.env['SUPABASE_DB_USER'] || 'postgres',
+  password: process.env['SUPABASE_DB_PASSWORD'] || '',
+  database: process.env['SUPABASE_DB_NAME'] || 'postgres',
+  ssl: { rejectUnauthorized: false }, // Required for Supabase
+});
+
+pool.on('error', (err: Error) => {
+  console.error('Unexpected error on idle client', err);
 });
 
 export default pool;
+

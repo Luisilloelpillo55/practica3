@@ -1,0 +1,81 @@
+<div class="page-frame">
+  <header class="page-header">
+    <h1>Gestión de Grupos</h1>
+  </header>
+
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <div class="table-container">
+    <div style="margin-bottom: 1rem;">
+      <button pButton type="button" icon="pi pi-plus" label="Nuevo Grupo" class="p-button-success" 
+              (click)="openNewGroupDialog()" *ngIf="auth.hasPermission('group_create') || auth.isAdmin()"></button>
+    </div>
+
+    <p-table [value]="groups" [paginator]="true" [rows]="10" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Nivel</th>
+          <th>Descripción</th>
+          <th>Integrantes</th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-group>
+        <tr>
+          <td>{{ group.id }}</td>
+          <td><strong>{{ group.nombre }}</strong></td>
+          <td>{{ group.nivel || 'N/A' }}</td>
+          <td>{{ group.descripcion || 'N/A' }}</td>
+          <td>{{ group.integrantes || 'N/A' }}</td>
+          <td>
+            <button *ngIf="auth.hasPermission('group_edit') || auth.isAdmin()" pButton type="button" icon="pi pi-pencil" 
+                    class="p-button-sm p-button-info" (click)="editGroup(group)" pTooltip="Editar" tooltipPosition="top"></button>
+            <button *ngIf="auth.hasPermission('group_delete') || auth.isAdmin()" pButton type="button" icon="pi pi-trash" 
+                    class="p-button-sm p-button-danger ml-2" (click)="deleteGroup(group)" pTooltip="Eliminar" tooltipPosition="top"></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">No hay grupos</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Dialog para crear/editar grupos -->
+  <p-dialog [(visible)]="showDialog" [header]="isEditing ? 'Editar Grupo' : 'Nuevo Grupo'" 
+            [modal]="true" [style]="{ width: '50vw' }" (onHide)="closeDialog()">
+    <form [formGroup]="groupForm" (ngSubmit)="saveGroup()">
+      <div class="form-group">
+        <label for="nombre">Nombre del Grupo *</label>
+        <input pInputText id="nombre" formControlName="nombre" type="text" class="w-full" placeholder="Ej: Desarrollo Backend" />
+      </div>
+
+      <div class="form-group">
+        <label for="nivel">Nivel *</label>
+        <input pInputText id="nivel" formControlName="nivel" type="text" class="w-full" placeholder="Ej: Senior, Junior" />
+      </div>
+
+      <div class="form-group">
+        <label for="descripcion">Descripción</label>
+        <textarea pInputTextarea id="descripcion" formControlName="descripcion" class="w-full" 
+                  placeholder="Descripción del grupo..." rows="3"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="integrantes">Integrantes</label>
+        <input pInputText id="integrantes" formControlName="integrantes" type="text" class="w-full" 
+               placeholder="lista de integrantes (JSON o comma-separated)" />
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+        <button pButton type="button" label="Cancelar" (click)="closeDialog()" class="p-button-secondary"></button>
+        <button pButton type="submit" [label]="isEditing ? 'Actualizar' : 'Crear'" class="p-button-success"></button>
+      </div>
+    </form>
+  </p-dialog>
+</div>

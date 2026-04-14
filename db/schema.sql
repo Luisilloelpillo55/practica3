@@ -1,11 +1,8 @@
--- SQL schema for mi-practica with JWT permissions
+-- SQL schema for mi-practica with JWT permissions and full logging
+-- Compatible con Supabase PostgreSQL
 
-CREATE DATABASE IF NOT EXISTS mi_practica DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE mi_practica;
-
--- Users table
 CREATE TABLE IF NOT EXISTS users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   usuario VARCHAR(100) NOT NULL UNIQUE,
   email VARCHAR(255) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
@@ -13,91 +10,118 @@ CREATE TABLE IF NOT EXISTS users (
   address TEXT,
   dob DATE,
   phone VARCHAR(50),
-  permiso INT DEFAULT 1,
+  permisos TEXT[] DEFAULT ARRAY['ticket_view','ticket_create','ticket_edit','ticket_move','ticket_delete','group_view','group_create','group_edit','group_delete'],
   is_admin BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Groups table
 CREATE TABLE IF NOT EXISTS groups (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   nivel VARCHAR(50),
-  autor INT,
+  autor BIGINT REFERENCES users(id) ON DELETE SET NULL,
   nombre VARCHAR(255) NOT NULL,
   integrantes TEXT,
   descripcion TEXT,
   estado VARCHAR(50) DEFAULT 'No iniciado',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_groups_autor FOREIGN KEY (autor) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Tickets table (one-to-many with groups)
 CREATE TABLE IF NOT EXISTS tickets (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  group_id INT NOT NULL,
+  id BIGSERIAL PRIMARY KEY,
+  group_id BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
   titulo VARCHAR(255) NOT NULL,
   descripcion TEXT,
   estado VARCHAR(50) DEFAULT 'No iniciado',
-  created_by INT,
+  created_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_tickets_group FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
-  CONSTRAINT fk_tickets_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Ticket history table for tracking estado changes
 CREATE TABLE IF NOT EXISTS ticket_history (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  ticket_id INT NOT NULL,
+  id BIGSERIAL PRIMARY KEY,
+  ticket_id BIGINT NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
   estado_anterior VARCHAR(50),
   estado_nuevo VARCHAR(50),
-  changed_by INT,
-  changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_th_ticket FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE,
-  CONSTRAINT fk_th_user FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  changed_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Permissions table
 CREATE TABLE IF NOT EXISTS permissions (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   nombre VARCHAR(100) NOT NULL UNIQUE,
   descripcion TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
--- User-Group membership table
-CREATE TABLE IF NOT EXISTS user_groups (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  group_id INT NOT NULL,
+CREATE TABLE IF NOT EXISTS group_members (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  group_id BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
   rol VARCHAR(50) DEFAULT 'miembro',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uk_user_group (user_id, group_id),
-  CONSTRAINT fk_ug_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  CONSTRAINT fk_ug_group FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  UNIQUE(user_id, group_id)
+);
 
--- User-Permissions table (junction table for permissions)
-CREATE TABLE IF NOT EXISTS user_permissions (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  permission_id INT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uk_user_perm (user_id, permission_id),
-  CONSTRAINT fk_up_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  CONSTRAINT fk_up_perm FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- Permissions stored directly in users.permisos array (DELETED TABLE - moved to user array field)
+-- Previously: CREATE TABLE IF NOT EXISTS user_permissions (...)
 
--- Insert default permissions
-INSERT IGNORE INTO permissions (nombre, descripcion) VALUES
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id BIGSERIAL PRIMARY KEY,
+  entity_type VARCHAR(50),
+  entity_id BIGINT,
+  action VARCHAR(50),
+  old_data JSONB,
+  new_data JSONB,
+  user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  method VARCHAR(10),
+  path VARCHAR(255),
+  status_code INT,
+  ip_address VARCHAR(45),
+  user_agent TEXT,
+  response_time INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS metrics (
+  id BIGSERIAL PRIMARY KEY,
+  metric_name VARCHAR(100),
+  metric_value NUMERIC,
+  group_id BIGINT REFERENCES groups(id) ON DELETE SET NULL,
+  method VARCHAR(10),
+  endpoint VARCHAR(255),
+  status_code INT,
+  response_time INT,
+  recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert default permissions (14 total)
+INSERT INTO permissions (nombre, descripcion) VALUES
   ('ticket_view', 'Ver tickets de grupos'),
   ('ticket_create', 'Crear tickets'),
   ('ticket_edit', 'Editar tickets'),
   ('ticket_move', 'Mover tickets entre columnas'),
   ('ticket_delete', 'Eliminar tickets'),
-  ('user_view', 'Ver información de usuarios'),
-  ('user_edit', 'Editar información de usuarios'),
-  ('user_delete', 'Eliminar usuarios'),
+  ('ticket_add', 'Agregar tickets'),
   ('group_view', 'Ver grupos'),
   ('group_create', 'Crear grupos'),
   ('group_edit', 'Editar grupos'),
-  ('group_delete', 'Eliminar grupos');
+  ('group_delete', 'Eliminar grupos'),
+  ('user_view', 'Ver información de usuarios'),
+  ('user_manage', 'Gestionar permisos de usuarios'),
+  ('user_delete', 'Eliminar usuarios'),
+  ('admin', 'Acceso administrativo total')
+ON CONFLICT DO NOTHING;
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_users_usuario ON users(usuario);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_groups_autor ON groups(autor);
+CREATE INDEX IF NOT EXISTS idx_tickets_group_id ON tickets(group_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_created_by ON tickets(created_by);
+CREATE INDEX IF NOT EXISTS idx_group_members_user_id ON group_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_group_members_group_id ON group_members(group_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_metrics_recorded_at ON metrics(recorded_at);

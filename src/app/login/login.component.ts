@@ -19,6 +19,7 @@ import { AuthService } from '../services/auth.service.js';
 export class LoginComponent {
   form: any;
   showPassword: boolean = false;
+  logoClicks: number = 0;
 
   constructor(private fb: FormBuilder, private messageService: MessageService, private router: Router, private http: HttpClient, private authService: AuthService) {
     this.form = this.fb.group({
@@ -27,24 +28,55 @@ export class LoginComponent {
     });
   }
 
-  onSubmit() {
+  onLogoClic(): void {
+    this.logoClicks++;
+    if (this.logoClicks === 5) {
+      this.messageService.add({
+        severity: 'info',
+        summary: '🎉 Easter Egg!',
+        detail: 'Has descubierto el easter egg. ¡Eres increíble! 🚀'
+      });
+      this.logoClicks = 0; // Reset after showing
+    }
+  }
+
+  async onSubmit() {
     const { username, password } = this.form.value;
-    this.http.post('/api/users/login', { username, password }).subscribe({
-      next: (user: any) => {
-        console.log('Login successful. User:', user.usuario, 'Token:', user.token ? 'present' : 'missing');
-        this.messageService.add({severity:'success', summary:'Login', detail:'Credenciales válidas'});
-        // Save user BEFORE navigation to ensure it's available immediately
-        this.authService.saveUser(user);
-        // Small delay to ensure BehaviorSubject has emitted
-        setTimeout(() => {
+    
+    try {
+      console.log('🔐 [LoginComponent] onSubmit - Starting login process for:', username);
+      const result = await this.authService.loginDirect(username, password);
+      
+      console.log('🔐 [LoginComponent] Login result:', {
+        success: result.success,
+        user: result.user?.usuario,
+        has_token: !!result.user?.token
+      });
+      
+      if (result.success) {
+        this.messageService.add({ severity: 'success', summary: 'Login', detail: 'Credenciales válidas' });
+        
+        // Wait longer to ensure localStorage is written AND BehaviorSubject is updated
+        console.log('⏳ [LoginComponent] Waiting for session to be fully saved...');
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Verify user is actually saved
+        const savedUser = this.authService.getUser();
+        if (savedUser && savedUser.token) {
+          console.log('✓ [LoginComponent] User confirmed saved:', savedUser.usuario, 'Token length:', savedUser.token.length);
+          console.log('✓ [LoginComponent] Navigating to /home');
           this.router.navigate(['/home']);
-        }, 100);
-      },
-      error: (err) => {
-        console.error('Login failed:', err);
-        this.messageService.add({severity:'error', summary:'Login', detail: err?.error?.error || 'Usuario o contraseña inválidos'});
+        } else {
+          console.error('❌ [LoginComponent] User not saved properly after login!');
+          this.messageService.add({ severity: 'error', summary: 'Login', detail: 'Error al guardar sesión' });
+        }
+      } else {
+        this.messageService.add({ severity: 'error', summary: 'Login', detail: result.error || 'Usuario o contraseña inválidos' });
       }
-    });
+    } catch (error: any) {
+      console.error('❌ [LoginComponent] Login error:', error);
+      this.messageService.add({ severity: 'error', summary: 'Login', detail: 'Error en la conexión' });
+    }
   }
 
   goBack(): void {

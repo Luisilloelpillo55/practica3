@@ -1,10 +1,19 @@
 <div class="page-frame">
   <header class="page-header">
-    <h3>Kanban</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <h3>Tareas / Tickets</h3>
+      <div class="view-toggle">
+        <button pButton type="button" [class.active]="viewMode === 'kanban'" (click)="toggleViewMode('kanban')" 
+                icon="pi pi-bars" label="Kanban" class="p-button-sm"></button>
+        <button pButton type="button" [class.active]="viewMode === 'list'" (click)="toggleViewMode('list')" 
+                icon="pi pi-list" label="Lista" class="p-button-sm"></button>
+      </div>
+    </div>
   </header>
 
-  <div class="kanban-container">
-  <div class="column">
+  <!-- VISTA KANBAN -->
+  <div class="kanban-container" *ngIf="viewMode === 'kanban'">
+    <div class="column">
     <p-card class="column-card">
       <ng-template pTemplate="header">
         <div class="col-header">
@@ -116,6 +125,57 @@
   <div cdkDropList id="delete-drop" [cdkDropListData]="deleteListData" [cdkDropListConnectedTo]="['backlog-list','progress-list','done-list','cancelled-list']" (cdkDropListDropped)="deleteDrop($event)" class="delete-zone">
     <div class="delete-label">Eliminar</div>
   </div>
+</div>
+
+<!-- VISTA LISTA -->
+<div style="padding: 20px;" *ngIf="viewMode === 'list'">
+  <p-table [value]="allTickets" [paginator]="true" [rows]="10" [globalFilterFields]="['titulo','descripcion','estado']"
+           [tableStyle]="{ 'min-width': '50rem' }" responsiveLayout="scroll">
+    <ng-template pTemplate="caption">
+      <div class="flex align-items-center justify-content-between">
+        <span class="p-input-icon-left">
+          <i class="pi pi-search"></i>
+          <input pInputText type="text" (input)="onGlobalFilter($event)" placeholder="Buscar por título o descripción..." 
+                 #globalFilter />
+        </span>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+        <th pSortableColumn="titulo">Título <p-sortIcon field="titulo"></p-sortIcon></th>
+        <th pSortableColumn="descripcion">Descripción</th>
+        <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
+        <th pSortableColumn="created_at">Creado <p-sortIcon field="created_at"></p-sortIcon></th>
+        <th *ngIf="canMove || canDelete">Acciones</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-ticket>
+      <tr>
+        <td>{{ ticket.id }}</td>
+        <td>{{ ticket.titulo }}</td>
+        <td>{{ ticket.descripcion || 'N/A' }}</td>
+        <td>
+          <span [ngClass]="{'badge': true, 'bg-info': ticket.estado === 'En progreso', 'bg-success': ticket.estado === 'Finalizado', 'bg-danger': ticket.estado === 'Cancelado', 'bg-secondary': ticket.estado === 'No iniciado'}">
+            {{ ticket.estado || 'N/A' }}
+          </span>
+        </td>
+        <td>{{ ticket.created_at | date:'short' }}</td>
+        <td *ngIf="canMove || canDelete">
+          <button *ngIf="canMove" pButton type="button" icon="pi pi-pencil" class="p-button-sm p-button-info" 
+                  (click)="moveToColumn(ticket, 'progress')" pTooltip="Cambiar estado" tooltipPosition="top"></button>
+          <button *ngIf="canDelete" pButton type="button" icon="pi pi-trash" class="p-button-sm p-button-danger ml-2" 
+                  (click)="deleteDrop($any({previousContainer: {data: allTickets}, container: {}, previousIndex: allTickets.indexOf(ticket), item: {data: ticket}}))" 
+                  pTooltip="Eliminar" tooltipPosition="top"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="text-center">No hay tareas</td>
+      </tr>
+    </ng-template>
+  </p-table>
 </div>
 
 <p-dialog [(visible)]="showHistoryDialog" [modal]="true" [header]="'Historial: ' + (selectedForHistory?.titulo || '')" [style]="{ width: '50vw' }" (onHide)="closeHistoryDialog()">

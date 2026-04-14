@@ -1,33 +1,32 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AuthService } from './auth.service';
+import { ApiHttpService } from './api-http.service.js';
 
 @Injectable({ providedIn: 'root' })
 export class TicketService {
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  constructor(private apiHttp: ApiHttpService) {}
 
   getAll(): Observable<any[]> {
-    return this.http.get<any[]>('/api/tickets', {
-      headers: this.auth.getAuthHeaders()
-    });
+    return this.apiHttp.getTickets() as unknown as Observable<any[]>;
   }
 
   getById(id: any): Observable<any> {
-    return this.http.get<any>(`/api/tickets/${id}`, {
-      headers: this.auth.getAuthHeaders()
-    });
+    return this.apiHttp.get(`http://localhost:3000/api/tickets/${id}`) as unknown as Observable<any>;
+  }
+
+  getByGroup(groupId: any): Observable<any[]> {
+    return this.apiHttp.getTicketsByGroup(groupId) as unknown as Observable<any[]>;
+  }
+
+  create(payload: any): Observable<any> {
+    return this.apiHttp.createTicket(payload);
   }
 
   update(id: any, payload: any): Observable<any> {
-    return this.http.put<any>(`/api/tickets/${id}`, payload, {
-      headers: this.auth.getAuthHeaders()
-    });
+    return this.apiHttp.updateTicket(id, payload);
   }
 
   delete(id: any): Observable<any> {
-    return this.http.delete<any>(`/api/tickets/${id}`, {
-      headers: this.auth.getAuthHeaders()
-    });
+    return this.apiHttp.deleteTicket(id);
   }
 }

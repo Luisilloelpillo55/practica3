@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { API_ENDPOINTS } from '../config/api.config.js';
+import { AuthService } from './auth.service.js';
 
 /**
  * HTTP Service wrapper that ensures all requests go to the API Gateway (port 3000)
@@ -10,12 +11,18 @@ import { API_ENDPOINTS } from '../config/api.config.js';
   providedIn: 'root'
 })
 export class ApiHttpService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private injector: Injector) {}
 
   private getHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      'Content-Type': 'application/json'
-    });
+    // Get auth headers from AuthService (includes Authorization token)
+    // Use injector.get() for lazy injection to avoid circular dependency
+    try {
+      const authService = this.injector.get(AuthService);
+      return authService.getAuthHeaders();
+    } catch (e) {
+      // Fallback if AuthService not available
+      return new HttpHeaders({ 'Content-Type': 'application/json' });
+    }
   }
 
   // Users endpoints

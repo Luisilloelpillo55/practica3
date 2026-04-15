@@ -101,7 +101,7 @@
                       </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-t>
-                      <tr *ngIf="!ticketStateFilter || t.estado === ticketStateFilter" [@listItem]>
+                      <tr *ngIf="matchesStateFilter(t.estado, ticketStateFilter)" [@listItem]>
                         <td>{{ t.titulo || ('#' + t.id) }}</td>
                         <td>
                           <span *ngIf="t.priority === 'alta'" class="priority-badge priority-alta">🔴 Alta</span>
@@ -129,10 +129,10 @@
 </div>
 
 <!-- Dialog: Crear ticket (migrado desde Group) -->
-<p-dialog header="Agregar ticket" styleClass="nubank-modal" [(visible)]="ticketDialog" [modal]="true" [style]="{width: '560px'}">
+<p-dialog [header]="editingTicketId ? 'Editar ticket' : 'Agregar ticket'" styleClass="nubank-modal" [(visible)]="ticketDialog" [modal]="true" [style]="{width: '560px'}" (onHide)="ticketDialog=false; editingTicketId=null; newTicket = { group_id: null, titulo: '', descripcion: '', estado: 'abierto', priority: 'moderada' }">
   <div class="form-group">
     <label for="ticket-group">Grupo</label>
-    <select id="ticket-group" [(ngModel)]="newTicket.group_id" class="form-control">
+    <select id="ticket-group" [(ngModel)]="newTicket.group_id" [disabled]="editingTicketId" class="form-control">
       <option [value]="null">Seleccionar grupo</option>
       <option *ngFor="let g of groups" [value]="g.id">{{ g.nombre }} (ID: {{ g.id }})</option>
     </select>
@@ -161,8 +161,8 @@
     </select>
   </div>
   <ng-template pTemplate="footer">
-    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="ticketDialog=false"></button>
-    <button pButton type="button" label="Crear" class="purple-btn" (click)="saveTicket()"></button>
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="ticketDialog=false; editingTicketId=null; newTicket = { group_id: null, titulo: '', descripcion: '', estado: 'abierto', priority: 'moderada' }"></button>
+    <button pButton type="button" [label]="editingTicketId ? 'Guardar cambios' : 'Crear'" class="purple-btn" (click)="saveTicket()"></button>
   </ng-template>
 </p-dialog>
 
@@ -190,3 +190,4 @@
 </div>
 
 <p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>

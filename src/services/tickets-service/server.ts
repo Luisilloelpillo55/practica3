@@ -158,7 +158,7 @@ fastify.post('/', async (request, reply) => {
     return { statusCode: 403, error: 'Missing permission: ticket_create' };
   }
 
-  const { group_id, titulo, descripcion, estado, created_by } = request.body as any || {};
+  const { group_id, titulo, descripcion, estado, priority, created_by } = request.body as any || {};
 
   if (!group_id || !titulo || !created_by) {
     reply.status(400);
@@ -171,14 +171,15 @@ fastify.post('/', async (request, reply) => {
       titulo,
       descripcion,
       estado,
+      priority,
       created_by
     });
 
-    const queryString = `INSERT INTO tickets (group_id, titulo, descripcion, estado, created_by)
-       VALUES ($1, $2, $3, $4, $5)
+    const queryString = `INSERT INTO tickets (group_id, titulo, descripcion, estado, priority, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`;
     
-    const queryParams = [group_id, titulo, descripcion || null, estado || 'No iniciado', created_by];
+    const queryParams = [group_id, titulo, descripcion || null, estado || 'No iniciado', priority || 'moderada', created_by];
     
     console.log('📝 [Tickets Service] INSERT Query:', {
       query: queryString,
@@ -225,15 +226,15 @@ fastify.put<{ Params: { id: string } }>('/:id', async (request, reply) => {
   }
 
   const { id } = request.params;
-  const { titulo, descripcion, estado } = request.body as any || {};
+  const { titulo, descripcion, estado, priority } = request.body as any || {};
 
   try {
-    console.log('✏️  Updating ticket:', { id, titulo, estado });
+    console.log('✏️  Updating ticket:', { id, titulo, estado, priority, descripcion });
     const result = await supabasePool.query(
-      `UPDATE tickets SET titulo = $1, descripcion = $2, estado = $3, updated_at = NOW()
-       WHERE id = $4
+      `UPDATE tickets SET titulo = $1, descripcion = $2, estado = $3, priority = $4, updated_at = NOW()
+       WHERE id = $5
        RETURNING *`,
-      [titulo, descripcion, estado, id]
+      [titulo, descripcion, estado, priority || 'moderada', id]
     );
 
     if (result.rows.length === 0) {

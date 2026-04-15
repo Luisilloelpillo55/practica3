@@ -11,7 +11,8 @@ import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { KanbanComponent } from '../pages/kanban/kanban.component';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -21,8 +22,8 @@ import { API_ENDPOINTS } from '../config/api.config';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, ButtonModule, HttpClientModule, FormsModule, CardModule, TableModule, DialogModule, InputTextModule, ToastModule, KanbanComponent],
-  providers: [MessageService],
+  imports: [CommonModule, ButtonModule, HttpClientModule, FormsModule, CardModule, TableModule, DialogModule, InputTextModule, ToastModule, ConfirmDialogModule, KanbanComponent],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
   animations: [pageEnterAnimation, cardAnimation, listItemAnimation]
@@ -40,6 +41,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   newTicket: any = { group_id: null, titulo: '', descripcion: '', estado: 'abierto', priority: 'moderada' };
   ticketDetailDialog: boolean = false;
   selectedTicket: any = null;
+  editingTicketId: any = null; // Track if we're editing
   private pendingQueryGroup: any = null;
   private pendingQueryTicket: any = null;
   // Controls whether the dashboard (groups/tickets/kanban) is shown
@@ -50,7 +52,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   headerHidden: boolean = false;
   private lastScrollTop: number = 0;
 
-  constructor(public authService: AuthService, private apiHttpService: ApiHttpService, private router: Router, private route: ActivatedRoute, private http: HttpClient, private cdr: ChangeDetectorRef, private messageService: MessageService) {}
+  constructor(public authService: AuthService, private apiHttpService: ApiHttpService, private router: Router, private route: ActivatedRoute, private http: HttpClient, private cdr: ChangeDetectorRef, private messageService: MessageService, private confirmationService: ConfirmationService) {}
 
   // Expose logged-in state for templates
   get loggedIn(): boolean {
@@ -214,50 +216,70 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   saveTicket(): void {
-    if (!this.hasPermission('ticket_create') || !this.newTicket || !this.newTicket.titulo || !this.newTicket.group_id) return;
+    if (!this.newTicket || !this.newTicket.titulo || !this.newTicket.group_id) return;
+    
+    // Check permission based on action
+    if (this.editingTicketId) {
+      if (!this.hasPermission('ticket_edit')) return;
+    } else {
+      if (!this.hasPermission('ticket_create')) return;
+    }
     
     const headers = this.authService.getAuthHeaders();
     const currentUser = this.authService.getUser();
     
-    // IMPORTANTE: El backend requiere created_by y group_id
     const payload = {
       group_id: this.newTicket.group_id,
       titulo: this.newTicket.titulo,
       descripcion: this.newTicket.descripcion || '',
       estado: this.newTicket.estado || 'abierto',
-      created_by: currentUser?.id || currentUser?.userId || 1
+      priority: this.newTicket.priority || 'moderada'
     };
     
-    console.log('🎫 [HomeComponent] Creating ticket:', {
-      group_id: payload.group_id,
-      titulo: payload.titulo,
-      created_by: payload.created_by,
+    // If creating, add created_by
+    if (!this.editingTicketId) {
+      (payload as any).created_by = currentUser?.id || currentUser?.userId || 1;
+    }
+    
+    // Determine if creating or editing
+    const isCreating = !this.editingTicketId;
+    const endpoint = isCreating 
+      ? 'http://localhost:3000/api/tickets' 
+      : `http://localhost:3000/api/tickets/${this.editingTicketId}`;
+    const method = isCreating ? 'POST' : 'PUT';
+    
+    console.log(`🎫 [HomeComponent] ${method} ticket - PAYLOAD ENVIADO:`, {
+      id: this.editingTicketId,
+      isCreating: isCreating,
+      endpoint: endpoint,
+      payload: JSON.stringify(payload, null, 2),
+      newTicket_priority: this.newTicket.priority,
       hasAuth: headers.has('Authorization')
     });
     
-    this.http.post('/api/tickets', payload, { headers }).subscribe({ 
+    const request$ = isCreating 
+      ? this.http.post(endpoint, payload, { headers })
+      : this.http.put(endpoint, payload, { headers });
+    
+    request$.subscribe({ 
       next: (res: any) => {
-        console.log('✅ Ticket creado - Response status 200-299:', {
-          response: res,
-          type: typeof res,
-          isArray: Array.isArray(res),
-          keys: typeof res === 'object' ? Object.keys(res) : 'N/A'
-        });
+        console.log(`✅ Ticket ${isCreating ? 'creado' : 'actualizado'}:`, res);
         this.ticketDialog = false;
+        this.editingTicketId = null;
+        this.newTicket = { group_id: null, titulo: '', descripcion: '', estado: 'abierto', priority: 'moderada' };
+        
         // reload
-        if (this.selectedGroup && String(this.selectedGroup.id) === String(this.newTicket.group_id)) {
-          console.log('🔄 Loading tickets for group:', this.selectedGroup.id);
+        if (this.selectedGroup) {
           this.loadGroupTickets(this.selectedGroup.id);
         }
       }, 
       error: (e: any) => {
-        console.error('❌ ERROR CREATING TICKET:', {
+        console.error(`❌ ERROR ${method} TICKET:`, {
           status: e.status,
           statusText: e.statusText,
-          error: e.error?.error || e.message,
-          fullError: e.error,
-          fullResponse: e
+          error: e.error?.error || e.message
         });
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: `No se pudo ${isCreating ? 'crear' : 'editar'} el ticket` });
       } 
     });
   }
@@ -272,29 +294,63 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   editTicket(ticket: any): void {
     if (!ticket) return;
-    // Initialize edit form with ticket data
-    this.newTicket = { ...ticket };
+    // Initialize edit form with ticket data - asegura que priority siempre tenga valor
+    this.editingTicketId = ticket.id;
+    this.newTicket = {
+      group_id: ticket.group_id,
+      titulo: ticket.titulo,
+      descripcion: ticket.descripcion || '',
+      estado: ticket.estado || 'abierto',
+      priority: ticket.priority || 'moderada'  // Always ensure priority exists
+    };
+    
+    console.log('📝 [EditTicket] Opened modal with:', {
+      id: this.editingTicketId,
+      titulo: this.newTicket.titulo,
+      priority: this.newTicket.priority,
+      estado: this.newTicket.estado
+    });
+    
     this.ticketDialog = true;
   }
 
   deleteTicket(ticket: any): void {
     if (!ticket) return;
-    if (confirm(`¿Está seguro que desea eliminar el ticket: ${ticket.titulo}?`)) {
-      this.apiHttpService.deleteTicket(ticket.id).subscribe({
-        next: (res: any) => {
-          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Ticket eliminado correctamente' });
-          this.loadGroupTickets(this.selectedGroup.id);
-        },
-        error: (e: any) => {
-          console.error('❌ ERROR DELETING TICKET:', e);
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el ticket' });
-        }
-      });
-    }
+    this.confirmationService.confirm({
+      message: `¿Está seguro que desea eliminar el ticket: <strong>${ticket.titulo}</strong>?`,
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.apiHttpService.deleteTicket(ticket.id).subscribe({
+          next: (res: any) => {
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Ticket eliminado correctamente' });
+            this.loadGroupTickets(this.selectedGroup.id);
+          },
+          error: (e: any) => {
+            console.error('❌ ERROR DELETING TICKET:', e);
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el ticket' });
+          }
+        });
+      },
+      reject: () => {
+        this.messageService.add({ severity: 'info', summary: 'Cancelado', detail: 'Eliminación cancelada' });
+      }
+    });
   }
 
   // helpers
   formatStateLabel(s: string): string { return s || 'No iniciado'; }
+  
+  matchesStateFilter(estado: string, filter: string): boolean {
+    if (!filter) return true;
+    const e = (estado || 'No iniciado').toLowerCase();
+    if (filter === 'backlog') return !e.includes('progres') && !e.includes('finaliz') && !e.includes('cancel');
+    if (filter === 'in_progress') return e.includes('progres');
+    if (filter === 'done') return e.includes('finaliz');
+    if (filter === 'cancelled') return e.includes('cancel');
+    return true;
+  }
+  
   hasPermission(permission: string | string[]): boolean { return this.authService.hasPermission(permission); }
   navigate(path: string): void { this.router.navigateByUrl(path); }
 }

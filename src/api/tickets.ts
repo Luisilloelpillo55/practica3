@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/', verifyToken, loadPermissions, async (req, res) => {
   try {
     const [tickets] = await pool.query(
-      'SELECT id, group_id, titulo, descripcion, estado, created_by, created_at FROM tickets ORDER BY created_at DESC'
+      'SELECT id, group_id, titulo, descripcion, estado, priority, created_by, created_at FROM tickets ORDER BY created_at DESC'
     );
     return res.json(tickets);
   } catch (e) {
@@ -22,7 +22,7 @@ router.get('/group/:groupId', verifyToken, loadPermissions, async (req, res) => 
   const { groupId } = req.params;
   try {
     const [tickets] = await pool.query(
-      'SELECT id, group_id, titulo, descripcion, estado, created_by, created_at FROM tickets WHERE group_id = ? ORDER BY created_at DESC',
+      'SELECT id, group_id, titulo, descripcion, estado, priority, created_by, created_at FROM tickets WHERE group_id = ? ORDER BY created_at DESC',
       [groupId]
     );
     return res.json(tickets);
@@ -52,12 +52,12 @@ router.get('/:id', verifyToken, loadPermissions, async (req, res) => {
 
 // CREATE ticket (requiere permisos)
 router.post('/', verifyToken, loadPermissions, requirePermission('ticket_create'), async (req, res) => {
-  const { group_id, titulo, descripcion, estado } = req.body || {};
+  const { group_id, titulo, descripcion, estado, priority } = req.body || {};
   if (!group_id || !titulo) return res.status(400).json({ error: 'Missing fields' });
   try {
     const [result] = await pool.query(
-      'INSERT INTO tickets (group_id, titulo, descripcion, estado, created_by) VALUES (?, ?, ?, ?, ?)',
-      [group_id, titulo, descripcion || null, estado || 'abierto', req.user.id]
+      'INSERT INTO tickets (group_id, titulo, descripcion, estado, priority, created_by) VALUES (?, ?, ?, ?, ?, ?)',
+      [group_id, titulo, descripcion || null, estado || 'abierto', priority || 'moderada', req.user.id]
     );
     // @ts-ignore
     const ticketId = (result as any).insertId;
@@ -73,7 +73,17 @@ router.post('/', verifyToken, loadPermissions, requirePermission('ticket_create'
 // UPDATE ticket (requiere permisos)
 router.put('/:id', verifyToken, loadPermissions, async (req, res) => {
   const { id } = req.params;
-  const { titulo, descripcion, estado } = req.body || {};
+  const { titulo, descripcion, estado, priority } = req.body || {};
+  
+  console.log('🔧 [BACKEND PUT] Recibido en backend:', {
+    id: id,
+    titulo: titulo,
+    descripcion: descripcion,
+    estado: estado,
+    priority: priority,
+    fullBody: req.body
+  });
+  
   // permitir que usuarios con permiso 'ticket_edit' o 'ticket_move' actualicen el estado
   const perms = Array.isArray((req as any).permissions) ? (req as any).permissions : [];
   if (!perms.includes('ticket_edit') && !perms.includes('ticket_move')) {
@@ -89,10 +99,19 @@ router.put('/:id', verifyToken, loadPermissions, async (req, res) => {
     const newTitulo = typeof titulo !== 'undefined' && titulo !== null ? titulo : ticket.titulo;
     const newDescripcion = typeof descripcion !== 'undefined' ? descripcion : ticket.descripcion;
     const newEstado = typeof estado !== 'undefined' && estado !== null ? estado : ticket.estado;
+    const newPriority = typeof priority !== 'undefined' && priority !== null ? priority : ticket.priority;
+
+    console.log('🔧 [BACKEND PUT] Valores a guardar:', {
+      newTitulo,
+      newDescripcion,
+      newEstado,
+      newPriority,
+      ticket_priority_actual: ticket.priority
+    });
 
     await pool.query(
-      'UPDATE tickets SET titulo = ?, descripcion = ?, estado = ? WHERE id = ?',
-      [newTitulo, newDescripcion || null, newEstado || 'abierto', id]
+      'UPDATE tickets SET titulo = ?, descripcion = ?, estado = ?, priority = ? WHERE id = ?',
+      [newTitulo, newDescripcion || null, newEstado || 'abierto', newPriority || 'moderada', id]
     );
     const [rows] = await pool.query('SELECT * FROM tickets WHERE id = ? LIMIT 1', [id]);
     // @ts-ignore

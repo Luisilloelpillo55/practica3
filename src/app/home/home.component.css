@@ -217,3 +217,31 @@
 	border-color: rgba(91, 45, 144, 0.5);
 	box-shadow: 0 0 0 2px rgba(91, 45, 144, 0.1);
 }
+
+/* Priority badges styling */
+.priority-badge {
+	display: inline-block;
+	padding: 0.35rem 0.75rem;
+	border-radius: 12px;
+	font-size: 0.8rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.priority-alta {
+	background-color: rgba(255, 23, 68, 0.2);
+	color: #ff1744;
+	border: 1px solid #ff1744;
+}
+
+.priority-moderada {
+	background-color: rgba(255, 193, 7, 0.2);
+	color: #ffc107;
+	border: 1px solid #ffc107;
+}
+
+.priority-baja {
+	background-color: rgba(76, 175, 80, 0.2);
+	color: #4caf50;
+	border: 1px solid #4caf50;
+}

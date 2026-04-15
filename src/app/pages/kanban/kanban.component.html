@@ -26,8 +26,10 @@
           <div *ngFor="let ticket of backlog" cdkDrag [cdkDragData]="ticket" class="kanban-item">
             <div class="item-title">{{ ticket.titulo }}</div>
             <div class="item-description">{{ ticket.descripcion || 'Sin descripción' }}</div>
+            <div class="item-priority" [ngClass]="'priority-' + (ticket.priority || 'moderada').toLowerCase()">
+              {{ ticket.priority || 'moderada' }}
+            </div>
             <div class="item-footer">
-              <small>ID: {{ ticket.id }}</small>
               <button pButton type="button" icon="pi pi-history" class="p-button-sm p-button-text" (click)="viewHistory(ticket)" pTooltip="Ver historial" tooltipPosition="top"></button>
             </div>
           </div>
@@ -52,8 +54,10 @@
           <div *ngFor="let ticket of progress" cdkDrag [cdkDragData]="ticket" class="kanban-item">
             <div class="item-title">{{ ticket.titulo }}</div>
             <div class="item-description">{{ ticket.descripcion || 'Sin descripción' }}</div>
+            <div class="item-priority" [ngClass]="'priority-' + (ticket.priority || 'moderada').toLowerCase()">
+              {{ ticket.priority || 'moderada' }}
+            </div>
             <div class="item-footer">
-              <small>ID: {{ ticket.id }}</small>
               <button pButton type="button" icon="pi pi-history" class="p-button-sm p-button-text" (click)="viewHistory(ticket)" pTooltip="Ver historial" tooltipPosition="top"></button>
             </div>
           </div>
@@ -78,8 +82,10 @@
           <div *ngFor="let ticket of done" cdkDrag [cdkDragData]="ticket" class="kanban-item">
             <div class="item-title">{{ ticket.titulo }}</div>
             <div class="item-description">{{ ticket.descripcion || 'Sin descripción' }}</div>
+            <div class="item-priority" [ngClass]="'priority-' + (ticket.priority || 'moderada').toLowerCase()">
+              {{ ticket.priority || 'moderada' }}
+            </div>
             <div class="item-footer">
-              <small>ID: {{ ticket.id }}</small>
               <button pButton type="button" icon="pi pi-history" class="p-button-sm p-button-text" (click)="viewHistory(ticket)" pTooltip="Ver historial" tooltipPosition="top"></button>
             </div>
           </div>
@@ -104,8 +110,10 @@
           <div *ngFor="let ticket of cancelled" cdkDrag [cdkDragData]="ticket" class="kanban-item">
             <div class="item-title">{{ ticket.titulo }}</div>
             <div class="item-description">{{ ticket.descripcion || 'Sin descripción' }}</div>
+            <div class="item-priority" [ngClass]="'priority-' + (ticket.priority || 'moderada').toLowerCase()">
+              {{ ticket.priority || 'moderada' }}
+            </div>
             <div class="item-footer">
-              <small>ID: {{ ticket.id }}</small>
               <button pButton type="button" icon="pi pi-history" class="p-button-sm p-button-text" (click)="viewHistory(ticket)" pTooltip="Ver historial" tooltipPosition="top"></button>
             </div>
           </div>
@@ -142,22 +150,26 @@
     </ng-template>
     <ng-template pTemplate="header">
       <tr>
-        <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
-        <th pSortableColumn="titulo">Título <p-sortIcon field="titulo"></p-sortIcon></th>
-        <th pSortableColumn="descripcion">Descripción</th>
+        <th pSortableColumn="titulo">Titulo <p-sortIcon field="titulo"></p-sortIcon></th>
+        <th pSortableColumn="descripcion">Descripcion</th>
         <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
+        <th pSortableColumn="priority">Prioridad <p-sortIcon field="priority"></p-sortIcon></th>
         <th pSortableColumn="created_at">Creado <p-sortIcon field="created_at"></p-sortIcon></th>
         <th *ngIf="canMove || canDelete">Acciones</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-ticket>
       <tr>
-        <td>{{ ticket.id }}</td>
         <td>{{ ticket.titulo }}</td>
         <td>{{ ticket.descripcion || 'N/A' }}</td>
         <td>
           <span [ngClass]="{'badge': true, 'bg-info': ticket.estado === 'En progreso', 'bg-success': ticket.estado === 'Finalizado', 'bg-danger': ticket.estado === 'Cancelado', 'bg-secondary': ticket.estado === 'No iniciado'}">
             {{ ticket.estado || 'N/A' }}
+          </span>
+        </td>
+        <td>
+          <span [ngClass]="{'badge': true, 'bg-danger': ticket.priority === 'alta', 'bg-warning': ticket.priority === 'moderada', 'bg-info': ticket.priority === 'baja'}">
+            {{ ticket.priority || 'moderada' }}
           </span>
         </td>
         <td>{{ ticket.created_at | date:'short' }}</td>

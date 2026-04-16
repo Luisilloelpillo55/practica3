@@ -77,10 +77,10 @@ export class ApiInterceptor implements HttpInterceptor {
   private getToken(): string | null {
     if (typeof window === 'undefined') return null;
     try {
-      const stored = window.localStorage.getItem('auth_user');
+      const stored = window.localStorage.getItem('auth_user') || window.sessionStorage.getItem('auth_user');
       if (stored) {
         const user = JSON.parse(stored);
-        return user?.token || null;
+        return user?.token || user?.accessToken || null;
       }
     } catch (e) {
       console.error('Error retrieving token:', e);
@@ -139,10 +139,10 @@ export class ApiInterceptor implements HttpInterceptor {
   private getCurrentUser(): string | null {
     if (typeof window === 'undefined') return null;
     try {
-      const stored = window.localStorage.getItem('auth_user');
+      const stored = window.localStorage.getItem('auth_user') || window.sessionStorage.getItem('auth_user');
       if (stored) {
         const user = JSON.parse(stored);
-        return user?.usuario || null;
+        return user?.usuario || user?.username || null;
       }
     } catch (e) {
       console.error('Error retrieving user:', e);

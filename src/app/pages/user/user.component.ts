@@ -101,6 +101,13 @@ export class UserComponent implements OnInit, OnDestroy {
   private fetchProfile(id: any, fallback: any) {
     const headers = this.authService.getAuthHeaders();
     const profileUrl = `${API_ENDPOINTS.USERS}/${id}`;
-    this.http.get(profileUrl, { headers }).subscribe({ next: (res: any) => this.user = res, error: () => this.user = fallback });
+    this.http.get(profileUrl, { headers }).subscribe({ 
+      next: (res: any) => {
+        // Extraer datos de la nueva estructura {statusCode, intOpCode, data}
+        const userData = res?.data || res;
+        this.user = userData;
+      },
+      error: () => this.user = fallback 
+    });
   }
 }

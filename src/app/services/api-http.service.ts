@@ -1,7 +1,7 @@
 import { Injectable, Injector } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { API_ENDPOINTS } from '../config/api.config.js';
-import { AuthService } from './auth.service.js';
+import { AuthService } from './auth.service';
 
 /**
  * HTTP Service wrapper that ensures all requests go to the API Gateway (port 3008)

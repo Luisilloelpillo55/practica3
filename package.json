@@ -12,7 +12,9 @@
     "start:gateway": "tsx src/services/gateway/server.ts",
     "start:users": "tsx src/services/users-service/server.ts",
     "start:groups": "tsx src/services/groups-service/server.ts",
-    "start:tickets": "tsx src/services/tickets-service/server.ts"
+    "start:tickets": "tsx src/services/tickets-service/server.ts",
+    "start:all": "concurrently \"npm run start:gateway\" \"npm run start:users\" \"npm run start:groups\" \"npm run start:tickets\" \"npm run start\"",
+    "start:backend": "concurrently \"npm run start:gateway\" \"npm run start:users\" \"npm run start:groups\" \"npm run start:tickets\""
   },
   "prettier": {
     "printWidth": 100,
@@ -66,6 +68,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.17.19",
     "@types/pg": "^8.20.0",
+    "concurrently": "^9.0.1",
     "jsdom": "^27.1.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",

@@ -12,7 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { filter, takeUntil } from 'rxjs';
 import { Subject } from 'rxjs';
-import { AuthService } from '../../services/auth.service.js';
+import { AuthService } from '../../services/auth.service';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
@@ -148,11 +148,14 @@ export class UserManagementComponent implements OnInit, OnDestroy {
 
   loadUsers(): void {
     const headers = this.auth.getAuthHeaders();
-    this.http.get<any[]>('/api/users', { headers }).subscribe({
+    this.http.get<any>('/api/users', { headers }).subscribe({
       next: (res: any) => {
-        const arr = Array.isArray(res) ? res : [];
+        // Extraer datos de la nueva estructura {statusCode, intOpCode, data}
+        const userData = res?.data || res;
+        const arr = Array.isArray(userData) ? userData : [];
         this.zone.run(() => {
           this.users = arr;
+          console.log('✓ [UserManagement] Users loaded:', arr.length, 'users');
           try { this.cdr.detectChanges(); } catch {}
         });
       },
@@ -266,8 +269,10 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         const me = this.auth.getUser();
         if (me && me.id === this.selectedUser.id) {
           this.http.get<any>(`/api/users/${me.id}`, { headers }).subscribe({
-            next: (u) => {
-              const updated = { ...me, ...u };
+            next: (res: any) => {
+              // Extraer datos de la nueva estructura {statusCode, intOpCode, data}
+              const userData = res?.data || res;
+              const updated = { ...me, ...userData };
               this.auth.saveUser(updated);
               this.closeDialog();
               this.loadUsers();
@@ -302,12 +307,75 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       this.loadPermissions();
     }
     
-    // Usar permisos del usuario desde su objeto (vienen del login)
-    this.zone.run(() => {
-      this.selectedPermissions = Array.isArray(user.permisos) ? [...user.permisos] : [];
-      this.permissionsDialog = true;
-      try { this.cdr.detectChanges(); } catch {}
+    // Limpiar selección previa
+    this.selectedPermissions = [];
+
+    // Primero intentar obtener permisos desde el backend específico del usuario
+    const headers = this.auth.getAuthHeaders();
+    this.http.get<any>(`/api/users/${user.id}/permissions`, { headers }).subscribe({
+      next: (res: any) => {
+        const perms = res?.data || res;
+        if (Array.isArray(perms)) {
+          this.selectedPermissions = perms;
+        } else {
+          // Si la respuesta no es array, usar parsing robusto (fallback)
+          this.parseAndSetPermissionsFromUserObject(user);
+        }
+        console.log('📋 [UserMgmt] Permisos cargados desde backend para usuario:', user.usuario, 'Total:', this.selectedPermissions.length, 'Permisos:', this.selectedPermissions);
+        this.zone.run(() => {
+          this.permissionsDialog = true;
+          try { this.cdr.detectChanges(); } catch {}
+        });
+      },
+      error: (err: any) => {
+        console.warn('⚠️ [UserMgmt] No se pudieron obtener permisos desde backend, usando fallback local:', err?.status || err);
+        // Fallback: intentar parsear campos disponibles en objeto user
+        this.parseAndSetPermissionsFromUserObject(user);
+        this.zone.run(() => {
+          this.permissionsDialog = true;
+          try { this.cdr.detectChanges(); } catch {}
+        });
+      }
     });
+  }
+
+  /** Extrae permisos del objeto `user` si el endpoint de permisos no responde */
+  private parseAndSetPermissionsFromUserObject(user: any): void {
+    let userPerms: any = null;
+    if (user.permiso) userPerms = user.permiso;
+    if (!userPerms && user.permisos) userPerms = user.permisos;
+    if (!userPerms && user.permissions) userPerms = user.permissions;
+    if (!userPerms && user.perms) userPerms = user.perms;
+    if (!userPerms && user.roles) userPerms = user.roles;
+    if (!userPerms && user.data && (user.data.permisos || user.data.permissions)) {
+      userPerms = user.data.permisos || user.data.permissions;
+    }
+    if (!userPerms && user.perfil && (user.perfil.permisos || user.perfil.permissions)) {
+      userPerms = user.perfil.permisos || user.perfil.permissions;
+    }
+
+    // Normalizar distintos formatos
+    if (userPerms) {
+      if (Array.isArray(userPerms)) {
+        this.selectedPermissions = [...userPerms];
+      } else if (typeof userPerms === 'object') {
+        this.selectedPermissions = Object.keys(userPerms).filter(k => !!userPerms[k]);
+      } else if (typeof userPerms === 'string') {
+        const s = userPerms.trim();
+        try {
+          const parsed = JSON.parse(s);
+          if (Array.isArray(parsed)) this.selectedPermissions = parsed;
+          else if (typeof parsed === 'object') this.selectedPermissions = Object.keys(parsed).filter(k => !!parsed[k]);
+          else this.selectedPermissions = s.length === 0 ? [] : s.split(',').map((p: string) => p.trim()).filter((p: string) => p);
+        } catch (e) {
+          this.selectedPermissions = s.length === 0 ? [] : s.split(',').map((p: string) => p.trim()).filter((p: string) => p);
+        }
+      }
+    } else {
+      // Si no hay información, dejar vacío
+      this.selectedPermissions = [];
+    }
+    console.log('📋 [UserMgmt] Permisos (fallback) para usuario:', user.usuario, 'Total:', this.selectedPermissions.length, this.selectedPermissions);
   }
 
   /**
@@ -335,9 +403,26 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   saveUserPermissions(): void {
     if (!this.selectedUserForPerms) return;
 
-    this.messageService.add({ severity: 'info', summary: 'Info', detail: 'Permisos visibles (guardado en backend vendrá próximamente)' });
-    this.permissionsDialog = false;
-    this.loadUsers();
+    const headers = this.auth.getAuthHeaders();
+    const id = this.selectedUserForPerms.id;
+    this.http.put<any>(`/api/users/${id}/permissions`, { permissions: this.selectedPermissions }, { headers }).subscribe({
+      next: (res: any) => {
+        const updated = res?.data || res;
+        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Permisos guardados' });
+        // Si actualizamos al usuario actual, refrescar sesión local
+        const me = this.auth.getUser();
+        if (me && String(me.id) === String(id)) {
+          const merged = { ...me, permisos: this.selectedPermissions, permissions: this.selectedPermissions };
+          this.auth.saveUser(merged, true);
+        }
+        this.permissionsDialog = false;
+        this.loadUsers();
+      },
+      error: (err: any) => {
+        console.error('Failed saving permissions:', err);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar permisos' });
+      }
+    });
   }
 
   deleteUser(user: any): void {

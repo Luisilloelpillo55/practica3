@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { AuthService } from './auth.service.js';
+import { AuthService } from './auth.service';
 
 /**
  * Servicio centralizado para gestionar permisos por acción.
@@ -17,6 +17,9 @@ export class PermissionService {
   
   private currentGroupSubject = new BehaviorSubject<string | null>(null);
   public currentGroup$: Observable<string | null> = this.currentGroupSubject.asObservable();
+  
+  private permissionsByGroupSubject = new BehaviorSubject<{ [groupId: string]: string[] }>({});
+  public permissionsByGroup$: Observable<{ [groupId: string]: string[] }> = this.permissionsByGroupSubject.asObservable();
 
   constructor(private authService: AuthService) {
     // Escuchar cambios de usuario y recargar permisos
@@ -26,6 +29,7 @@ export class PermissionService {
       } else {
         this.currentPermissionsSubject.next([]);
         this.currentGroupSubject.next(null);
+        this.permissionsByGroupSubject.next({});
       }
     });
   }
@@ -35,23 +39,26 @@ export class PermissionService {
    * @param permission string del permiso (ej: "tickets:add")
    * @returns boolean true si tiene el permiso
    */
-  hasPermission(permission: string): boolean {
+  hasPermission(permission: string | string[]): boolean {
     const permissions = this.currentPermissionsSubject.value;
-    return permissions.includes(permission);
+    const permsToCheck = Array.isArray(permission) ? permission : [permission];
+    return permsToCheck.every(p => permissions.includes(p));
   }
 
   /**
-   * Verifica si el usuario tiene múltiples permisos (AND lógico)
-   */
-  hasAllPermissions(permissions: string[]): boolean {
-    return permissions.every(p => this.hasPermission(p));
-  }
-
-  /**
-   * Verifica si el usuario tiene cualquiera de los permisos (OR lógico)
+   * Verifica si el usuario tiene CUALQUIERA de los permisos (OR lógico)
    */
   hasAnyPermission(permissions: string[]): boolean {
-    return permissions.some(p => this.hasPermission(p));
+    const currentPerms = this.currentPermissionsSubject.value;
+    return permissions.some(p => currentPerms.includes(p));
+  }
+
+  /**
+   * Verifica si el usuario tiene TODOS los permisos (AND lógico)
+   */
+  hasAllPermissions(permissions: string[]): boolean {
+    const currentPerms = this.currentPermissionsSubject.value;
+    return permissions.every(p => currentPerms.includes(p));
   }
 
   /**
@@ -65,8 +72,11 @@ export class PermissionService {
    * Establece el grupo actual y carga permisos para ese grupo
    */
   setCurrentGroup(groupId: string): void {
-    this.currentGroupSubject.next(groupId);
-    this.refreshPermissionsForGroup(groupId);
+    const permsByGroup = this.permissionsByGroupSubject.value;
+    if (permsByGroup[groupId]) {
+      this.currentGroupSubject.next(groupId);
+      this.currentPermissionsSubject.next(permsByGroup[groupId]);
+    }
   }
 
   /**
@@ -74,34 +84,37 @@ export class PermissionService {
    * En producción, esto debería llamar a la API
    */
   refreshPermissionsForGroup(groupId: string): void {
-    const user = this.authService.getUser();
-    if (user && user.permissionsByGroup && user.permissionsByGroup[groupId]) {
-      this.currentPermissionsSubject.next(user.permissionsByGroup[groupId]);
-    } else {
-      this.currentPermissionsSubject.next([]);
+    const permsByGroup = this.permissionsByGroupSubject.value;
+    if (permsByGroup[groupId]) {
+      this.currentGroupSubject.next(groupId);
+      this.currentPermissionsSubject.next(permsByGroup[groupId]);
     }
   }
 
   /**
    * Carga los permisos iniciales desde el usuario autenticado
-   * Los permisos vienen en el modelo de usuario como:
-   * {
-   *   usuario: "...",
-   *   token: "...",
-   *   permissionsByGroup: {
-   *     "group-123": ["tickets:add", "tickets:move", ...],
-   *     "group-456": ["tickets:add", ...]
-   *   },
-   *   defaultGroupId: "group-123"
-   * }
+   * Los permisos vienen del login como un array global
    */
   private loadPermissionsFromUser(user: any): void {
-    if (user.defaultGroupId && user.permissionsByGroup && user.permissionsByGroup[user.defaultGroupId]) {
-      this.currentGroupSubject.next(user.defaultGroupId);
-      this.currentPermissionsSubject.next(user.permissionsByGroup[user.defaultGroupId]);
+    // Obtener permisos del usuario (devueltos del servidor en el login)
+    const userPermissions = user.permissions || user.permisos || [];
+    
+    // Si el usuario tiene permisos por grupo, usarlos
+    if (user.permissionsByGroup) {
+      this.permissionsByGroupSubject.next(user.permissionsByGroup);
+      // Seleccionar el primer grupo si existe
+      const groupIds = Object.keys(user.permissionsByGroup);
+      if (groupIds.length > 0) {
+        this.currentGroupSubject.next(groupIds[0]);
+        this.currentPermissionsSubject.next(user.permissionsByGroup[groupIds[0]]);
+      } else {
+        this.currentPermissionsSubject.next(userPermissions);
+      }
     } else {
+      // Si no tiene permisos por grupo, usar los permisos globales
+      this.permissionsByGroupSubject.next({ 'default': userPermissions });
       this.currentGroupSubject.next(null);
-      this.currentPermissionsSubject.next([]);
+      this.currentPermissionsSubject.next(userPermissions);
     }
   }
 
@@ -109,15 +122,21 @@ export class PermissionService {
    * Obtiene todos los permisos disponibles para el usuario
    */
   getAllUserPermissions(): { [groupId: string]: string[] } {
-    const user = this.authService.getUser();
-    return user?.permissionsByGroup || {};
+    return this.permissionsByGroupSubject.value;
   }
 
   /**
    * Obtiene lista de grupos en los que el usuario tiene permisos
    */
   getAvailableGroups(): string[] {
-    const user = this.authService.getUser();
-    return user?.permissionsByGroup ? Object.keys(user.permissionsByGroup) : [];
+    const permsByGroup = this.permissionsByGroupSubject.value;
+    return Object.keys(permsByGroup).filter(groupId => groupId !== 'default');
+  }
+
+  /**
+   * Obtiene los permisos actuales como observable
+   */
+  getCurrentPermissions(): string[] {
+    return this.currentPermissionsSubject.value;
   }
 }

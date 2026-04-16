@@ -8,7 +8,7 @@ import { routes } from './app.routes.js';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { ApiInterceptor } from './interceptors/api.interceptor.js';
 import { LoadingInterceptor } from './interceptors/loading.interceptor.js';
-import { AuthService } from './services/auth.service.js';
+import { AuthService } from './services/auth.service';
 
 /**
  * Initialize app - recover session from localStorage

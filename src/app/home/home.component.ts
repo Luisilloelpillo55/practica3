@@ -118,17 +118,23 @@ export class HomeComponent implements OnInit, OnDestroy {
     console.log('📊 [HomeComponent] loadGroups() - Has token:', !!this.authService.getToken());
     console.log('📊 [HomeComponent] loadGroups() - Will use proxy to reach http://localhost:3008/api/groups');
     
-    this.http.get<any[]>('/api/groups', { headers }).subscribe({
+    this.http.get<any>('/api/groups', { headers }).subscribe({
       next: (res: any) => {
-        console.log('✓ [HomeComponent] Groups loaded successfully:', res?.length || 0, 'groups');
-        this.groups = Array.isArray(res) ? res : [];
-        this.filterMyGroups();
-        // if navigation requested a group, select it now
-        if (this.pendingQueryGroup) {
-          const g = this.groups.find(x => String(x.id) === String(this.pendingQueryGroup));
-          if (g) this.selectGroup(g);
-          this.pendingQueryGroup = null;
-        }
+        // Extraer datos de la nueva estructura {statusCode, intOpCode, data}
+        const groupData = res?.data || res;
+        console.log('✓ [HomeComponent] Groups loaded successfully:', groupData?.length || 0, 'groups');
+        // Usar microtask para evitar ExpressionChangedAfterItHasBeenCheckedError
+        setTimeout(() => {
+          this.groups = Array.isArray(groupData) ? groupData : [];
+          this.filterMyGroups();
+          // if navigation requested a group, select it now
+          if (this.pendingQueryGroup) {
+            const g = this.groups.find(x => String(x.id) === String(this.pendingQueryGroup));
+            if (g) this.selectGroup(g);
+            this.pendingQueryGroup = null;
+          }
+          try { this.cdr.detectChanges(); } catch {}
+        }, 0);
       },
       error: (err) => { 
         console.error('❌ [HomeComponent] Error loading groups:', err); 
@@ -180,15 +186,17 @@ export class HomeComponent implements OnInit, OnDestroy {
     const ticketUrl = `${API_ENDPOINTS.GROUPS}/${groupId}/tickets`;
     console.log('🎫 Loading tickets for group:', groupId, 'URL:', ticketUrl, 'has token:', headers.has('Authorization'));
     
-    this.http.get<any[]>(ticketUrl, { headers }).subscribe({
+    this.http.get<any>(ticketUrl, { headers }).subscribe({
       next: (res: any) => {
+        // Extraer datos de la nueva estructura {statusCode, intOpCode, data}
+        const ticketData = res?.data || res;
         console.log('✅ Tickets loaded successfully:', {
-          response: res,
-          type: typeof res,
-          isArray: Array.isArray(res),
-          count: Array.isArray(res) ? res.length : 'N/A'
+          response: ticketData,
+          type: typeof ticketData,
+          isArray: Array.isArray(ticketData),
+          count: Array.isArray(ticketData) ? ticketData.length : 'N/A'
         });
-        this.tickets = Array.isArray(res) ? res : [];
+        this.tickets = Array.isArray(ticketData) ? ticketData : [];
         this.cdr.detectChanges();
         // if a ticket was requested in query params, open it
         if (this.pendingQueryTicket) {

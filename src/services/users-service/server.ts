@@ -5,6 +5,8 @@ import supabasePool from '../shared-db.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { successResponse, errorResponse } from '../response-handler.js';
+import { DEFAULT_PERMISSIONS } from '../permissions-definitions.js';
 
 dotenv.config();
 
@@ -30,7 +32,7 @@ app.get('/health', (req, res) => {
 app.post('/register', async (req, res) => {
   const { usuario, email, password, fullname, address, dob, phone } = req.body || {};
   if (!usuario || !email || !password) {
-    return res.status(400).json({ error: 'Missing required fields' });
+    return res.status(400).json(errorResponse(400, 'USER_BAD_REQUEST', 'Missing required fields: usuario, email, password'));
   }
 
   try {
@@ -41,17 +43,14 @@ app.post('/register', async (req, res) => {
     );
 
     if (checkResult.rows.length > 0) {
-      return res.status(409).json({ error: 'User or email already registered' });
+      return res.status(409).json(errorResponse(409, 'USER_ALREADY_EXISTS', 'Usuario o email ya registrado'));
     }
 
     // Hash password
     const hashed = await bcrypt.hash(password, 10);
 
-    // Default permissions array (all except admin and user_view)
-    const defaultPermissions = [
-      'ticket_view', 'ticket_create', 'ticket_edit', 'ticket_move', 'ticket_delete',
-      'group_view', 'group_create', 'group_edit', 'group_delete'
-    ];
+    // Default permissions array (ALL action-based permissions)
+    const defaultPermissions = DEFAULT_PERMISSIONS;
 
     // Insert user with default permissions
     const result = await supabasePool.query(
@@ -64,14 +63,22 @@ app.post('/register', async (req, res) => {
     const newUser = result.rows[0];
 
     // Return user data with permissions assigned
-    res.status(201).json({
-      ...newUser,
+    res.status(201).json(successResponse({
+      id: newUser.id,
+      usuario: newUser.usuario,
+      email: newUser.email,
+      fullname: newUser.fullname,
+      address: newUser.address,
+      dob: newUser.dob,
+      phone: newUser.phone,
       permisos: defaultPermissions,
+      is_admin: newUser.is_admin,
+      created_at: newUser.created_at,
       message: 'Usuario registrado exitosamente. Por favor inicia sesión.'
-    });
+    }, 201, 'USER_REGISTER_SUCCESS'));
   } catch (error: any) {
     console.error('[Users Service Error]', error);
-    res.status(500).json({ error: 'Database error', details: error.message });
+    res.status(500).json(errorResponse(500, 'USER_INTERNAL_ERROR', error.message));
   }
 });
 
@@ -79,7 +86,7 @@ app.post('/register', async (req, res) => {
 app.post('/login', async (req, res) => {
   const { username, password } = req.body || {};
   if (!username || !password) {
-    return res.status(400).json({ error: 'Missing username or password' });
+    return res.status(401).json(errorResponse(401, 'USER_BAD_REQUEST', 'Username and password are required'));
   }
 
   try {
@@ -92,7 +99,7 @@ app.post('/login', async (req, res) => {
 
     if (result.rows.length === 0) {
       console.warn('❌ [Users Service] User not found:', username);
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json(errorResponse(401, 'USER_INVALID_CREDENTIALS', 'Invalid credentials'));
     }
 
     const user = result.rows[0];
@@ -102,12 +109,12 @@ app.post('/login', async (req, res) => {
 
     if (!passwordMatch) {
       console.warn('❌ [Users Service] Password mismatch for user:', username);
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json(errorResponse(401, 'USER_INVALID_CREDENTIALS', 'Invalid credentials'));
     }
 
     console.log('✓ [Users Service] Password verified for:', username);
 
-    // Get permissions from user record (stored as array)
+    // Get permissions from user record (stored as array) - action-based permissions
     const permissions = Array.isArray(user.permisos) ? user.permisos : [];
     console.log('✓ [Users Service] Permissions loaded:', permissions.length, 'items -', permissions);
 
@@ -151,10 +158,10 @@ app.post('/login', async (req, res) => {
       token_length: response.token.length
     });
     
-    res.json(response);
+    res.status(200).json(successResponse(response, 200, 'USER_LOGIN_SUCCESS'));
   } catch (error: any) {
     console.error('❌ [Users Service Error]', error);
-    res.status(500).json({ error: 'Database error', details: error.message });
+    res.status(500).json(errorResponse(500, 'USER_INTERNAL_ERROR', error.message));
   }
 });
 
@@ -164,10 +171,10 @@ app.get('/', async (req, res) => {
     const result = await supabasePool.query(
       'SELECT id, usuario, email, fullname, address, dob, phone, is_admin, created_at FROM users ORDER BY created_at DESC'
     );
-    res.json(result.rows);
+    res.json(successResponse(result.rows, 200, 'USER_LOGIN_SUCCESS'));
   } catch (error: any) {
     console.error('❌ [Users Service] GET / error:', error);
-    res.status(500).json({ error: 'Database error', details: error.message });
+    res.status(500).json(errorResponse(500, 'USER_INTERNAL_ERROR', error.message));
   }
 });
 
@@ -175,10 +182,10 @@ app.get('/', async (req, res) => {
 app.get('/permissions', async (req, res) => {
   try {
     const result = await supabasePool.query('SELECT id, nombre, descripcion FROM permissions ORDER BY nombre');
-    res.json(result.rows);
+    res.json(successResponse(result.rows, 200, 'USER_LOGIN_SUCCESS'));
   } catch (error: any) {
     console.error('[Users Service] GET /permissions error:', error);
-    res.status(500).json({ error: 'Database error', details: error.message });
+    res.status(500).json(errorResponse(500, 'USER_INTERNAL_ERROR', error.message));
   }
 });
 
@@ -192,14 +199,14 @@ app.get('/:id/permissions', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json(errorResponse(404, 'USER_NOT_FOUND', 'Usuario no encontrado'));
     }
 
     const permisos = result.rows[0].permisos || [];
-    res.json(permisos);
+    res.json(successResponse(permisos, 200, 'USER_LOGIN_SUCCESS'));
   } catch (error: any) {
     console.error('[Users Service] GET /:id/permissions error:', error);
-    res.status(500).json({ error: 'Database error', details: error.message });
+    res.status(500).json(errorResponse(500, 'USER_INTERNAL_ERROR', error.message));
   }
 });
 
@@ -214,13 +221,13 @@ app.get('/:id', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json(errorResponse(404, 'USER_NOT_FOUND', 'Usuario no encontrado'));
     }
 
-    res.json(result.rows[0]);
+    res.json(successResponse(result.rows[0], 200, 'USER_LOGIN_SUCCESS'));
   } catch (error: any) {
     console.error('[Users Service Error]', error);
-    res.status(500).json({ error: 'Database error', details: error.message });
+    res.status(500).json(errorResponse(500, 'USER_INTERNAL_ERROR', error.message));
   }
 });
 
@@ -238,13 +245,13 @@ app.put('/:id', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json(errorResponse(404, 'USER_NOT_FOUND', 'Usuario no encontrado'));
     }
 
-    res.json(result.rows[0]);
+    res.json(successResponse(result.rows[0], 200, 'USER_LOGIN_SUCCESS'));
   } catch (error: any) {
     console.error('[Users Service Error]', error);
-    res.status(500).json({ error: 'Database error', details: error.message });
+    res.status(500).json(errorResponse(500, 'USER_INTERNAL_ERROR', error.message));
   }
 });
 
@@ -254,7 +261,7 @@ app.put('/:id/permissions', async (req, res) => {
   const { permissions } = req.body;
 
   if (!Array.isArray(permissions)) {
-    return res.status(400).json({ error: 'permissions must be an array' });
+    return res.status(400).json(errorResponse(400, 'USER_BAD_REQUEST', 'permissions must be an array'));
   }
 
   try {
@@ -264,20 +271,20 @@ app.put('/:id/permissions', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json(errorResponse(404, 'USER_NOT_FOUND', 'Usuario no encontrado'));
     }
 
-    res.json(result.rows[0]);
+    res.json(successResponse(result.rows[0], 200, 'USER_LOGIN_SUCCESS'));
   } catch (error: any) {
     console.error('[Users Service] PUT /:id/permissions error:', error);
-    res.status(500).json({ error: 'Database error', details: error.message });
+    res.status(500).json(errorResponse(500, 'USER_INTERNAL_ERROR', error.message));
   }
 });
 
 // Error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('[Users Service Error]', err);
-  res.status(500).json({ error: 'Service error', details: err.message });
+  res.status(500).json(errorResponse(500, 'USER_INTERNAL_ERROR', err.message));
 });
 
 app.listen(USERS_PORT, () => {

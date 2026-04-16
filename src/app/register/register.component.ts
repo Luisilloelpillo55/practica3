@@ -7,7 +7,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
-import { AuthService } from '../services/auth.service.js';
+import { AuthService } from '../services/auth.service';
 
 function passwordValidator(control: AbstractControl): ValidationErrors | null {
   const val: string = control.value || '';

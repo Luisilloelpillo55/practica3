@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { AuthService } from '../../../services/auth.service.js';
+import { AuthService } from '../../../services/auth.service';
 import { Subscription } from 'rxjs';
 
 interface NavItem {

@@ -9,7 +9,7 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { GroupService } from '../../services/group.service.js';
-import { AuthService } from '../../services/auth.service.js';
+import { AuthService } from '../../services/auth.service';
 import { takeUntil } from 'rxjs';
 import { Subject } from 'rxjs';
 

@@ -11,7 +11,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { HttpClientModule } from '@angular/common/http';
 import { DragDropModule, CdkDragDrop, transferArrayItem, moveItemInArray } from '@angular/cdk/drag-drop';
 import { TicketService } from '../../services/ticket.service.js';
-import { AuthService } from '../../services/auth.service.js';
+import { AuthService } from '../../services/auth.service';
 import { filter, takeUntil } from 'rxjs';
 import { Subject } from 'rxjs';
 import { MessageService } from 'primeng/api';

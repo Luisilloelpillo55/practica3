@@ -1,65 +1,112 @@
-<div class="dashboard-container">
-  <h1>Dashboard</h1>
-  
-  <!-- Selector de grupo -->
-  <div class="group-selector">
-    <label>Selecciona un grupo:</label>
-    <select class="group-select" (change)="onGroupChange($event)">
-      <option value="">-- Selecciona un grupo --</option>
-      <option *ngFor="let group of getAvailableGroups()" [value]="group.id">
-        {{ group.nombre }}
-      </option>
-    </select>
-  </div>
-
-  <!-- Estadísticas generales -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <h3>Total de Tickets</h3>
-      <p class="stat-value">{{ stats.totalTickets }}</p>
-    </div>
-    
-    <div class="stat-card">
-      <h3>Por Hacer</h3>
-      <p class="stat-value">{{ stats.ticketsByStatus['to-do'] || 0 }}</p>
-    </div>
-    
-    <div class="stat-card">
-      <h3>En Progreso</h3>
-      <p class="stat-value">{{ stats.ticketsByStatus['in-progress'] || 0 }}</p>
-    </div>
-    
-    <div class="stat-card">
-      <h3>Completados</h3>
-      <p class="stat-value">{{ stats.ticketsByStatus['done'] || 0 }}</p>
+<div class="dashboard-wrapper">
+  <!-- Header con gradiente -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1 class="header-title">Dashboard de Control</h1>
+      <p class="header-subtitle">Visualiza tus tickets y estadísticas en tiempo real</p>
     </div>
   </div>
 
-  <!-- Tabla de tickets por prioridad -->
-  <p-card class="stats-table">
-    <ng-template pTemplate="header">
-      <h3 style="margin: 0; color: #fff;">Tickets por Prioridad</h3>
-    </ng-template>
-    <p-table [value]="getPriorityStats()">
-      <ng-template pTemplate="header">
-        <tr>
-          <th style="color: #fff;">Prioridad</th>
-          <th style="color: #fff;">Cantidad</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-item>
-        <tr>
-          <td>{{ item.priority }}</td>
-          <td>{{ item.count }}</td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </p-card>
+  <div class="dashboard-container">
+    <!-- Selector de Grupo -->
+    <div class="selector-section">
+      <div class="selector-card">
+        <div class="selector-label">
+          <i class="pi pi-building"></i>
+          <label>Selecciona un workspace</label>
+        </div>
+        <select class="group-select" (change)="onGroupChange($event)" [value]="selectedGroup?.id || ''">
+          <option value="">-- Selecciona un grupo --</option>
+          <option *ngFor="let group of getAvailableGroups()" [value]="group.id">
+            {{ group.nombre }}
+          </option>
+        </select>
+      </div>
+    </div>
 
-  <!-- Acciones rápidas (según permisos) -->
-  <div class="quick-actions" *appHasPermission="'tickets:add'">
-    <h3>Acciones rápidas</h3>
-    <button pButton type="button" label="Crear Ticket" icon="pi pi-plus" routerLink="/kanban" class="btn-primary"></button>
-    <button pButton type="button" label="Ir a Kanban" icon="pi pi-list" routerLink="/kanban" class="btn-secondary"></button>
+    <!-- Tarjetas de Estadísticas -->
+    <div class="stats-grid">
+      <div class="stat-card total-tickets">
+        <div class="stat-icon">
+          <i class="pi pi-inbox"></i>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Total de Tickets</p>
+          <p class="stat-value">{{ stats.totalTickets }}</p>
+        </div>
+      </div>
+      
+      <div class="stat-card status-todo">
+        <div class="stat-icon">
+          <i class="pi pi-circle"></i>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Por Hacer</p>
+          <p class="stat-value">{{ stats.ticketsByStatus['to-do'] || 0 }}</p>
+        </div>
+      </div>
+      
+      <div class="stat-card status-progress">
+        <div class="stat-icon">
+          <i class="pi pi-spin pi-spinner"></i>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">En Progreso</p>
+          <p class="stat-value">{{ stats.ticketsByStatus['in-progress'] || 0 }}</p>
+        </div>
+      </div>
+      
+      <div class="stat-card status-done">
+        <div class="stat-icon">
+          <i class="pi pi-check"></i>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Completados</p>
+          <p class="stat-value">{{ stats.ticketsByStatus['done'] || 0 }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección de Prioridades -->
+    <div class="priority-section">
+      <h3 class="section-title">Distribución por Prioridad</h3>
+      <div class="priority-grid">
+        <div class="priority-card priority-high">
+          <span class="priority-badge">ALTA</span>
+          <p class="priority-count">{{ stats.ticketsByPriority['high'] || 0 }}</p>
+        </div>
+        <div class="priority-card priority-medium">
+          <span class="priority-badge">MEDIA</span>
+          <p class="priority-count">{{ stats.ticketsByPriority['medium'] || 0 }}</p>
+        </div>
+        <div class="priority-card priority-low">
+          <span class="priority-badge">BAJA</span>
+          <p class="priority-count">{{ stats.ticketsByPriority['low'] || 0 }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="quick-actions-section" *appHasPermission="'tickets:add'">
+      <h3 class="section-title">Acciones Rápidas</h3>
+      <div class="actions-grid">
+        <button class="action-btn btn-create" pButton type="button" routerLink="/kanban">
+          <i class="pi pi-plus"></i>
+          <span>Crear Ticket</span>
+        </button>
+        <button class="action-btn btn-view" pButton type="button" routerLink="/home">
+          <i class="pi pi-list"></i>
+          <span>Ver Kanban</span>
+        </button>
+        <button class="action-btn btn-groups" pButton type="button" routerLink="/group" *appHasPermission="'groups:create'">
+          <i class="pi pi-plus"></i>
+          <span>Crear Grupo</span>
+        </button>
+        <button class="action-btn btn-admin" pButton type="button" routerLink="/admin-users" *appHasPermission="'users:manage'">
+          <i class="pi pi-cog"></i>
+          <span>Admin</span>
+        </button>
+      </div>
+    </div>
   </div>
 </div>

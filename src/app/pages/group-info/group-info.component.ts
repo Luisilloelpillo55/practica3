@@ -6,7 +6,7 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
-import { AuthService } from '../../services/auth.service.js';
+import { AuthService } from '../../services/auth.service';
 import { filter, takeUntil } from 'rxjs';
 import { Subject } from 'rxjs';
 
@@ -89,10 +89,12 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
 
   private loadGroups(): void {
     const headers = this.auth.getAuthHeaders();
-    this.http.get<any[]>('/api/groups', { headers }).subscribe({
+    this.http.get<any>('/api/groups', { headers }).subscribe({
       next: (res: any) => {
+        // Extraer datos de la nueva estructura {statusCode, intOpCode, data}
+        const groupData = res?.data || res;
         Promise.resolve().then(() => {
-          this.groups = Array.isArray(res) ? res : [];
+          this.groups = Array.isArray(groupData) ? groupData : [];
           try { this.cdr.detectChanges(); } catch {}
         });
       },
@@ -120,10 +122,12 @@ export class GroupInfoComponent implements OnInit, OnDestroy {
 
   private loadGroupTickets(groupId: any): void {
     const headers = this.auth.getAuthHeaders();
-    this.http.get<any[]>(`/api/groups/${groupId}/tickets`, { headers }).subscribe({
+    this.http.get<any>(`/api/groups/${groupId}/tickets`, { headers }).subscribe({
       next: (res: any) => {
+        // Extraer datos de la nueva estructura {statusCode, intOpCode, data}
+        const ticketData = res?.data || res;
         Promise.resolve().then(() => {
-          this.tickets = Array.isArray(res) ? res : [];
+          this.tickets = Array.isArray(ticketData) ? ticketData : [];
           try { this.cdr.detectChanges(); } catch {}
         });
       },

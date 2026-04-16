@@ -128,12 +128,14 @@ export class GroupComponent implements OnInit, OnDestroy {
     const groupsUrl = `${API_ENDPOINTS.GROUPS}`;
     console.log('Loading groups from:', groupsUrl, 'with token:', auth ? auth.substr(0,20) + '...' : 'missing');
     
-    this.http.get<any[]>(groupsUrl, { headers }).subscribe({ 
+    this.http.get<any>(groupsUrl, { headers }).subscribe({ 
       next: (res: any) => {
-        console.log('Groups loaded successfully:', res ? res.length : 0);
+        // Extraer datos de la nueva estructura {statusCode, intOpCode, data}
+        const groupData = res?.data || res;
+        console.log('Groups loaded successfully:', groupData ? groupData.length : 0);
         // assign in next microtask to avoid ExpressionChangedAfterItHasBeenChecked
         Promise.resolve().then(() => {
-          this.groups = Array.isArray(res) ? res : [];
+          this.groups = Array.isArray(groupData) ? groupData : [];
           // update view if needed
           try { this.cdr.detectChanges(); } catch {}
         });
@@ -147,15 +149,20 @@ export class GroupComponent implements OnInit, OnDestroy {
 
   loadTickets() {
     const ticketsUrl = `${API_ENDPOINTS.TICKETS}`;
-    this.http.get(ticketsUrl, { headers: this.authService.getAuthHeaders() }).subscribe({ next: (res: any) => {
-      const arr = Array.isArray(res) ? res : [];
-      const map: Record<string, any[]> = {};
-      for (const t of arr) {
-        const gid = t.group_id != null ? String(t.group_id) : 'unknown';
-        (map[gid] = map[gid] || []).push(t);
-      }
-      this.ticketsByGroup = map;
-    }, error: () => { this.ticketsByGroup = {}; } });
+    this.http.get(ticketsUrl, { headers: this.authService.getAuthHeaders() }).subscribe({ 
+      next: (res: any) => {
+        // Extraer datos de la nueva estructura {statusCode, intOpCode, data}
+        const ticketData = res?.data || res;
+        const arr = Array.isArray(ticketData) ? ticketData : [];
+        const map: Record<string, any[]> = {};
+        for (const t of arr) {
+          const gid = t.group_id != null ? String(t.group_id) : 'unknown';
+          (map[gid] = map[gid] || []).push(t);
+        }
+        this.ticketsByGroup = map;
+      }, 
+      error: () => { this.ticketsByGroup = {}; } 
+    });
   }
 
   openTickets(g: any) {
@@ -177,7 +184,11 @@ export class GroupComponent implements OnInit, OnDestroy {
   loadUsers() {
     const usersUrl = '/api/users';
     this.http.get(usersUrl, { headers: this.authService.getAuthHeaders() }).subscribe({ 
-      next: (res: any) => this.users = Array.isArray(res) ? res : [], 
+      next: (res: any) => {
+        // Extraer datos de la nueva estructura {statusCode, intOpCode, data}
+        const userData = res?.data || res;
+        this.users = Array.isArray(userData) ? userData : [];
+      },
       error: () => {} 
     });
   }

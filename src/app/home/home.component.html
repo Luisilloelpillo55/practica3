@@ -29,6 +29,32 @@
   </div>
 
     <div *ngIf="loggedIn && dashboardVisible" class="home-dashboard app-container" [@pageEnter]>
+      <!-- Statistics summary (real data from DB) -->
+      <div class="stats-summary" style="display:flex; gap:1rem; margin-bottom:1rem; flex-wrap:wrap;">
+        <div class="stat-card p-card" style="flex:1 1 180px; padding:1rem;">
+          <div style="font-size:0.85rem; color:var(--muted-color);">Total de tickets</div>
+          <div style="font-size:1.6rem; font-weight:700;">{{ statsTotal }}</div>
+        </div>
+        <div class="stat-card p-card" style="flex:1 1 220px; padding:1rem;">
+          <div style="font-size:0.85rem; color:var(--muted-color);">Tickets por estado</div>
+          <div style="margin-top:0.5rem;">
+            <div *ngFor="let kv of statsByState | keyvalue">{{ kv.key }}: <strong>{{ kv.value }}</strong></div>
+          </div>
+        </div>
+        <div class="stat-card p-card" style="flex:1 1 220px; padding:1rem;">
+          <div style="font-size:0.85rem; color:var(--muted-color);">Tickets por prioridad</div>
+          <div style="margin-top:0.5rem;">
+            <div *ngFor="let kv of statsByPriority | keyvalue">{{ kv.key }}: <strong>{{ kv.value }}</strong></div>
+          </div>
+        </div>
+        <div class="stat-card p-card" style="flex:1 1 260px; padding:1rem;">
+          <div style="font-size:0.85rem; color:var(--muted-color);">Tickets por grupo</div>
+          <div style="margin-top:0.5rem;">
+            <div *ngFor="let g of statsByGroup">{{ g.groupName }}: <strong>{{ g.count }}</strong></div>
+          </div>
+        </div>
+      </div>
+
       <div class="dashboard-header" [ngClass]="{ 'hidden': headerHidden }">
         <h2>Mis Grupos</h2>
         <div class="filters">

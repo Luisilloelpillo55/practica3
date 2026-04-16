@@ -30,10 +30,10 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
   availablePermissions: string[] = [
     'ticket_create', 'ticket_move', 'ticket_delete', 'ticket_view',
     'group_create', 'group_edit', 'group_delete',
-    'user_manage', 'user_delete',
-    'admin'
+    'user_manage', 'user_delete'
   ];
   selectedPermissions: { [key: string]: boolean } = {};
+  selectedIsAdmin: boolean = false;
 
   private destroy$ = new Subject<void>();
 
@@ -78,12 +78,15 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
   }
 
   editPermissions(user: any): void {
-    if (!this.auth.hasPermission('user_manage')) {
+    // Allow users with 'user_manage' permission OR admins to open the permissions modal
+    if (!this.auth.hasPermission('user_manage') && !this.auth.isAdmin()) {
       this.messageService.add({ severity: 'error', summary: 'Permiso', detail: 'No tienes permiso para gestionar permisos' });
       return;
     }
 
     this.selectedUser = user;
+    // default admin flag from user record (list provides is_admin)
+    this.selectedIsAdmin = !!user?.is_admin;
     this.selectedPermissions = {};
     
     // Cargar permisos actuales del usuario
@@ -124,8 +127,28 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Permisos actualizados' });
-          this.loadUsers();
-          this.showPermissionsDialog = false;
+          // If current logged user is admin, allow toggling is_admin flag via user update
+          if (this.auth.isAdmin() && (this.selectedIsAdmin !== !!this.selectedUser?.is_admin)) {
+            // call backend to set is_admin flag
+            this.userService.update(this.selectedUser.id, { is_admin: this.selectedIsAdmin })
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                next: () => {
+                  this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Flag admin actualizado' });
+                  this.loadUsers();
+                  this.showPermissionsDialog = false;
+                },
+                error: (err: any) => {
+                  console.error('Error updating admin flag:', err);
+                  this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar flag admin' });
+                  this.loadUsers();
+                  this.showPermissionsDialog = false;
+                }
+              });
+          } else {
+            this.loadUsers();
+            this.showPermissionsDialog = false;
+          }
         },
         error: (err: any) => {
           console.error('Error updating permissions:', err);

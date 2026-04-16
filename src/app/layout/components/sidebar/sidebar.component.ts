@@ -51,7 +51,6 @@ export class SidebarComponent {
     // Show group-related links when user has 'group_view' permission
     if (this.auth.hasPermission('group_view')) {
       items.push({ label: 'Grupos', icon: 'pi pi-users', routerLink: ['/group'] });
-      items.push({ label: 'Info grupo', icon: 'pi pi-info-circle', routerLink: ['/group-info'] });
     }
 
     // Kanban removed from sidebar (managed from Home)

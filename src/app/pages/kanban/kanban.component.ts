@@ -8,7 +8,7 @@ import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { DragDropModule, CdkDragDrop, transferArrayItem, moveItemInArray } from '@angular/cdk/drag-drop';
 import { TicketService } from '../../services/ticket.service.js';
 import { AuthService } from '../../services/auth.service';
@@ -54,6 +54,7 @@ export class KanbanComponent implements OnInit, OnDestroy {
     public auth: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef,
+    private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object,
     private messageService: MessageService
   ) {}
@@ -157,8 +158,66 @@ export class KanbanComponent implements OnInit, OnDestroy {
             }
           }
           console.debug('Kanban: tickets loaded count=', tickets.length, 'sample=', tickets.slice(0,3));
-          this.distribute(tickets || []);
-          try { this.cdr.detectChanges(); } catch {}
+
+          // Filter tickets so user only sees tickets they own or that belong to groups
+          // where they are author/member.
+          const me = this.auth.getUser();
+          const uid = me?.id || me?.userId || me?.id_usuario || null;
+          if (!uid) {
+            // no user in session, do not show tickets
+            this.clearKanban();
+            return;
+          }
+
+          const headers = (typeof this.auth.getAuthHeaders === 'function') ? this.auth.getAuthHeaders() : undefined;
+
+          // Fetch user's groups to determine membership
+          try {
+            this.http.get<any>('/api/groups', { headers }).subscribe({
+              next: (gres: any) => {
+                const groupData = gres?.data || gres || [];
+                const myGroupIds = new Set<string>();
+                try {
+                  const arr = Array.isArray(groupData) ? groupData : [];
+                  for (const g of arr) {
+                    try {
+                      const ints = g.integrantes ? (typeof g.integrantes === 'string' ? JSON.parse(g.integrantes) : g.integrantes) : [];
+                      if (String(g.autor) === String(uid) || (Array.isArray(ints) && ints.includes(uid))) {
+                        myGroupIds.add(String(g.id));
+                      }
+                    } catch (e) { if (String(g.autor) === String(uid)) myGroupIds.add(String(g.id)); }
+                  }
+                } catch (e) { /* ignore */ }
+
+                const filtered = (tickets || []).filter((t: any) => {
+                  const owner = t.created_by || t.autor || t.owner || t.user_id || t.usuario;
+                  const groupId = t.group_id || t.groupId || t.grupo_id || t.group;
+                  const isOwner = owner && String(owner) === String(uid);
+                  const inGroup = groupId && myGroupIds.has(String(groupId));
+                  return !!(isOwner || inGroup);
+                });
+
+                this.distribute(filtered || []);
+                try { this.cdr.detectChanges(); } catch {}
+              },
+              error: (e: any) => {
+                // fallback: only allow tickets where user is owner
+                const filtered = (tickets || []).filter((t: any) => {
+                  const owner = t.created_by || t.autor || t.owner || t.user_id || t.usuario;
+                  return owner && String(owner) === String(uid);
+                });
+                this.distribute(filtered || []);
+                try { this.cdr.detectChanges(); } catch {}
+              }
+            });
+          } catch (err) {
+            const filtered = (tickets || []).filter((t: any) => {
+              const owner = t.created_by || t.autor || t.owner || t.user_id || t.usuario;
+              return owner && String(owner) === String(uid);
+            });
+            this.distribute(filtered || []);
+            try { this.cdr.detectChanges(); } catch {}
+          }
         }, 0);
       },
       error: (err: any) => {

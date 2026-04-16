@@ -256,21 +256,45 @@ app.get('/:id', async (req, res) => {
 // Update user
 app.put('/:id', async (req, res) => {
   const { id } = req.params;
-  const { fullname, address, phone } = req.body;
+  const { fullname, address, phone, is_admin } = req.body || {};
 
   try {
+    // If caller is attempting to change is_admin, ensure requester is admin
+    if (typeof is_admin !== 'undefined') {
+      let requesterIsAdmin = false;
+      const authHeader = req.headers['authorization'] || null;
+      if (authHeader) {
+        try {
+          const token = typeof authHeader === 'string' && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : String(authHeader);
+          const decoded: any = jwt.verify(token, JWT_SECRET);
+          requesterIsAdmin = !!decoded?.is_admin || !!decoded?.admin;
+        } catch (e) {
+          requesterIsAdmin = false;
+        }
+      }
+      if (!requesterIsAdmin) {
+        return res.status(403).json(errorResponse(403, 'USER_FORBIDDEN', 'Only admin can update admin flag'));
+      }
+    }
+
+    // Update fields, using COALESCE so omitted fields are left intact
     const result = await supabasePool.query(
-      `UPDATE users SET fullname = $1, address = $2, phone = $3, updated_at = NOW()
-       WHERE id = $4
-       RETURNING id, usuario, email, fullname, address, dob, phone, updated_at`,
-      [fullname, address, phone, id]
+      `UPDATE users SET
+         fullname = COALESCE($1, fullname),
+         address = COALESCE($2, address),
+         phone = COALESCE($3, phone),
+         is_admin = COALESCE($4, is_admin),
+         updated_at = NOW()
+       WHERE id = $5
+       RETURNING id, usuario, email, fullname, address, dob, phone, permisos, is_admin, updated_at`,
+      [fullname || null, address || null, phone || null, (typeof is_admin !== 'undefined' ? is_admin : null), id]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json(errorResponse(404, 'USER_NOT_FOUND', 'Usuario no encontrado'));
     }
 
-    res.json(successResponse(result.rows[0], 200, 'USER_LOGIN_SUCCESS'));
+    res.json(successResponse(result.rows[0], 200, 'USER_UPDATE_SUCCESS'));
   } catch (error: any) {
     console.error('[Users Service Error]', error);
     res.status(500).json(errorResponse(500, 'USER_INTERNAL_ERROR', error.message));

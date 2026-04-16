@@ -33,6 +33,37 @@ await fastify.register(cors, {
 });
 
 // ============================================
+// RATE LIMITING - Simple in-memory counter (100 req/min per IP)
+// ============================================
+const requestCounts = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const RATE_LIMIT_MAX = 100; // 100 requests per minute
+
+fastify.addHook('onRequest', async (request, reply) => {
+  const clientIp = (request.headers['x-forwarded-for'] as string)?.split(',')[0] || request.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  
+  let clientData = requestCounts.get(clientIp);
+  
+  // First request or window reset
+  if (!clientData || now > clientData.resetTime) {
+    requestCounts.set(clientIp, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    console.log(`[RATE LIMIT] New window for IP ${clientIp}, count=1`);
+    return;
+  }
+  
+  // Increment counter
+  clientData.count++;
+  console.log(`[RATE LIMIT] IP ${clientIp}: ${clientData.count}/${RATE_LIMIT_MAX}`);
+  
+  // Check limit
+  if (clientData.count > RATE_LIMIT_MAX) {
+    console.warn(`🚫 [RATE LIMIT] EXCEEDED - IP: ${clientIp}, Requests: ${clientData.count}/${RATE_LIMIT_MAX}`);
+    return reply.status(429).send(errorResponse(429, 'RATE_LIMIT_EXCEEDED', `Límite de 100 requests/minuto excedido`));
+  }
+});
+
+// ============================================
 // PERMISSION MAP - Action-based permissions
 // ============================================
 

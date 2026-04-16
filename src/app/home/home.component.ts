@@ -32,6 +32,11 @@ export class HomeComponent implements OnInit, OnDestroy {
   groups: any[] = [];
   myGroups: any[] = [];
   tickets: any[] = [];
+  // Statistics
+  statsTotal: number = 0;
+  statsByState: { [key: string]: number } = {};
+  statsByPriority: { [key: string]: number } = {};
+  statsByGroup: Array<{ groupId: any; groupName: string; count: number }> = [];
   selectedGroup: any = null;
   groupFilter = '';
   ticketStateFilter = '';
@@ -83,6 +88,8 @@ export class HomeComponent implements OnInit, OnDestroy {
         });
         // When user logs in/out, reload groups and refresh change detection
         this.loadGroups();
+        // refresh statistics when login changes
+        setTimeout(() => { try { this.loadStats(); } catch {} }, 300);
         this.cdr.detectChanges();
       });
 
@@ -140,6 +147,8 @@ export class HomeComponent implements OnInit, OnDestroy {
         setTimeout(() => {
           this.groups = Array.isArray(groupData) ? groupData : [];
           this.filterMyGroups();
+          // refresh stats once groups are available
+          setTimeout(() => { try { this.loadStats(); } catch {} }, 0);
           // if navigation requested a group, select it now
           if (this.pendingQueryGroup) {
             const g = this.groups.find(x => String(x.id) === String(this.pendingQueryGroup));
@@ -158,6 +167,47 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.groups = []; 
       }
     });
+  }
+
+  // Load aggregated ticket statistics (total, by state, by priority, by group)
+  loadStats(): void {
+    try {
+      if (!this.hasPermission('ticket_view')) {
+        this.statsTotal = 0; this.statsByState = {}; this.statsByPriority = {}; this.statsByGroup = [];
+        return;
+      }
+      const headers = this.authService.getAuthHeaders();
+      const ticketsUrl = `${API_ENDPOINTS.TICKETS}`;
+      this.http.get<any>(ticketsUrl, { headers }).subscribe({
+        next: (res: any) => {
+          const tdata = res?.data || res || [];
+          const list = Array.isArray(tdata) ? tdata : [];
+          this.statsTotal = list.length;
+          // by state
+          const byState: any = {};
+          const byPriority: any = {};
+          const byGroup: any = {};
+          list.forEach((t: any) => {
+            const s = t.estado || 'unknown';
+            const p = t.priority || 'moderada';
+            const g = t.group_id || 'none';
+            byState[s] = (byState[s] || 0) + 1;
+            byPriority[p] = (byPriority[p] || 0) + 1;
+            byGroup[g] = (byGroup[g] || 0) + 1;
+          });
+          this.statsByState = byState;
+          this.statsByPriority = byPriority;
+          this.statsByGroup = Object.keys(byGroup).map(k => ({ groupId: k, groupName: (this.groups.find(x=>String(x.id)===String(k))?.nombre) || `Grupo ${k}`, count: byGroup[k] }));
+          try { this.cdr.detectChanges(); } catch {}
+        },
+        error: (err) => {
+          console.warn('Could not load ticket stats:', err?.message || err);
+          this.statsTotal = 0; this.statsByState = {}; this.statsByPriority = {}; this.statsByGroup = [];
+        }
+      });
+    } catch (e) {
+      console.error('loadStats error', e);
+    }
   }
 
   filterMyGroups(): void {

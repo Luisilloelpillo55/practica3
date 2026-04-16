@@ -53,6 +53,12 @@
         </div>
       </div>
 
+      <!-- Admin toggle (visible solo para administradores actuales) -->
+      <div *ngIf="auth.isAdmin()" style="margin-top:1.25rem; display:flex; align-items:center; gap:.5rem;">
+        <p-checkbox [(ngModel)]="selectedIsAdmin" [binary]="true"></p-checkbox>
+        <label style="font-weight:600;">Hacer administrador</label>
+        <small style="opacity:.85; margin-left:.5rem;">Al marcar esto el usuario obtendrá el rol admin (trigger DB asignará permisos)</small>
+      </div>
       <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 2rem;">
         <button pButton type="button" label="Cancelar" (click)="closeDialog()" class="p-button-secondary"></button>
         <button pButton type="button" label="Guardar" (click)="savePermissions()" class="p-button-success"></button>

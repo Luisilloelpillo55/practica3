@@ -14,7 +14,6 @@ export const routes: Routes = [
 			
 			// PROTECTED ROUTES (authentication required)
 			{ path: 'group', loadComponent: () => import('./pages/group/group.component.js').then(m => m.GroupComponent), canActivate: [AuthGuard] },
-			{ path: 'group-info', loadComponent: () => import('./pages/group-info/group-info.component.js').then(m => m.GroupInfoComponent), canActivate: [AuthGuard] },
 			{ path: 'kanban', loadComponent: () => import('./pages/kanban/kanban.component.js').then(m => m.KanbanComponent), canActivate: [AuthGuard] },
 			{ path: 'user', loadComponent: () => import('./pages/user/user.component.js').then(m => m.UserComponent), canActivate: [AuthGuard] },
 			{ path: 'user-management', loadComponent: () => import('./pages/user-management/user-management.component.js').then(m => m.UserManagementComponent), canActivate: [AuthGuard] },

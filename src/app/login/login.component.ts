@@ -31,11 +31,8 @@ export class LoginComponent {
   onLogoClic(): void {
     this.logoClicks++;
     if (this.logoClicks === 5) {
-      this.messageService.add({
-        severity: 'info',
-        summary: '🎉 Easter Egg!',
-        detail: 'Has descubierto el easter egg. ¡Eres increíble! 🚀'
-      });
+      // Mostrar alerta nativa solicitada
+      window.alert('catch u');
       this.logoClicks = 0; // Reset after showing
     }
   }

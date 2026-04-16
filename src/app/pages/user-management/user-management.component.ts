@@ -316,7 +316,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       next: (res: any) => {
         const perms = res?.data || res;
         if (Array.isArray(perms)) {
-          this.selectedPermissions = perms;
+          this.selectedPermissions = this.normalizeIncomingPermissions(perms);
         } else {
           // Si la respuesta no es array, usar parsing robusto (fallback)
           this.parseAndSetPermissionsFromUserObject(user);
@@ -357,7 +357,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     // Normalizar distintos formatos
     if (userPerms) {
       if (Array.isArray(userPerms)) {
-        this.selectedPermissions = [...userPerms];
+      this.selectedPermissions = [...userPerms];
       } else if (typeof userPerms === 'object') {
         this.selectedPermissions = Object.keys(userPerms).filter(k => !!userPerms[k]);
       } else if (typeof userPerms === 'string') {
@@ -371,11 +371,45 @@ export class UserManagementComponent implements OnInit, OnDestroy {
           this.selectedPermissions = s.length === 0 ? [] : s.split(',').map((p: string) => p.trim()).filter((p: string) => p);
         }
       }
+      // Normalizar permisos entrantes para la UI (mapear aliases y eliminar duplicados)
+      this.selectedPermissions = this.normalizeIncomingPermissions(this.selectedPermissions);
     } else {
       // Si no hay información, dejar vacío
       this.selectedPermissions = [];
     }
     console.log('📋 [UserMgmt] Permisos (fallback) para usuario:', user.usuario, 'Total:', this.selectedPermissions.length, this.selectedPermissions);
+  }
+
+  /** Normaliza permisos recibidos desde el backend a los ids usados por la UI */
+  private normalizeIncomingPermissions(perms: any[]): string[] {
+    if (!Array.isArray(perms)) return [];
+    const map: { [key: string]: string } = {
+      'ticket_add': 'ticket_create',
+      'tickets:add': 'ticket_create',
+      'tickets:view': 'ticket_view',
+      'tickets:edit': 'ticket_edit',
+      'tickets:move': 'ticket_move',
+      'tickets:delete': 'ticket_delete',
+      'groups:view': 'group_view',
+      'groups:create': 'group_create',
+      'groups:edit': 'group_edit',
+      'groups:delete': 'group_delete',
+      'users:view': 'user_view',
+      'users:edit': 'user_edit',
+      'users:manage': 'user_manage',
+      'users:delete': 'user_delete'
+    };
+
+    const out: string[] = [];
+    for (let p of perms) {
+      if (!p) continue;
+      p = String(p).trim();
+      const normalized = map[p] || p;
+      // Ignorar alias redundante 'ticket_add' (ya mapeado a 'ticket_create')
+      if (normalized === 'ticket_add') continue;
+      if (!out.includes(normalized)) out.push(normalized);
+    }
+    return out;
   }
 
   /**
@@ -405,16 +439,49 @@ export class UserManagementComponent implements OnInit, OnDestroy {
 
     const headers = this.auth.getAuthHeaders();
     const id = this.selectedUserForPerms.id;
-    this.http.put<any>(`/api/users/${id}/permissions`, { permissions: this.selectedPermissions }, { headers }).subscribe({
+    // Normalizar antes de enviar: eliminar aliases redundantes y duplicados
+    const payloadPerms = this.normalizeIncomingPermissions(this.selectedPermissions);
+
+    this.http.put<any>(`/api/users/${id}/permissions`, { permissions: payloadPerms }, { headers }).subscribe({
       next: (res: any) => {
         const updated = res?.data || res;
         this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Permisos guardados' });
-        // Si actualizamos al usuario actual, refrescar sesión local
+
+        // Guardar también un registro local por id para recuperación rápida
+        try {
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem(`user_permissions_${id}`, JSON.stringify(payloadPerms));
+          }
+        } catch (e) { /* ignore */ }
+
+        // Si actualizamos al usuario actual, refrescar sesión local y permisos en AuthService
         const me = this.auth.getUser();
         if (me && String(me.id) === String(id)) {
-          const merged = { ...me, permisos: this.selectedPermissions, permissions: this.selectedPermissions };
-          this.auth.saveUser(merged, true);
+          // Si el endpoint devolvió un token nuevo, usarlo
+          if (updated && (updated.token || updated.data?.token)) {
+            const serverPayload = updated.token ? updated : (updated.data || updated);
+            const finalSaved = { ...me, ...serverPayload };
+            this.auth.saveUser(finalSaved, true);
+          } else {
+            const merged = { ...me, permisos: payloadPerms, permissions: payloadPerms };
+            // Guardar inmediatamente en storage
+            this.auth.saveUser(merged, true);
+
+            // Intentar reconsultar al servidor por el usuario actualizado (mejor sincronía)
+            this.http.get<any>(`/api/users/${id}`, { headers }).subscribe({
+              next: (resp: any) => {
+                const serverUser = resp?.data || resp;
+                const finalUser = { ...merged, ...serverUser };
+                // Si server devuelve token lo guardamos también
+                this.auth.saveUser(finalUser, true);
+              },
+              error: () => {
+                // ignore - we already saved local changes
+              }
+            });
+          }
         }
+
         this.permissionsDialog = false;
         this.loadUsers();
       },

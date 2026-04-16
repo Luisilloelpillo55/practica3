@@ -136,7 +136,7 @@
 </div>
 
 <!-- VISTA LISTA -->
-<div style="padding: 20px;" *ngIf="viewMode === 'list'">
+<div class="list-view" style="padding: 20px;" *ngIf="viewMode === 'list'">
   <p-table [value]="allTickets" [paginator]="true" [rows]="10" [globalFilterFields]="['titulo','descripcion','estado']"
            [tableStyle]="{ 'min-width': '50rem' }" responsiveLayout="scroll">
     <ng-template pTemplate="caption">

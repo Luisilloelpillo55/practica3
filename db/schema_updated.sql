@@ -114,6 +114,7 @@ INSERT INTO permissions (nombre, descripcion) VALUES
   ('group_edit', 'Editar grupos'),
   ('group_delete', 'Eliminar grupos'),
   ('user_view', 'Ver información de usuarios'),
+  ('user_edit', 'Editar información de usuarios'),
   ('user_manage', 'Gestionar permisos de usuarios'),
   ('user_delete', 'Eliminar usuarios'),
   ('admin', 'Acceso administrativo total')
@@ -136,23 +137,44 @@ CREATE INDEX IF NOT EXISTS idx_metrics_recorded_at ON metrics(recorded_at);
 CREATE OR REPLACE FUNCTION sync_admin_permissions()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.is_admin = TRUE THEN
+  -- Only populate full admin permissions when a user becomes admin (INSERT or is_admin changed from false->true)
+  IF TG_OP = 'INSERT' AND NEW.is_admin = TRUE THEN
     NEW.permisos := ARRAY[
       'ticket_view',
       'ticket_create',
       'ticket_edit',
       'ticket_move',
       'ticket_delete',
-      'ticket_add',
       'group_view',
       'group_create',
       'group_edit',
       'group_delete',
       'user_view',
+      'user_edit',
       'user_manage',
       'user_delete',
       'admin'
     ];
+  ELSIF TG_OP = 'UPDATE' THEN
+    -- If becoming admin on update, populate defaults; otherwise preserve explicit changes to permisos
+    IF NEW.is_admin = TRUE AND (OLD.is_admin IS NULL OR OLD.is_admin = FALSE) THEN
+      NEW.permisos := ARRAY[
+        'ticket_view',
+        'ticket_create',
+        'ticket_edit',
+        'ticket_move',
+        'ticket_delete',
+        'group_view',
+        'group_create',
+        'group_edit',
+        'group_delete',
+        'user_view',
+        'user_edit',
+        'user_manage',
+        'user_delete',
+        'admin'
+      ];
+    END IF;
   END IF;
   RETURN NEW;
 END;

@@ -11,6 +11,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { UserService } from '../../services/user.service.js';
 import { AuthService } from '../../services/auth.service';
+import { PermissionService } from '../../services/permission.service';
 import { takeUntil } from 'rxjs';
 import { Subject } from 'rxjs';
 
@@ -27,7 +28,7 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
   showPermissionsDialog = false;
   selectedUser: any = null;
   availablePermissions: string[] = [
-    'ticket_add', 'ticket_move', 'ticket_delete', 'ticket_view',
+    'ticket_create', 'ticket_move', 'ticket_delete', 'ticket_view',
     'group_create', 'group_edit', 'group_delete',
     'user_manage', 'user_delete',
     'admin'
@@ -40,7 +41,8 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
     private userService: UserService,
     public auth: AuthService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private permissionService: PermissionService
   ) {}
 
   ngOnInit(): void {
@@ -95,7 +97,10 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
           } else if (permissions && Array.isArray(permissions.data)) {
             userPerms = permissions.data;
           }
-          
+
+          // Normalizar permisos entrantes para que coincidan con los ids de la UI
+          userPerms = this.permissionService.normalizePermissions(userPerms);
+
           this.availablePermissions.forEach(perm => {
             this.selectedPermissions[perm] = userPerms.includes(perm);
           });
@@ -164,7 +169,7 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
 
   getPermissionLabel(perm: string): string {
     const labels: { [key: string]: string } = {
-      'ticket_add': 'Crear tickets',
+      'ticket_create': 'Crear tickets',
       'ticket_move': 'Mover tickets',
       'ticket_delete': 'Eliminar tickets',
       'ticket_view': 'Ver tickets',

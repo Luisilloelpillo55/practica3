@@ -139,4 +139,34 @@ export class PermissionService {
   getCurrentPermissions(): string[] {
     return this.currentPermissionsSubject.value;
   }
+
+  /** Normaliza permisos recibidos (aliases o formatos distintos) hacia los ids de la UI */
+  normalizePermissions(perms: any[]): string[] {
+    if (!Array.isArray(perms)) return [];
+    const map: { [key: string]: string } = {
+      'ticket_add': 'ticket_create',
+      'tickets:add': 'ticket_create',
+      'tickets:view': 'ticket_view',
+      'tickets:edit': 'ticket_edit',
+      'tickets:move': 'ticket_move',
+      'tickets:delete': 'ticket_delete',
+      'groups:view': 'group_view',
+      'groups:create': 'group_create',
+      'groups:edit': 'group_edit',
+      'groups:delete': 'group_delete',
+      'users:view': 'user_view',
+      'users:edit': 'user_edit',
+      'users:manage': 'user_manage',
+      'users:delete': 'user_delete'
+    };
+    const out: string[] = [];
+    for (let p of perms) {
+      if (!p) continue;
+      p = String(p).trim();
+      const normalized = map[p] || p;
+      if (normalized === 'ticket_add') continue;
+      if (!out.includes(normalized)) out.push(normalized);
+    }
+    return out;
+  }
 }

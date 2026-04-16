@@ -58,9 +58,6 @@ router.post('/login', async (req, res) => {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
     
-    // Generar JWT
-    const token = generateToken(user.id, user.usuario);
-    
     // Cargar permisos del usuario: soportar users.permissions (JSON/text), permiso numérico, o user_permissions legacy
     let permissions: string[] = [];
     try {
@@ -121,7 +118,33 @@ router.post('/login', async (req, res) => {
     if (!permissions || permissions.length === 0) {
       permissions = ['group_view', 'ticket_view', 'user_view'];
     }
-    
+
+    // Normalizar permisos para que el Gateway reciba el formato esperado (ej: 'users:manage')
+    const PERM_MAP: { [key: string]: string } = {
+      'ticket_view': 'tickets:view',
+      'ticket_create': 'tickets:add',
+      'ticket_add': 'tickets:add',
+      'ticket_edit': 'tickets:edit',
+      'ticket_move': 'tickets:move',
+      'ticket_delete': 'tickets:delete',
+      'group_view': 'groups:view',
+      'group_create': 'groups:create',
+      'group_edit': 'groups:edit',
+      'group_delete': 'groups:delete',
+      'user_view': 'users:view',
+      'user_edit': 'users:edit',
+      'user_manage': 'users:manage',
+      'user_delete': 'users:delete',
+      'admin': 'admin'
+    };
+
+    const normalized = permissions.map(p => PERM_MAP[p] || (p.includes(':') ? p : p));
+    // Incluir tanto la forma legacy como la normalizada para compatibilidad
+    const tokenPermissions = Array.from(new Set([...(permissions || []), ...normalized]));
+
+    // Generar JWT incluyendo permisos normalizados
+    const token = generateToken(user.id, user.usuario, tokenPermissions);
+
     // remove password
     delete user.password;
     return res.json({ ...user, token, permissions });

@@ -70,7 +70,7 @@ export class KanbanComponent implements OnInit, OnDestroy {
     }
     // permiso para mover tickets
     this.canMove = this.auth.hasPermission('ticket_move') || this.auth.isAdmin();
-    this.canAdd = this.auth.hasPermission('ticket_add') || this.auth.isAdmin();
+    this.canAdd = this.auth.hasPermission('ticket_create') || this.auth.isAdmin();
     this.canDelete = this.auth.hasPermission('ticket_delete') || this.auth.isAdmin();
     
     this.auth.currentUser$
@@ -79,7 +79,7 @@ export class KanbanComponent implements OnInit, OnDestroy {
         if (user && user.token) {
           this.loadAll();
           this.canMove = this.auth.hasPermission('ticket_move') || this.auth.isAdmin();
-          this.canAdd = this.auth.hasPermission('ticket_add') || this.auth.isAdmin();
+          this.canAdd = this.auth.hasPermission('ticket_create') || this.auth.isAdmin();
           this.canDelete = this.auth.hasPermission('ticket_delete') || this.auth.isAdmin();
         } else {
           this.clearKanban();

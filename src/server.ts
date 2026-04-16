@@ -18,15 +18,60 @@ const angularApp = new AngularNodeAppEngine();
 app.use(cors());
 app.use(express.json());
 
-// Block API routes - they should go to the Gateway (port 3008)
-app.use('/api', (req, res) => {
-  console.warn(`[SSR] API request blocked: ${req.method} ${req.path}`);
-  res.status(503).json({ 
-    error: 'API Gateway unavailable', 
-    message: 'Please ensure the API Gateway is running on port 3008',
-    hint: 'Run: npm run start:gateway'
-  });
-  return;
+// Proxy API routes to the API Gateway so SSR can fetch data server-side.
+// Uses the environment GATEWAY_URL or defaults to http://localhost:3008
+app.use('/api', async (req, res) => {
+  const gatewayBase = process.env['GATEWAY_URL'] || `http://localhost:${process.env['GATEWAY_PORT'] || 3008}`;
+  const target = `${gatewayBase}${req.originalUrl}`;
+  console.log(`[SSR Proxy] Forwarding ${req.method} ${req.originalUrl} -> ${target}`);
+
+  try {
+    // Clone headers and remove host to avoid mismatches
+    const forwardHeaders: any = { ...req.headers };
+    delete forwardHeaders.host;
+
+    const fetchOptions: any = {
+      method: req.method,
+      headers: forwardHeaders,
+      // Allow credentials if present
+      redirect: 'follow'
+    };
+
+    // Attach body for non-GET requests
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      // req.body is already parsed by express.json()
+      if (req.body && Object.keys(req.body).length > 0) {
+        fetchOptions.body = JSON.stringify(req.body);
+        fetchOptions.headers = fetchOptions.headers || {};
+        if (!fetchOptions.headers['content-type']) fetchOptions.headers['content-type'] = 'application/json';
+      }
+    }
+
+    const backendRes = await fetch(target, fetchOptions as any);
+
+    // Forward status
+    res.statusCode = backendRes.status;
+
+    // Forward headers
+    backendRes.headers.forEach((value, key) => {
+      // Some hop-by-hop headers should not be forwarded; keep it simple
+      if (key.toLowerCase() === 'transfer-encoding') return;
+      res.setHeader(key, value as string);
+    });
+
+    // Stream/forward body
+    const arrayBuffer = await backendRes.arrayBuffer();
+    res.send(Buffer.from(arrayBuffer));
+    return;
+  } catch (err: any) {
+    console.error('[SSR Proxy Error]', err);
+    res.status(503).json({ 
+      error: 'API Gateway unavailable', 
+      message: `Could not proxy to API Gateway at ${gatewayBase}`,
+      details: err?.message || String(err)
+    });
+    return;
+  }
 });
 
 // NOTE: API routes are handled by the microservices architecture (Gateway on port 3008)

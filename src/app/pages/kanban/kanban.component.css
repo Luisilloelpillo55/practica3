@@ -224,3 +224,70 @@
   background: rgba(255,23,68,0.06);
   box-shadow: 0 6px 18px rgba(255,23,68,0.12);
 }
+
+/* LIST VIEW: make table rows look like cards (no plain lines) */
+:host ::ng-deep .list-view .p-table .p-datatable {
+  background: transparent !important;
+  border: none !important;
+}
+
+:host ::ng-deep .list-view .p-table .p-datatable-thead > tr {
+  background: linear-gradient(90deg, rgba(156,39,176,0.95), rgba(123,60,255,0.95)) !important;
+}
+
+:host ::ng-deep .list-view .p-table .p-datatable-thead > tr > th {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border: none !important;
+  padding: 0.9rem 1rem !important;
+}
+
+:host ::ng-deep .list-view .p-table .p-datatable-tbody > tr {
+  background: #0f0f12 !important;
+  border-radius: 10px !important;
+  margin-bottom: 12px !important;
+  display: block !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6) !important;
+  overflow: hidden !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+:host ::ng-deep .list-view .p-table .p-datatable-tbody > tr > td {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  padding: 1rem !important;
+  border: none !important;
+  color: #e6e6e6 !important;
+}
+
+:host ::ng-deep .list-view .p-table .p-datatable-tbody > tr:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 28px rgba(123,60,255,0.12) !important;
+}
+
+/* Compact circular action buttons */
+:host ::ng-deep .list-view .p-button.p-button-icon-only,
+:host ::ng-deep .list-view .action-icon {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+}
+
+/* Stronger badges */
+:host ::ng-deep .list-view .badge {
+  padding: 0.45rem 0.75rem !important;
+  border-radius: 999px !important;
+  font-size: 0.85rem !important;
+}
+
+/* Keep table header as real header for accessibility */
+:host ::ng-deep .list-view .p-table .p-datatable-thead,
+:host ::ng-deep .list-view .p-table .p-datatable-thead > tr {
+  display: table-header-group !important;
+}
+
+/* Empty message styling */
+:host ::ng-deep .list-view .p-table .p-datatable-empty-message td {
+  color: #999999 !important;
+}

@@ -17,9 +17,9 @@ declare global {
   }
 }
 
-// Generar JWT
-export function generateToken(userId: number, usuario: string): string {
-  return jwt.sign({ userId, usuario, permissions: [] }, JWT_SECRET, { expiresIn: '24h' });
+// Generar JWT (incluye permisos en el payload)
+export function generateToken(userId: number, usuario: string, permissions: string[] = []): string {
+  return jwt.sign({ userId, usuario, permissions }, JWT_SECRET, { expiresIn: '24h' });
 }
 
 // Middleware: Verificar JWT

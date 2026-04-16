@@ -133,7 +133,6 @@ export class KanbanComponent implements OnInit, OnDestroy {
           } else if (res && Array.isArray(res.rows)) {
             tickets = res.rows;
           } else if (res && typeof res === 'object') {
-            // try to find the first array property
             for (const key of Object.keys(res)) {
               if (Array.isArray((res as any)[key])) { tickets = (res as any)[key]; break; }
             }
@@ -145,7 +144,6 @@ export class KanbanComponent implements OnInit, OnDestroy {
       },
       error: (err: any) => {
         console.error('Error loading tickets:', err);
-        // no borrar inmediatamente para facilitar depuración; mostrar mensaje al usuario
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar las tareas' });
       }
     });
@@ -216,15 +214,14 @@ export class KanbanComponent implements OnInit, OnDestroy {
 
   // Drop en zona de eliminación
   deleteDrop(event: any): void {
-    // require permiso de eliminación específico
     if (!(this.auth.hasPermission('ticket_delete') || this.auth.isAdmin())) {
       this.messageService.add({ severity: 'error', summary: 'Permiso', detail: 'No tienes permiso para eliminar tareas' });
       return;
     }
     if (event.previousContainer !== event.container) {
       const item = event.item.data;
-      // quitar visualmente desde la lista origen
       try { event.previousContainer.data.splice(event.previousIndex, 1); } catch {}
+      
       this.ticketSrv.delete(item.id).subscribe({
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: 'Ticket eliminado' });

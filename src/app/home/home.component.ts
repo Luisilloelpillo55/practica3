@@ -116,7 +116,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     
     console.log('📊 [HomeComponent] loadGroups() - Current user:', user?.usuario || 'null');
     console.log('📊 [HomeComponent] loadGroups() - Has token:', !!this.authService.getToken());
-    console.log('📊 [HomeComponent] loadGroups() - Will use proxy to reach http://localhost:3000/api/groups');
+    console.log('📊 [HomeComponent] loadGroups() - Will use proxy to reach http://localhost:3008/api/groups');
     
     this.http.get<any[]>('/api/groups', { headers }).subscribe({
       next: (res: any) => {
@@ -244,8 +244,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Determine if creating or editing
     const isCreating = !this.editingTicketId;
     const endpoint = isCreating 
-      ? 'http://localhost:3000/api/tickets' 
-      : `http://localhost:3000/api/tickets/${this.editingTicketId}`;
+      ? '/api/tickets' 
+      : `/api/tickets/${this.editingTicketId}`;
     const method = isCreating ? 'POST' : 'PUT';
     
     console.log(`🎫 [HomeComponent] ${method} ticket - PAYLOAD ENVIADO:`, {

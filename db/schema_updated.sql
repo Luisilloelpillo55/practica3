@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS tickets (
   titulo VARCHAR(255) NOT NULL,
   descripcion TEXT,
   estado VARCHAR(50) DEFAULT 'No iniciado',
+  priority VARCHAR(50) DEFAULT 'moderada',
   created_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -129,3 +130,36 @@ CREATE INDEX IF NOT EXISTS idx_group_members_group_id ON group_members(group_id)
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_metrics_recorded_at ON metrics(recorded_at);
+
+-- TRIGGER: Automatically sync admin permissions
+-- When is_admin is set to TRUE, populate the permisos array with all permissions
+CREATE OR REPLACE FUNCTION sync_admin_permissions()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.is_admin = TRUE THEN
+    NEW.permisos := ARRAY[
+      'ticket_view',
+      'ticket_create',
+      'ticket_edit',
+      'ticket_move',
+      'ticket_delete',
+      'ticket_add',
+      'group_view',
+      'group_create',
+      'group_edit',
+      'group_delete',
+      'user_view',
+      'user_manage',
+      'user_delete',
+      'admin'
+    ];
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_sync_admin_permissions ON users;
+CREATE TRIGGER trigger_sync_admin_permissions
+BEFORE INSERT OR UPDATE ON users
+FOR EACH ROW
+EXECUTE FUNCTION sync_admin_permissions();

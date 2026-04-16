@@ -175,7 +175,7 @@ export class GroupComponent implements OnInit, OnDestroy {
   }
 
   loadUsers() {
-    const usersUrl = 'http://localhost:3000/api/users';
+    const usersUrl = '/api/users';
     this.http.get(usersUrl, { headers: this.authService.getAuthHeaders() }).subscribe({ 
       next: (res: any) => this.users = Array.isArray(res) ? res : [], 
       error: () => {} 

@@ -13,9 +13,9 @@ export class AuthGuard implements CanActivate {
     
     let isLoggedIn = this.authService.isLoggedIn();
     
-    // If not logged in, try to recover session (useful for HMR)
+    // If not logged in, try to recover from storage
     if (!isLoggedIn) {
-      console.log('⚠️  [AuthGuard] Not logged in, attempting session recovery...');
+      console.log('⚠️  [AuthGuard] Not logged in, attempting session recovery from localStorage...');
       const recovered = await this.authService.recoverSession();
       isLoggedIn = recovered;
       console.log('🔄 [AuthGuard] Session recovery result:', recovered ? 'SUCCESS' : 'FAILED');
@@ -25,11 +25,11 @@ export class AuthGuard implements CanActivate {
     console.log('🛡️  [AuthGuard] Final status - isLoggedIn:', isLoggedIn, 'user:', user?.usuario || 'null');
     
     if (isLoggedIn) {
-      console.log('✅ [AuthGuard] User authenticated, allowing access');
+      console.log('✅ [AuthGuard] User authenticated, allowing access to:', state.url);
       return true;
     }
     
-    console.warn('❌ [AuthGuard] User not authenticated, redirecting to login');
+    console.warn('❌ [AuthGuard] User not authenticated, redirecting to login from:', state.url);
     this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
     return false;
   }

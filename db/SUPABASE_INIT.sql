@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS public.tickets (
   titulo VARCHAR(255) NOT NULL,
   descripcion TEXT,
   estado VARCHAR(50) DEFAULT 'No iniciado',
+  priority VARCHAR(50) DEFAULT 'moderada',
   created_by BIGINT REFERENCES public.users(id) ON DELETE SET NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

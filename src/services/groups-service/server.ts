@@ -250,7 +250,7 @@ fastify.get<{ Params: { id: string } }>('/:id/tickets', async (request, reply) =
 
   try {
     const result = await supabasePool.query(
-      `SELECT id, group_id, titulo, descripcion, estado, created_by, created_at 
+      `SELECT id, group_id, titulo, descripcion, estado, priority, created_by, created_at 
        FROM tickets WHERE group_id = $1 ORDER BY created_at DESC`,
       [id]
     );

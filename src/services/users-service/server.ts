@@ -171,13 +171,45 @@ app.get('/', async (req, res) => {
   }
 });
 
+// Get all available permissions
+app.get('/permissions', async (req, res) => {
+  try {
+    const result = await supabasePool.query('SELECT id, nombre, descripcion FROM permissions ORDER BY nombre');
+    res.json(result.rows);
+  } catch (error: any) {
+    console.error('[Users Service] GET /permissions error:', error);
+    res.status(500).json({ error: 'Database error', details: error.message });
+  }
+});
+
+// Get user's permissions by user ID
+app.get('/:id/permissions', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await supabasePool.query(
+      'SELECT permisos FROM users WHERE id = $1 LIMIT 1',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const permisos = result.rows[0].permisos || [];
+    res.json(permisos);
+  } catch (error: any) {
+    console.error('[Users Service] GET /:id/permissions error:', error);
+    res.status(500).json({ error: 'Database error', details: error.message });
+  }
+});
+
 // Get user by ID
 app.get('/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
     const result = await supabasePool.query(
-      'SELECT id, usuario, email, fullname, address, dob, phone, created_at FROM users WHERE id = $1 LIMIT 1',
+      'SELECT id, usuario, email, fullname, address, dob, phone, permisos, created_at FROM users WHERE id = $1 LIMIT 1',
       [id]
     );
 
@@ -212,6 +244,32 @@ app.put('/:id', async (req, res) => {
     res.json(result.rows[0]);
   } catch (error: any) {
     console.error('[Users Service Error]', error);
+    res.status(500).json({ error: 'Database error', details: error.message });
+  }
+});
+
+// Update user permissions
+app.put('/:id/permissions', async (req, res) => {
+  const { id } = req.params;
+  const { permissions } = req.body;
+
+  if (!Array.isArray(permissions)) {
+    return res.status(400).json({ error: 'permissions must be an array' });
+  }
+
+  try {
+    const result = await supabasePool.query(
+      'UPDATE users SET permisos = $1, updated_at = NOW() WHERE id = $2 RETURNING id, usuario, permisos, updated_at',
+      [permissions, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error: any) {
+    console.error('[Users Service] PUT /:id/permissions error:', error);
     res.status(500).json({ error: 'Database error', details: error.message });
   }
 });

@@ -4,7 +4,7 @@ import { API_ENDPOINTS } from '../config/api.config.js';
 import { AuthService } from './auth.service.js';
 
 /**
- * HTTP Service wrapper that ensures all requests go to the API Gateway (port 3000)
+ * HTTP Service wrapper that ensures all requests go to the API Gateway (port 3008)
  * instead of the SSR server (port 4200)
  */
 @Injectable({

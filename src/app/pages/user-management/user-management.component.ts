@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, PLATFORM_ID, Inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, PLATFORM_ID, Inject, OnDestroy, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { isPlatformBrowser } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
@@ -9,13 +9,26 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { filter, takeUntil } from 'rxjs';
 import { Subject } from 'rxjs';
-import { UserService } from '../../services/user.service.js';
 import { AuthService } from '../../services/auth.service.js';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+
+// Interfaz para organizar permisos por categoría
+interface PermissionCategory {
+  name: string;
+  icon: string;
+  color: string;
+  permissions: PermissionItem[];
+}
+
+interface PermissionItem {
+  nombre: string;
+  descripcion: string;
+  category?: string;
+}
 
 @Component({
   selector: 'app-user-management',
@@ -37,7 +50,7 @@ import { ToastModule } from 'primeng/toast';
   providers: [MessageService]
 })
 export class UserManagementComponent implements OnInit, OnDestroy {
-  users: any[] = [];
+  users: any[] | null = null;
   displayDialog = false;
   selectedUser: any = null;
   editForm = {
@@ -47,66 +60,26 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     phone: '',
     address: ''
   };
-  // permissions
-  availablePermissions: any[] = [];
-  selectedPermissions: string[] = [];
-  // permisos dialog dedicado
-  showPermsDialog = false;
+  
+  // NEW: Permisos dialog profesional
+  permissionsDialog = false;
   selectedUserForPerms: any = null;
+  selectedPermissions: string[] = [];
+  permissionCategories: PermissionCategory[] = [];
+  allAvailablePermissions: PermissionItem[] = [];
   
   private destroy$ = new Subject<void>();
 
+
   constructor(
-    private userSrv: UserService,
+    private http: HttpClient,
     private auth: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object,
+    private zone: NgZone,
     private messageService: MessageService
   ) {}
-
-  onTogglePermission(name: string, checked: boolean): void {
-    if (!this.selectedPermissions) this.selectedPermissions = [];
-    const idx = this.selectedPermissions.indexOf(name);
-    if (checked && idx === -1) this.selectedPermissions.push(name);
-    if (!checked && idx !== -1) this.selectedPermissions.splice(idx, 1);
-  }
-
-  // Permisos dialog handlers
-  openPermsDialog(user: any): void {
-    this.selectedUserForPerms = user;
-    this.showPermsDialog = true;
-    // asegurar permisos disponibles
-    if (!this.availablePermissions || this.availablePermissions.length === 0) {
-      this.loadAvailablePermissions();
-    }
-    // cargar permisos del usuario
-    this.userSrv.getUserPermissions(user.id).subscribe({
-      next: (perms: any) => { this.selectedPermissions = Array.isArray(perms) ? perms : []; },
-      error: (err: any) => { console.error('Failed loading user permissions:', err); this.selectedPermissions = []; }
-    });
-  }
-
-  savePermissions(): void {
-    if (!this.selectedUserForPerms) return;
-    this.userSrv.setUserPermissions(this.selectedUserForPerms.id, this.selectedPermissions || []).subscribe({
-      next: () => {
-        this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Permisos actualizados' });
-        // si actualizaste tus propios permisos, refrescar sesión
-        const me = this.auth.getUser();
-        if (me && me.id === this.selectedUserForPerms.id) {
-          this.userSrv.getById(me.id).subscribe({ next: (u) => { const updated = { ...me, ...u }; if (this.selectedPermissions) updated.permissions = this.selectedPermissions; this.auth.saveUser(updated); this.showPermsDialog = false; this.loadUsers(); }, error: () => { this.showPermsDialog = false; this.loadUsers(); } });
-        } else {
-          this.showPermsDialog = false;
-          this.loadUsers();
-        }
-      },
-      error: (err: any) => {
-        console.error('Failed saving permissions:', err);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron guardar permisos' });
-      }
-    });
-  }
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -125,14 +98,14 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         return;
       }
       this.loadUsers();
+      this.loadPermissions();
     }
     
     this.auth.currentUser$
       .pipe(takeUntil(this.destroy$))
       .subscribe((user) => {
         if (user && user.token) {
-          // Verificar permisos al cambiar usuario
-            if (!this.auth.hasPermission('user_delete')) {
+          if (!this.auth.hasPermission('user_delete')) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No tienes permisos para acceder a esta sección' });
             this.router.navigateByUrl('/home');
             return;
@@ -152,14 +125,13 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         if (!u || !u.token) {
           this.auth.loadUser();
         } else {
-          // Verificar permisos antes de cargar usuarios
-            if (!this.auth.hasPermission('user_delete')) {
+          if (!this.auth.hasPermission('user_delete')) {
             this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No tienes permisos para acceder a esta sección' });
             this.router.navigateByUrl('/home');
             return;
           }
           this.loadUsers();
-          this.loadAvailablePermissions();
+          this.loadPermissions();
         }
       }
     });
@@ -175,27 +147,100 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   }
 
   loadUsers(): void {
-    Promise.resolve().then(() => {
-      this.userSrv.getAll().subscribe({
-        next: (res: any) => {
-          Promise.resolve().then(() => {
-            this.users = Array.isArray(res) ? res : [];
-            try { this.cdr.detectChanges(); } catch {}
-          });
-        },
-        error: (err: any) => {
-          console.error('Failed loading users:', err);
+    const headers = this.auth.getAuthHeaders();
+    this.http.get<any[]>('/api/users', { headers }).subscribe({
+      next: (res: any) => {
+        const arr = Array.isArray(res) ? res : [];
+        this.zone.run(() => {
+          this.users = arr;
+          try { this.cdr.detectChanges(); } catch {}
+        });
+      },
+      error: (err: any) => {
+        console.error('Failed loading users:', err);
+        this.zone.run(() => {
           this.users = [];
-        }
-      });
+          try { this.cdr.detectChanges(); } catch {}
+        });
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los usuarios' });
+      }
     });
   }
 
-  loadAvailablePermissions(): void {
-    this.userSrv.getAllPermissions().subscribe({
-      next: (res: any) => { this.availablePermissions = Array.isArray(res) ? res : []; },
-      error: (err: any) => { console.error('Failed loading permissions:', err); this.availablePermissions = []; }
+  loadPermissions(): void {
+    // Datos de permisos disponibles (NO hacer llamada HTTP)
+    const perms = [
+      { nombre: 'ticket_view', descripcion: 'Ver tickets' },
+      { nombre: 'ticket_create', descripcion: 'Crear tickets' },
+      { nombre: 'ticket_edit', descripcion: 'Editar tickets' },
+      { nombre: 'ticket_move', descripcion: 'Mover tickets' },
+      { nombre: 'ticket_delete', descripcion: 'Eliminar tickets' },
+      { nombre: 'group_view', descripcion: 'Ver grupos' },
+      { nombre: 'group_create', descripcion: 'Crear grupos' },
+      { nombre: 'group_edit', descripcion: 'Editar grupos' },
+      { nombre: 'group_delete', descripcion: 'Eliminar grupos' },
+      { nombre: 'user_view', descripcion: 'Ver usuarios' },
+      { nombre: 'user_edit', descripcion: 'Editar usuarios' },
+      { nombre: 'user_delete', descripcion: 'Eliminar usuarios' },
+      { nombre: 'user_manage', descripcion: 'Gestionar permisos' }
+    ];
+    
+    this.zone.run(() => {
+      this.allAvailablePermissions = perms;
+      this.organizarPermisosPorCategoria(perms);
+      try { this.cdr.detectChanges(); } catch {}
     });
+  }
+
+  /**
+   * Organiza permisos en categorías para mejor UI
+   */
+  private organizarPermisosPorCategoria(perms: PermissionItem[]): void {
+    const categorized: { [key: string]: PermissionItem[] } = {
+      'Tickets': [],
+      'Grupos': [],
+      'Usuarios': [],
+      'Admin': []
+    };
+
+    perms.forEach(p => {
+      if (p.nombre.startsWith('ticket')) {
+        categorized['Tickets'].push(p);
+      } else if (p.nombre.startsWith('group')) {
+        categorized['Grupos'].push(p);
+      } else if (p.nombre.startsWith('user')) {
+        categorized['Usuarios'].push(p);
+      } else if (p.nombre === 'admin') {
+        categorized['Admin'].push(p);
+      }
+    });
+
+    this.permissionCategories = [
+      {
+        name: 'Tickets',
+        icon: 'pi-file-edit',
+        color: '#3b82f6',
+        permissions: categorized['Tickets']
+      },
+      {
+        name: 'Grupos',
+        icon: 'pi-users',
+        color: '#10b981',
+        permissions: categorized['Grupos']
+      },
+      {
+        name: 'Usuarios',
+        icon: 'pi-users-alt',
+        color: '#f59e0b',
+        permissions: categorized['Usuarios']
+      },
+      {
+        name: 'Admin',
+        icon: 'pi-shield',
+        color: '#ef4444',
+        permissions: categorized['Admin']
+      }
+    ].filter(cat => cat.permissions.length > 0);
   }
 
   openEditDialog(user: any): void {
@@ -208,39 +253,34 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       address: user.address || ''
     };
     this.displayDialog = true;
-    // load user's permissions
-    this.userSrv.getUserPermissions(user.id).subscribe({
-      next: (perms: any) => { this.selectedPermissions = Array.isArray(perms) ? perms : []; },
-      error: (err: any) => { console.error('Failed loading user permissions:', err); this.selectedPermissions = []; }
-    });
   }
 
   saveUser(): void {
     if (!this.selectedUser) return;
     
     const updatedUser = { ...this.selectedUser, ...this.editForm };
-    this.userSrv.update(this.selectedUser.id, updatedUser).subscribe({
+    const headers = this.auth.getAuthHeaders();
+    this.http.put<any>(`/api/users/${this.selectedUser.id}`, updatedUser, { headers }).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario actualizado' });
-        // update permissions as well
-        this.userSrv.setUserPermissions(this.selectedUser.id, this.selectedPermissions || []).subscribe({
-          next: () => {
-            // if admin edited their own account, refresh stored permissions
-            const me = this.auth.getUser();
-            if (me && me.id === this.selectedUser.id) {
-              // fetch updated user from backend and replace stored user
-              this.userSrv.getById(me.id).subscribe({ next: (u) => { const updated = { ...me, ...u }; if (this.selectedPermissions) updated.permissions = this.selectedPermissions; this.auth.saveUser(updated); this.closeDialog(); this.loadUsers(); }, error: () => { this.closeDialog(); this.loadUsers(); } });
-            } else {
+        const me = this.auth.getUser();
+        if (me && me.id === this.selectedUser.id) {
+          this.http.get<any>(`/api/users/${me.id}`, { headers }).subscribe({
+            next: (u) => {
+              const updated = { ...me, ...u };
+              this.auth.saveUser(updated);
+              this.closeDialog();
+              this.loadUsers();
+            },
+            error: () => {
               this.closeDialog();
               this.loadUsers();
             }
-          },
-          error: (e: any) => {
-            console.error('Failed saving permissions:', e);
-            this.closeDialog();
-            this.loadUsers();
-          }
-        });
+          });
+        } else {
+          this.closeDialog();
+          this.loadUsers();
+        }
       },
       error: (err: any) => {
         console.error('Failed updating user:', err);
@@ -249,9 +289,61 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Abre el modal de permisos y carga los permisos del usuario desde el servidor
+   */
+  /**
+   * Abre el modal de permisos - SIN LLAMADAS HTTP
+   */
+  openPermissionsModal(user: any): void {
+    this.selectedUserForPerms = user;
+    
+    if (!this.allAvailablePermissions || this.allAvailablePermissions.length === 0) {
+      this.loadPermissions();
+    }
+    
+    // Usar permisos del usuario desde su objeto (vienen del login)
+    this.zone.run(() => {
+      this.selectedPermissions = Array.isArray(user.permisos) ? [...user.permisos] : [];
+      this.permissionsDialog = true;
+      try { this.cdr.detectChanges(); } catch {}
+    });
+  }
+
+  /**
+   * NEW: Toggle checkbox de permiso
+   */
+  togglePermission(permissionName: string): void {
+    const idx = this.selectedPermissions.indexOf(permissionName);
+    if (idx === -1) {
+      this.selectedPermissions.push(permissionName);
+    } else {
+      this.selectedPermissions.splice(idx, 1);
+    }
+  }
+
+  /**
+   * NEW: Verifica si un permiso está seleccionado
+   */
+  isPermissionSelected(permissionName: string): boolean {
+    return this.selectedPermissions.includes(permissionName);
+  }
+
+  /**
+   * NEW: Guarda los permisos del usuario
+   */
+  saveUserPermissions(): void {
+    if (!this.selectedUserForPerms) return;
+
+    this.messageService.add({ severity: 'info', summary: 'Info', detail: 'Permisos visibles (guardado en backend vendrá próximamente)' });
+    this.permissionsDialog = false;
+    this.loadUsers();
+  }
+
   deleteUser(user: any): void {
     if (confirm(`¿Está seguro de que desea eliminar al usuario ${user.usuario}?`)) {
-      this.userSrv.delete(user.id).subscribe({
+      const headers = this.auth.getAuthHeaders();
+      this.http.delete<any>(`/api/users/${user.id}`, { headers }).subscribe({
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario eliminado' });
           this.loadUsers();
@@ -274,5 +366,11 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       phone: '',
       address: ''
     };
+  }
+
+  closePermissionsModal(): void {
+    this.permissionsDialog = false;
+    this.selectedUserForPerms = null;
+    this.selectedPermissions = [];
   }
 }

@@ -97,7 +97,7 @@ router.delete('/:id', async (req, res) => {
 router.get('/:id/tickets', verifyToken, loadPermissions, requirePermission('ticket_view'), async (req, res) => {
   const id = req.params['id'];
   try {
-    const [rows] = await pool.query('SELECT id, group_id, titulo, descripcion, estado, created_by, created_at FROM tickets WHERE group_id = ? ORDER BY created_at DESC', [id]);
+    const [rows] = await pool.query('SELECT id, group_id, titulo, descripcion, estado, priority, created_by, created_at FROM tickets WHERE group_id = ? ORDER BY created_at DESC', [id]);
     return res.json(rows);
   } catch (e) {
     console.error(e);

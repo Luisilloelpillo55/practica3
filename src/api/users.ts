@@ -253,4 +253,52 @@ router.delete('/:id', verifyToken, loadPermissions, async (req, res) => {
   }
 });
 
+// Verify/Sync session endpoint - checks for user changes from other devices
+router.post('/verify-session', verifyToken, async (req, res) => {
+  const userId = req.user.userId || req.user.id;
+  if (!userId) return res.status(401).json({ error: 'User not authenticated' });
+  
+  try {
+    // Get current user data from DB
+    const [rows] = await pool.query('SELECT id, usuario, email, fullname, address, dob, phone, is_admin, permisos, permiso, created_at FROM users WHERE id = ? LIMIT 1', [userId]);
+    // @ts-ignore
+    const user = Array.isArray(rows) && (rows as any)[0] ? (rows as any)[0] : null;
+    
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    
+    // Load permissions from permisos array column
+    let permissions: string[] = [];
+    if (user.permisos) {
+      try {
+        if (typeof user.permisos === 'string') {
+          permissions = JSON.parse(user.permisos);
+        } else if (Array.isArray(user.permisos)) {
+          permissions = user.permisos;
+        }
+      } catch (pe) {
+        console.warn('Could not parse permisos');
+      }
+    }
+    
+    // If no permissions but is_admin, grant all permissions
+    if ((!permissions || permissions.length === 0) && user.is_admin) {
+      const [allPerms] = await pool.query('SELECT nombre FROM permissions');
+      // @ts-ignore
+      permissions = Array.isArray(allPerms) ? (allPerms as any[]).map((r: any) => r.nombre) : [];
+    }
+    
+    // Default permissions if none found
+    if (!permissions || permissions.length === 0) {
+      permissions = ['group_view', 'ticket_view', 'user_view'];
+    }
+    
+    // Return updated user data
+    delete (user as any).password;
+    return res.json({ ...user, permissions });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: 'db error' });
+  }
+});
+
 export default router;

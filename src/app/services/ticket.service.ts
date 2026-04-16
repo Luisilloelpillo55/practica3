@@ -11,7 +11,7 @@ export class TicketService {
   }
 
   getById(id: any): Observable<any> {
-    return this.apiHttp.get(`http://localhost:3000/api/tickets/${id}`) as unknown as Observable<any>;
+    return this.apiHttp.get(`/api/tickets/${id}`) as unknown as Observable<any>;
   }
 
   getByGroup(groupId: any): Observable<any[]> {

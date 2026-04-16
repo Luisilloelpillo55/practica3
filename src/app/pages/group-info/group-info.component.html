@@ -39,6 +39,7 @@
               <tr>
                 <th>ID</th>
                 <th>Título</th>
+                <th>Prioridad</th>
                 <th>Estado</th>
                 <th>Creado</th>
               </tr>
@@ -47,6 +48,12 @@
               <tr>
                 <td>{{ t.id }}</td>
                 <td>{{ t.titulo }}</td>
+                <td>
+                  <span *ngIf="t.priority === 'alta'" class="priority-badge priority-alta">🔴 Alta</span>
+                  <span *ngIf="t.priority === 'moderada'" class="priority-badge priority-moderada">🟡 Moderada</span>
+                  <span *ngIf="t.priority === 'baja'" class="priority-badge priority-baja">🟢 Baja</span>
+                  <span *ngIf="!t.priority" class="priority-badge priority-moderada">🟡 Moderada</span>
+                </td>
                 <td>{{ t.estado }}</td>
                 <td>{{ t.created_at | date:'short' }}</td>
               </tr>

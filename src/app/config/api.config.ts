@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: typeof window !== 'undefined' ? 'http://localhost:3000' : 'http://localhost:3000',
+  BASE_URL: typeof window !== 'undefined' ? 'http://localhost:3008' : 'http://localhost:3008',
   TIMEOUT: 30000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000

@@ -9,7 +9,7 @@ import { logRequest, logError, logMetric } from './logging.js';
 dotenv.config();
 
 const fastify = Fastify({ logger: true });
-const GATEWAY_PORT = 3000;
+const GATEWAY_PORT = 3008;
 
 // Microservice URLs
 const USERS_SERVICE = process.env['USERS_SERVICE_URL'] || 'http://localhost:3001';

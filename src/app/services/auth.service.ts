@@ -13,6 +13,7 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<any>(null);
   public currentUser$: Observable<any> = this.currentUserSubject.asObservable();
   private storageAvailable: boolean = false;
+  private userHashChecksum: string = '';
 
   constructor(
     private http: HttpClient, 
@@ -28,19 +29,38 @@ export class AuthService {
         console.warn('⚠️ [AuthService] localStorage is not available (Private Browsing?). Session will not persist on refresh.');
       }
       
-      // Try to load user immediately
+      // Sync sessionStorage to localStorage at startup (in case localStorage was cleared but sessionStorage has data)
+      const sessionData = window.sessionStorage.getItem(this.STORAGE_KEY);
+      if (sessionData && !window.localStorage.getItem(this.STORAGE_KEY) && this.storageAvailable) {
+        console.log('🔄 [AuthService] Syncing sessionStorage to localStorage at startup');
+        try {
+          window.localStorage.setItem(this.STORAGE_KEY, sessionData);
+        } catch (e) {
+          console.warn('⚠️ [AuthService] Could not sync to localStorage:', e);
+        }
+      }
+      
+      // Try to load user immediately (will check both sessionStorage and localStorage)
       this.loadUser();
       
       // Also set up a second attempt after a small delay to ensure DOM is ready
       setTimeout(() => {
         if (!this.currentUserSubject.value) {
-          console.log('⏱️  [AuthService] Second loadUser attempt after DOM ready');
+          console.log('⏱️  [AuthService] Second loadUser attempt after DOM ready (50ms)');
           this.loadUser();
         }
-      }, 100);
+      }, 50);
+
+      // Third attempt with more delay
+      setTimeout(() => {
+        if (!this.currentUserSubject.value) {
+          console.log('⏱️  [AuthService] Third loadUser attempt (150ms)');
+          this.loadUser();
+        }
+      }, 150);
 
       // Set up aggressive recovery for HMR (Vite Hot Module Replacement)
-      // Check every 500ms for the first 3 seconds if BehaviorSubject is empty but localStorage has data
+      // Check every 500ms for the first 3 seconds if BehaviorSubject is empty but sessionStorage/localStorage has data
       let attempts = 0;
       const hmrRecoveryInterval = setInterval(() => {
         if (attempts >= 6) {
@@ -51,7 +71,14 @@ export class AuthService {
           const stored = this.getFromStorage();
           if (stored) {
             console.log('🔄 [AuthService] HMR Recovery - Detected storage data, loading user...');
-            this.loadUser();
+            this.ngZone.run(() => {
+              this.currentUserSubject.next(stored);
+              this.userHashChecksum = JSON.stringify({
+                permissions: stored.permissions,
+                is_admin: stored.is_admin,
+                permisos: stored.permisos
+              });
+            });
           }
         }
         attempts++;
@@ -104,8 +131,49 @@ export class AuthService {
   private getFromStorage(): any {
     if (!this.isBrowser()) return null;
     try {
-      const data = window.localStorage.getItem(this.STORAGE_KEY);
-      return data ? JSON.parse(data) : null;
+      // Try localStorage first (more persistent)
+      let data = window.localStorage.getItem(this.STORAGE_KEY);
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed && parsed.usuario && parsed.token) {
+            console.log('📂 [AuthService] Found VALID user in localStorage:', parsed.usuario);
+            return parsed;
+          } else {
+            console.warn('⚠️ [AuthService] localStorage has data but missing required fields');
+          }
+        } catch (e) {
+          console.error('❌ [AuthService] Error parsing localStorage:', e);
+        }
+      }
+      
+      // Fallback to sessionStorage
+      data = window.sessionStorage.getItem(this.STORAGE_KEY);
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed && parsed.usuario && parsed.token) {
+            console.log('📂 [AuthService] Found VALID user in sessionStorage:', parsed.usuario);
+            // Also save to localStorage for persistence
+            if (this.storageAvailable) {
+              try {
+                window.localStorage.setItem(this.STORAGE_KEY, data);
+                console.log('💾 [AuthService] Synced valid user from sessionStorage to localStorage');
+              } catch (e) {
+                console.warn('⚠️ [AuthService] Could not sync to localStorage:', e);
+              }
+            }
+            return parsed;
+          } else {
+            console.warn('⚠️ [AuthService] sessionStorage has data but missing required fields');
+          }
+        } catch (e) {
+          console.error('❌ [AuthService] Error parsing sessionStorage:', e);
+        }
+      }
+      
+      console.log('📂 [AuthService] No user found in any storage');
+      return null;
     } catch (e) {
       console.error('❌ [AuthService] getFromStorage error:', e);
       return null;
@@ -113,15 +181,45 @@ export class AuthService {
   }
 
   private saveToStorage(data: any): boolean {
-    if (!this.isBrowser() || !this.storageAvailable) return false;
+    if (!this.isBrowser()) return false;
     try {
-      window.localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
-      const verify = window.localStorage.getItem(this.STORAGE_KEY);
-      if (!verify) {
-        console.error('❌ [AuthService] Storage write verification failed');
+      const dataStr = JSON.stringify(data);
+      let successCount = 0;
+      
+      // Always try to save to sessionStorage (guaranteed to work in normal mode)
+      try {
+        window.sessionStorage.setItem(this.STORAGE_KEY, dataStr);
+        console.log('💾 [AuthService] Data saved to sessionStorage');
+        successCount++;
+      } catch (e) {
+        console.error('❌ [AuthService] Failed to save to sessionStorage:', e);
+      }
+      
+      // Try to save to localStorage for persistence
+      if (this.storageAvailable) {
+        try {
+          window.localStorage.setItem(this.STORAGE_KEY, dataStr);
+          // Verify it was actually written
+          const verify = window.localStorage.getItem(this.STORAGE_KEY);
+          if (verify) {
+            console.log('💾 [AuthService] Data saved to localStorage successfully');
+            successCount++;
+          } else {
+            console.warn('⚠️ [AuthService] localStorage.setItem succeeded but getItem returned null');
+          }
+        } catch (e) {
+          console.warn('⚠️ [AuthService] localStorage not available or quota exceeded:', e);
+        }
+      } else {
+        console.log('⚠️ [AuthService] localStorage not available, using sessionStorage only');
+      }
+      
+      if (successCount === 0) {
+        console.error('❌ [AuthService] Failed to save to any storage!');
         return false;
       }
-      console.log('💾 [AuthService] Data saved to localStorage successfully');
+      
+      console.log(`✓ [AuthService] Save successful to ${successCount} storage(s)`);
       return true;
     } catch (e) {
       console.error('❌ [AuthService] saveToStorage error:', e);
@@ -133,6 +231,8 @@ export class AuthService {
     if (!this.isBrowser()) return false;
     try {
       window.localStorage.removeItem(this.STORAGE_KEY);
+      window.sessionStorage.removeItem(this.STORAGE_KEY);
+      console.log('🗑️  [AuthService] User data removed from all storage');
       return true;
     } catch (e) {
       console.error('❌ [AuthService] removeFromStorage error:', e);
@@ -188,6 +288,7 @@ export class AuthService {
   loadUser(): void {
     if (!this.isBrowser()) return;
     
+    console.log('📖 [AuthService] loadUser() - Attempting to load user from storage...');
     const stored = this.getFromStorage();
     if (stored) {
       // Validate required fields
@@ -197,13 +298,23 @@ export class AuthService {
           this.currentUserSubject.next(stored);
           console.log('✓ [AuthService] BehaviorSubject updated with user:', stored.usuario);
         });
+        // Initialize polling checksum and start polling
+        this.userHashChecksum = JSON.stringify({
+          permissions: stored.permissions,
+          is_admin: stored.is_admin,
+          permisos: stored.permisos
+        });
         return;
       } else {
         console.warn('⚠️ [AuthService] loadUser() - Stored data missing required fields:', {
           has_usuario: !!stored?.usuario,
           has_id: !!stored?.id,
-          has_token: !!stored?.token
+          has_token: !!stored?.token,
+          has_permisos: !!stored?.permisos,
+          has_permissions: !!stored?.permissions
         });
+        // Clear bad data from storage
+        this.removeFromStorage();
       }
     } else {
       console.log('ℹ️ [AuthService] No user found in storage');
@@ -338,42 +449,53 @@ export class AuthService {
    * Recover session - useful for HMR and state recovery
    */
   async recoverSession(): Promise<boolean> {
-    console.log('🔄 [AuthService] recoverSession() - Attempting to recover session...');
-    return new Promise((resolve) => {
-      if (!this.isBrowser()) {
-        resolve(false);
-        return;
-      }
+    console.log('🔄 [AuthService] recoverSession() - Attempting to recover session from localStorage...');
+    
+    if (!this.isBrowser()) {
+      console.log('❌ [AuthService] recoverSession - Not in browser environment');
+      return false;
+    }
 
-      // Try immediate load
-      this.loadUser();
-      
-      // If still no user, try after a delay
-      setTimeout(() => {
-        if (!this.currentUserSubject.value) {
-          console.log('⏱️  [AuthService] recoverSession - Retrying loadUser()');
-          this.loadUser();
-        }
-        
-        const hasUser = !!this.currentUserSubject.value;
-        console.log('recoverSession result:', hasUser ? 'SUCCESS' : 'FAILED');
-        resolve(hasUser);
-      }, 150);
-    });
+    // Simple synchronous check from storage
+    const stored = this.getFromStorage();
+    if (stored && stored.usuario && stored.token) {
+      console.log('✓ [AuthService] recoverSession - Found user in storage:', stored.usuario);
+      this.ngZone.run(() => {
+        this.currentUserSubject.next(stored);
+        this.userHashChecksum = JSON.stringify({
+          permissions: stored.permissions,
+          is_admin: stored.is_admin,
+          permisos: stored.permisos
+        });
+      });
+      return true;
+    }
+
+    console.log('❌ [AuthService] recoverSession - No valid user found in storage');
+    return false;
   }
 
   isLoggedIn(): boolean {
     const user = this.getUser();
     const token = this.getToken();
     
-    console.log('🔍 [AuthService] isLoggedIn() check:', {
-      user_exists: !!user,
-      user_id: user?.id || null,
-      token_exists: !!token,
-      result: !!(user && token)
-    });
+    const isLogged = !!(user && token);
     
-    return !!user && !!token;
+    if (!isLogged) {
+      console.log('🔍 [AuthService] isLoggedIn() check: FALSE', {
+        user_exists: !!user,
+        user_id: user?.id || null,
+        token_exists: !!token,
+        user_usuario: user?.usuario || null
+      });
+    } else {
+      console.log('🔍 [AuthService] isLoggedIn() check: TRUE -', {
+        usuario: user?.usuario,
+        has_token: !!token
+      });
+    }
+    
+    return isLogged;
   }
 
   /**
@@ -466,12 +588,22 @@ export class AuthService {
           phone: response.phone || '',
           token: response.token, // JWT real del backend
           permissions: response.permissions || [], // Array de permisos
+          permisos: response.permisos || response.permissions || [], // Array de permisos desde BD
           permissionsByGroup: {},
           is_admin: response.is_admin || false
         };
         
         console.log('💾 [AuthService] Saving user to storage and BehaviorSubject:', userData.usuario);
         this.saveUser(userData);
+        
+        // Store initial checksum for polling
+        this.userHashChecksum = JSON.stringify({
+          permissions: userData.permissions,
+          is_admin: userData.is_admin,
+          permisos: userData.permisos
+        });
+        
+        // Start polling for session changes
         
         // After saveUser completes, verify it's actually been saved
         const immediateCheck = this.getUser();
@@ -513,4 +645,5 @@ export class AuthService {
       return { success: false, error: error.error?.error || error.message || 'Error en registro' };
     }
   }
+
 }

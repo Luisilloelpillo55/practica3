@@ -18,18 +18,18 @@ const angularApp = new AngularNodeAppEngine();
 app.use(cors());
 app.use(express.json());
 
-// Block API routes - they should go to the Gateway (port 3000)
+// Block API routes - they should go to the Gateway (port 3008)
 app.use('/api', (req, res) => {
   console.warn(`[SSR] API request blocked: ${req.method} ${req.path}`);
   res.status(503).json({ 
     error: 'API Gateway unavailable', 
-    message: 'Please ensure the API Gateway is running on port 3000',
+    message: 'Please ensure the API Gateway is running on port 3008',
     hint: 'Run: npm run start:gateway'
   });
   return;
 });
 
-// NOTE: API routes are handled by the microservices architecture (Gateway on port 3000)
+// NOTE: API routes are handled by the microservices architecture (Gateway on port 3008)
 // This SSR server only serves the Angular frontend
 
 /**

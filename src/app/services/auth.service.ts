@@ -49,8 +49,57 @@ export class AuthService {
   /** Comprueba si el usuario tiene un permiso (o todos) */
   hasPermission(permission: string | string[]): boolean {
     const perms = Array.isArray(permission) ? permission : [permission];
-    const userPerms: string[] = this.getUser()?.permissions || this.getUser()?.permisos || this.getUser()?.permiso || [];
-    return perms.every(p => userPerms.includes(p));
+    const userPermsRaw: any = this.getUser()?.permissions || this.getUser()?.permisos || this.getUser()?.permiso;
+    let userPermsArr: any[] = [];
+    if (Array.isArray(userPermsRaw)) {
+      userPermsArr = userPermsRaw;
+    } else if (typeof userPermsRaw === 'string') {
+      userPermsArr = userPermsRaw.split(',').map(s => s.trim()).filter(Boolean);
+    } else {
+      userPermsArr = [];
+    }
+    const userPerms = (userPermsArr || []).map((x: any) => String(x).toLowerCase());
+
+    const matches = perms.every((p) => {
+      const variants = this.generatePermissionVariants(String(p || '').toLowerCase());
+      return variants.some(v => userPerms.includes(v));
+    });
+    return matches;
+  }
+
+  /** Genera variantes de un permiso para permitir formatos legacy/action-based (ticket_view <-> tickets:view) */
+  private generatePermissionVariants(p: string): string[] {
+    const out = new Set<string>();
+    if (!p) return [];
+    const base = p.toLowerCase();
+    out.add(base);
+
+    // snake <-> colon
+    if (base.includes('_')) {
+      out.add(base.replace('_', ':'));
+      const [entity, action] = base.split('_');
+      out.add(`${entity}s:${action}`);
+      out.add(`${entity}s_${action}`);
+      out.add(`${entity}:${action}`);
+      out.add(`${entity}_${action}`);
+    }
+
+    if (base.includes(':')) {
+      out.add(base.replace(':', '_'));
+      const [entity, action] = base.split(':');
+      if (entity.endsWith('s')) {
+        out.add(`${entity.slice(0, -1)}_${action}`);
+        out.add(`${entity.slice(0, -1)}:${action}`);
+      } else {
+        out.add(`${entity}s:${action}`);
+        out.add(`${entity}s_${action}`);
+      }
+    }
+
+    // ensure admin stays covered
+    if (base === 'admin') out.add('admin');
+
+    return Array.from(out).filter(Boolean).map(s => s.toLowerCase());
   }
 
   /** Comprueba si el usuario es admin (flag o permiso admin) */

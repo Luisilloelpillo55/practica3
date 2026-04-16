@@ -44,10 +44,22 @@ console.log('🚀 Tickets Service starting on Fastify...');
 fastify.addHook('preHandler', async (request, reply) => {
   const authHeader = request.headers.authorization;
   const token = authHeader?.replace('Bearer ', '');
-  
+
+  // If gateway provided a user id, prefer loading fresh permisos from DB (source of truth)
+  const headerUserId = (request.headers['x-user-id'] || request.headers['x_user_id'] || request.headers['x-user']) as string | undefined;
+  if (headerUserId) {
+    try {
+      const result = await supabasePool.query('SELECT permisos FROM users WHERE id = $1 LIMIT 1', [headerUserId]);
+      const perms = (result.rows && result.rows[0] && result.rows[0].permisos) ? result.rows[0].permisos : [];
+      (request as any).userPermissions = perms;
+      return; // Use DB-backed permissions to ensure immediate consistency
+    } catch (err) {
+      fastify.log.warn('[Tickets] Failed to load permisos from DB for user:', headerUserId, err?.message || err);
+    }
+  }
+
   // Primero intenta leer del header que inyecta el gateway
   let userPerms = (request.headers['x-user-permissions'] as string)?.trim();
-  
   if (userPerms) {
     try {
       (request as any).userPermissions = JSON.parse(userPerms);
@@ -56,7 +68,7 @@ fastify.addHook('preHandler', async (request, reply) => {
       fastify.log.warn('[Tickets] Failed to parse x-user-permissions header:', userPerms);
     }
   }
-  
+
   // Fallback: intenta decodificar del token
   if (token) {
     try {
@@ -69,7 +81,7 @@ fastify.addHook('preHandler', async (request, reply) => {
       fastify.log.warn('[Tickets] Token decode failed:', err);
     }
   }
-  
+
   // Si no hay nada, set empty permissions
   if (!(request as any).userPermissions) {
     (request as any).userPermissions = [];
@@ -87,6 +99,14 @@ fastify.get('/health', async (request, reply) => {
 
 // Get all tickets
 fastify.get('/', async (request, reply) => {
+  // Check permission: ticket_view
+  const userPerms = (request as any).userPermissions || [];
+  const hasView = userPerms.includes('ticket_view') || userPerms.includes('tickets:view') || userPerms.includes('admin');
+  if (!hasView) {
+    reply.status(403);
+    return { statusCode: 403, error: 'Missing permission: ticket_view' };
+  }
+
   try {
     const result = await supabasePool.query(
       'SELECT id, group_id, titulo, descripcion, estado, created_by, created_at, priority FROM tickets ORDER BY created_at DESC'
@@ -109,6 +129,13 @@ fastify.get('/', async (request, reply) => {
 // Get all tickets for a group
 fastify.get<{ Params: { groupId: string } }>('/group/:groupId', async (request, reply) => {
   const { groupId } = request.params;
+  // Check permission: ticket_view
+  const userPerms = (request as any).userPermissions || [];
+  const hasView = userPerms.includes('ticket_view') || userPerms.includes('tickets:view') || userPerms.includes('admin');
+  if (!hasView) {
+    reply.status(403);
+    return { statusCode: 403, error: 'Missing permission: ticket_view' };
+  }
 
   try {
     const result = await supabasePool.query(
@@ -124,9 +151,43 @@ fastify.get<{ Params: { groupId: string } }>('/group/:groupId', async (request, 
   }
 });
 
+// Get ticket history (last entries)
+fastify.get<{ Params: { id: string } }>('/:id/history', async (request, reply) => {
+  const { id } = request.params;
+
+  // Permission: ticket_view required to access history
+  const userPerms = (request as any).userPermissions || [];
+  const hasPermission = userPerms.includes('ticket_view') || userPerms.includes('admin');
+  if (!hasPermission) {
+    reply.status(403);
+    return { statusCode: 403, error: 'Missing permission: ticket_view' };
+  }
+
+  try {
+    const result = await supabasePool.query(
+      `SELECT estado_anterior, estado_nuevo, changed_by, changed_at
+       FROM ticket_history WHERE ticket_id = $1
+       ORDER BY changed_at DESC LIMIT 10`,
+      [id]
+    );
+    return result.rows;
+  } catch (error: any) {
+    fastify.log.error('[Tickets Service Error - History]', error);
+    reply.status(500);
+    return { error: 'Database error', details: error.message };
+  }
+});
+
 // Get single ticket
 fastify.get<{ Params: { id: string } }>('/:id', async (request, reply) => {
   const { id } = request.params;
+  // Check permission: ticket_view
+  const userPerms = (request as any).userPermissions || [];
+  const hasView = userPerms.includes('ticket_view') || userPerms.includes('tickets:view') || userPerms.includes('admin');
+  if (!hasView) {
+    reply.status(403);
+    return { statusCode: 403, error: 'Missing permission: ticket_view' };
+  }
 
   try {
     const result = await supabasePool.query(

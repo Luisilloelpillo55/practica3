@@ -47,6 +47,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   // Controls whether the dashboard (groups/tickets/kanban) is shown
   dashboardVisible: boolean = true;
   private destroy$ = new Subject<void>();
+  private groupsLoadAttempted = false;
   
   // Scroll reveal for header
   headerHidden: boolean = false;
@@ -113,11 +114,23 @@ export class HomeComponent implements OnInit, OnDestroy {
   private loadGroups(): void {
     const headers = this.authService.getAuthHeaders();
     const user = this.authService.getUser();
-    
+    const isFirstCall = !this.groupsLoadAttempted;
+    this.groupsLoadAttempted = true;
+
     console.log('📊 [HomeComponent] loadGroups() - Current user:', user?.usuario || 'null');
     console.log('📊 [HomeComponent] loadGroups() - Has token:', !!this.authService.getToken());
     console.log('📊 [HomeComponent] loadGroups() - Will use proxy to reach http://localhost:3008/api/groups');
-    
+
+    // Si no hay token, evitar solicitar recursos protegidos (evita 401 en consola)
+    if (!this.authService.getToken()) {
+      // Silenciar la advertencia durante la primera carga (inicialización/SSR)
+      if (!isFirstCall) {
+        console.warn('⛔ [HomeComponent] No token disponible - omitimos petición a /api/groups');
+      }
+      this.groups = [];
+      return;
+    }
+
     this.http.get<any>('/api/groups', { headers }).subscribe({
       next: (res: any) => {
         // Extraer datos de la nueva estructura {statusCode, intOpCode, data}
@@ -137,7 +150,11 @@ export class HomeComponent implements OnInit, OnDestroy {
         }, 0);
       },
       error: (err) => { 
-        console.error('❌ [HomeComponent] Error loading groups:', err); 
+        console.error('❌ [HomeComponent] Error loading groups:', err);
+        // Mostrar mensaje de permiso si recibimos 403
+        if (err?.status === 403) {
+          try { this.messageService.add({ severity: 'warn', summary: 'Sin permiso', detail: 'No tienes permiso para ver grupos' }); } catch {}
+        }
         this.groups = []; 
       }
     });

@@ -23,7 +23,7 @@ import { ToastModule } from 'primeng/toast';
   imports: [CommonModule, CardModule, ButtonModule, DialogModule, TableModule, TooltipModule, HttpClientModule, ToastModule, DragDropModule, InputTextModule],
   templateUrl: './kanban.component.html',
   styleUrls: ['./kanban.component.css'],
-  providers: [MessageService]
+  // use app-level MessageService (provided in app.config)
 })
 export class KanbanComponent implements OnInit, OnDestroy {
   // Kanban columns
@@ -44,12 +44,14 @@ export class KanbanComponent implements OnInit, OnDestroy {
   canMove = false;
   canAdd = false;
   canDelete = false;
+  permissionChecked = false;
+  canShow = false;
   // datos para la zona de eliminación (evita inference a `never[]` en template)
   deleteListData: any[] = [];
 
   constructor(
     private ticketSrv: TicketService,
-    private auth: AuthService,
+    public auth: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -58,32 +60,31 @@ export class KanbanComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
-    
-    const currentUser = this.auth.getUser();
-    if (!currentUser || !currentUser.token) {
-      this.auth.loadUser();
-    }
-    
-    const userToUse = this.auth.getUser();
-    if (userToUse && userToUse.token) {
-      this.loadAll();
-    }
-    // permiso para mover tickets
-    this.canMove = this.auth.hasPermission('ticket_move') || this.auth.isAdmin();
-    this.canAdd = this.auth.hasPermission('ticket_create') || this.auth.isAdmin();
-    this.canDelete = this.auth.hasPermission('ticket_delete') || this.auth.isAdmin();
-    
+    // ensure auth BehaviorSubject is populated (APP_INITIALIZER should handle most cases)
+    const maybe = this.auth.getUser();
+    if (!maybe || !maybe.token) this.auth.loadUser();
+
+    // start with unknown permission state; wait for currentUser$ emission to decide
+    this.permissionChecked = false;
+    this.canShow = false;
+    this.canMove = this.canAdd = this.canDelete = false;
+
     this.auth.currentUser$
       .pipe(takeUntil(this.destroy$))
       .subscribe((user) => {
-        if (user && user.token) {
+        this.permissionChecked = true;
+        if (user && user.token && (this.auth.hasPermission('ticket_view') || this.auth.isAdmin())) {
+          this.canShow = true;
+          this.canMove = (this.auth.hasPermission('ticket_move') && this.auth.hasPermission('ticket_view')) || this.auth.isAdmin();
+          this.canAdd = (this.auth.hasPermission('ticket_create') && this.auth.hasPermission('ticket_view')) || this.auth.isAdmin();
+          this.canDelete = (this.auth.hasPermission('ticket_delete') && this.auth.hasPermission('ticket_view')) || this.auth.isAdmin();
           this.loadAll();
-          this.canMove = this.auth.hasPermission('ticket_move') || this.auth.isAdmin();
-          this.canAdd = this.auth.hasPermission('ticket_create') || this.auth.isAdmin();
-          this.canDelete = this.auth.hasPermission('ticket_delete') || this.auth.isAdmin();
         } else {
+          this.canShow = false;
           this.clearKanban();
+          this.canMove = this.canAdd = this.canDelete = false;
         }
+        try { this.cdr.detectChanges(); } catch {}
       });
 
     this.router.events.pipe(
@@ -95,7 +96,12 @@ export class KanbanComponent implements OnInit, OnDestroy {
         if (!u || !u.token) {
           this.auth.loadUser();
         } else {
-          this.loadAll();
+          // Only load tickets if the current user has view permissions
+          if (this.auth.hasPermission('ticket_view') || this.auth.isAdmin()) {
+            this.loadAll();
+          } else {
+            this.clearKanban();
+          }
         }
       }
     });
@@ -111,6 +117,8 @@ export class KanbanComponent implements OnInit, OnDestroy {
     this.progress = [];
     this.done = [];
     this.cancelled = [];
+    this.allTickets = [];
+    try { this.cdr.detectChanges(); } catch {}
   }
 
   private loadAll(): void {
@@ -120,9 +128,20 @@ export class KanbanComponent implements OnInit, OnDestroy {
   }
 
   private loadTickets(): void {
+    // Final guard: do not load if the current session user does not have view permission
+    const user = this.auth.getUser();
+    const rawPerms = this.auth.getPermiso();
+    const hasView = (this.auth.hasPermission('ticket_view') || this.auth.hasPermission('tickets:view') || this.auth.isAdmin());
+    if (!user || !user.token || !hasView) {
+      console.warn('⛔ [Kanban] Aborting loadTickets: no ticket_view permission for current session', { userId: user?.id, rawPerms });
+      this.clearKanban();
+      return;
+    }
+
     this.ticketSrv.getAll().subscribe({
       next: (res: any) => {
-        Promise.resolve().then(() => {
+        // Schedule DOM-updating work to the next macrotask to avoid ExpressionChangedAfterItHasBeenCheckedError
+        setTimeout(() => {
           let tickets: any[] = [];
           if (Array.isArray(res)) {
             tickets = res;
@@ -140,7 +159,7 @@ export class KanbanComponent implements OnInit, OnDestroy {
           console.debug('Kanban: tickets loaded count=', tickets.length, 'sample=', tickets.slice(0,3));
           this.distribute(tickets || []);
           try { this.cdr.detectChanges(); } catch {}
-        });
+        }, 0);
       },
       error: (err: any) => {
         console.error('Error loading tickets:', err);
@@ -179,7 +198,14 @@ export class KanbanComponent implements OnInit, OnDestroy {
       },
       error: (err: any) => {
         console.error('Error updating ticket:', err);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo mover el ticket' });
+        const detail = (err?.error?.error) || err?.message || 'No se pudo mover el ticket';
+        if (err?.status === 403 || (err?.error && typeof err.error === 'object' && err.error.error && String(err.error.error).toLowerCase().includes('permiso'))) {
+          this.messageService.add({ severity: 'error', summary: 'Permiso denegado', detail });
+          this.clearKanban();
+          this.canMove = this.canAdd = this.canDelete = false;
+          return;
+        }
+        this.messageService.add({ severity: 'error', summary: 'Error', detail });
       }
     });
   }
@@ -202,13 +228,34 @@ export class KanbanComponent implements OnInit, OnDestroy {
     
     if (!targetColumn) return;
     
-    // Si el item se movió a una columna diferente, actualizar visualmente y persistir
+    // Si el item se movió a una columna diferente, persistir primero y aplicar cambio en UI solo si backend acepta
     if (event.previousContainer !== event.container) {
-      // actualizar arrays para reflejar el movimiento inmediatamente
-      transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
       const item = event.item.data;
-      // persistir el nuevo estado en backend
-      this.moveToColumn(item, targetColumn);
+      const nuevoEstado = this.statusLabel(targetColumn);
+      const payload = { ...item, estado: nuevoEstado };
+
+      // Enviar petición al backend primero
+      this.ticketSrv.update(item.id, payload).subscribe({
+        next: (resp: any) => {
+          try {
+            transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
+          } catch (e) { /* ignore transfer errors */ }
+          item.estado = nuevoEstado;
+          this.distribute([...this.backlog, ...this.progress, ...this.done, ...this.cancelled]);
+          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Ticket movido' });
+        },
+        error: (err: any) => {
+          console.error('Error updating ticket:', err);
+          const detail = (err?.error?.error) || err?.message || 'No se pudo mover el ticket';
+          if (err?.status === 403 || (err?.error && typeof err.error === 'object' && err.error.error && String(err.error.error).toLowerCase().includes('permiso'))) {
+            this.messageService.add({ severity: 'error', summary: 'Permiso denegado', detail });
+            this.clearKanban();
+            this.canMove = this.canAdd = this.canDelete = false;
+            return;
+          }
+          this.messageService.add({ severity: 'error', summary: 'Error', detail });
+        }
+      });
     }
   }
 
@@ -229,7 +276,14 @@ export class KanbanComponent implements OnInit, OnDestroy {
         },
         error: (err: any) => {
           console.error('Error deleting ticket:', err);
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el ticket' });
+          const detail = (err?.error?.error) || err?.message || 'No se pudo eliminar el ticket';
+          if (err?.status === 403 || (err?.error && typeof err.error === 'object' && err.error.error && String(err.error.error).toLowerCase().includes('permiso'))) {
+            this.messageService.add({ severity: 'error', summary: 'Permiso denegado', detail });
+            this.clearKanban();
+            this.canMove = this.canAdd = this.canDelete = false;
+            return;
+          }
+          this.messageService.add({ severity: 'error', summary: 'Error', detail });
         }
       });
     }
@@ -237,10 +291,26 @@ export class KanbanComponent implements OnInit, OnDestroy {
 
   viewHistory(ticket: any): void {
     this.selectedForHistory = ticket;
-    this.historyTickets = [
-      { estado_anterior: 'N/A', estado_nuevo: 'No iniciado', changed_at: ticket.created_at }
-    ];
+    this.historyTickets = [];
     this.showHistoryDialog = true;
+
+    // Solicitar historial al backend; si falla, mostrar un registro por defecto
+    this.ticketSrv.getHistory(ticket.id).subscribe({
+      next: (res: any) => {
+        const rows = Array.isArray(res) ? res : (res?.data || []);
+        if (!rows || rows.length === 0) {
+          this.historyTickets = [{ estado_anterior: 'N/A', estado_nuevo: ticket.estado || 'No iniciado', changed_at: ticket.created_at }];
+        } else {
+          this.historyTickets = rows;
+        }
+        try { this.cdr.detectChanges(); } catch {}
+      },
+      error: (err: any) => {
+        console.warn('⚠️ [Kanban] No se pudo cargar el historial:', err);
+        this.historyTickets = [{ estado_anterior: 'N/A', estado_nuevo: ticket.estado || 'No iniciado', changed_at: ticket.created_at }];
+        try { this.cdr.detectChanges(); } catch {}
+      }
+    });
   }
 
   closeHistoryDialog(): void {
@@ -261,6 +331,11 @@ export class KanbanComponent implements OnInit, OnDestroy {
 
   toggleViewMode(mode: 'kanban' | 'list'): void {
     this.viewMode = mode;
+  }
+
+  hideKanban(): void {
+    this.canShow = false;
+    try { this.cdr.detectChanges(); } catch {}
   }
 
   onGlobalFilter(event: Event): void {

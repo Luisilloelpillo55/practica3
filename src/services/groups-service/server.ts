@@ -44,10 +44,22 @@ console.log('🚀 Groups Service starting on Fastify...');
 fastify.addHook('preHandler', async (request, reply) => {
   const authHeader = request.headers.authorization;
   const token = authHeader?.replace('Bearer ', '');
-  
+
+  // If gateway provided a user id, prefer loading fresh permisos from DB (source of truth)
+  const headerUserId = (request.headers['x-user-id'] || request.headers['x_user_id'] || request.headers['x-user']) as string | undefined;
+  if (headerUserId) {
+    try {
+      const result = await supabasePool.query('SELECT permisos FROM users WHERE id = $1 LIMIT 1', [headerUserId]);
+      const perms = (result.rows && result.rows[0] && result.rows[0].permisos) ? result.rows[0].permisos : [];
+      (request as any).userPermissions = perms;
+      return; // Use DB-backed permissions to ensure immediate consistency
+    } catch (err) {
+      fastify.log.warn('[Groups] Failed to load permisos from DB for user:', headerUserId, err?.message || err);
+    }
+  }
+
   // Primero intenta leer del header que inyecta el gateway
   let userPerms = (request.headers['x-user-permissions'] as string)?.trim();
-  
   if (userPerms) {
     try {
       (request as any).userPermissions = JSON.parse(userPerms);
@@ -56,7 +68,7 @@ fastify.addHook('preHandler', async (request, reply) => {
       fastify.log.warn('[Groups] Failed to parse x-user-permissions header:', userPerms);
     }
   }
-  
+
   // Fallback: intenta decodificar del token
   if (token) {
     try {
@@ -69,7 +81,7 @@ fastify.addHook('preHandler', async (request, reply) => {
       fastify.log.warn('[Groups] Token decode failed:', err);
     }
   }
-  
+
   // Si no hay nada, set empty permissions
   if (!(request as any).userPermissions) {
     (request as any).userPermissions = [];
@@ -137,6 +149,13 @@ fastify.post('/', async (request, reply) => {
 
 // Get all groups
 fastify.get('/', async (request, reply) => {
+  // Check permission: groups:view
+  const userPerms = (request as any).userPermissions || [];
+  const hasView = userPerms.includes('group_view') || userPerms.includes('groups:view') || userPerms.includes('admin');
+  if (!hasView) {
+    reply.status(403);
+    return { statusCode: 403, error: 'Missing permission: groups:view' };
+  }
   try {
     const result = await supabasePool.query('SELECT * FROM groups ORDER BY created_at DESC');
     const groups = result.rows.map((g: any) => ({
@@ -154,6 +173,13 @@ fastify.get('/', async (request, reply) => {
 // Get single group
 fastify.get<{ Params: { id: string } }>('/:id', async (request, reply) => {
   const { id } = request.params;
+  // Check permission: groups:view
+  const userPerms = (request as any).userPermissions || [];
+  const hasView = userPerms.includes('group_view') || userPerms.includes('groups:view') || userPerms.includes('admin');
+  if (!hasView) {
+    reply.status(403);
+    return { statusCode: 403, error: 'Missing permission: groups:view' };
+  }
 
   try {
     const result = await supabasePool.query('SELECT * FROM groups WHERE id = $1 LIMIT 1', [id]);
@@ -247,6 +273,13 @@ fastify.delete<{ Params: { id: string } }>('/:id', async (request, reply) => {
 // Get group tickets
 fastify.get<{ Params: { id: string } }>('/:id/tickets', async (request, reply) => {
   const { id } = request.params;
+  // Check permission: ticket_view
+  const userPerms = (request as any).userPermissions || [];
+  const hasTicketView = userPerms.includes('ticket_view') || userPerms.includes('tickets:view') || userPerms.includes('admin');
+  if (!hasTicketView) {
+    reply.status(403);
+    return { statusCode: 403, error: 'Missing permission: ticket_view' };
+  }
 
   try {
     const result = await supabasePool.query(

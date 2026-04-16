@@ -186,7 +186,9 @@
 
 <!-- Kanban integrado al final del dashboard (el componente ya tiene su encabezado) -->
 <div *ngIf="loggedIn && dashboardVisible" class="home-kanban-section" style="margin-top:28px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.03);">
-  <app-kanban></app-kanban>
+  <ng-container *ngIf="hasPermission('ticket_view')">
+    <app-kanban></app-kanban>
+  </ng-container>
 </div>
 
 <p-toast></p-toast>

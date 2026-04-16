@@ -291,3 +291,45 @@
 :host ::ng-deep .list-view .p-table .p-datatable-empty-message td {
   color: #999999 !important;
 }
+
+/* Extra: broader selectors to ensure list view styles apply across PrimeNG versions */
+:host ::ng-deep .list-view table,
+:host ::ng-deep .list-view .p-table table,
+:host ::ng-deep .list-view .p-datatable {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 12px !important;
+}
+
+:host ::ng-deep .list-view table thead th,
+:host ::ng-deep .list-view .p-table thead th {
+  background: linear-gradient(90deg, rgba(156,39,176,0.95), rgba(123,60,255,0.95)) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  padding: 0.9rem 1rem !important;
+  border: none !important;
+}
+
+:host ::ng-deep .list-view table tbody tr,
+:host ::ng-deep .list-view .p-table .p-datatable-tbody > tr {
+  display: block !important;
+  background: #0f0f12 !important;
+  border-radius: 10px !important;
+  margin-bottom: 12px !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6) !important;
+  overflow: hidden !important;
+}
+
+:host ::ng-deep .list-view table tbody tr td,
+:host ::ng-deep .list-view .p-table .p-datatable-tbody > tr > td {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  padding: 1rem !important;
+  border: none !important;
+  color: #e6e6e6 !important;
+}
+
+:host ::ng-deep .list-view .p-table .p-datatable-empty-message td {
+  color: #999999 !important;
+}

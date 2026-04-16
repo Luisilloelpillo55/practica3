@@ -29,4 +29,8 @@ export class TicketService {
   delete(id: any): Observable<any> {
     return this.apiHttp.deleteTicket(id);
   }
+
+  getHistory(id: any): Observable<any[]> {
+    return this.apiHttp.get(`/api/tickets/${id}/history`) as unknown as Observable<any[]>;
+  }
 }

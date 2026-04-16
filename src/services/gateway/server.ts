@@ -39,12 +39,15 @@ await fastify.register(cors, {
 const PERMISSION_ROUTES: { [key: string]: string } = {
   // Tickets
   'POST:/api/tickets': 'tickets:add',
+  'PUT:/api/tickets/*': 'tickets:edit',
   'PATCH:/api/tickets': 'tickets:edit',
   'PATCH:/api/tickets/*': 'tickets:edit',
   'DELETE:/api/tickets/*': 'tickets:delete',
   
   // Groups
   'POST:/api/groups': 'groups:create',
+  'GET:/api/groups': 'groups:view',
+  'GET:/api/groups/*': 'groups:view',
   'PATCH:/api/groups/*': 'groups:edit',
   'DELETE:/api/groups/*': 'groups:delete',
   

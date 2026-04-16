@@ -8,12 +8,13 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { CheckboxModule } from 'primeng/checkbox';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { filter, takeUntil } from 'rxjs';
 import { Subject } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-import { MessageService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
 // Interfaz para organizar permisos por categoría
@@ -43,11 +44,13 @@ interface PermissionItem {
     CheckboxModule,
     FormsModule,
     HttpClientModule,
-    ToastModule
+    ToastModule,
+    // Confirm dialog (used instead of window.confirm)
+    ConfirmDialogModule
   ],
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.css'],
-  providers: [MessageService]
+  providers: [MessageService, ConfirmationService]
 })
 export class UserManagementComponent implements OnInit, OnDestroy {
   users: any[] | null = null;
@@ -78,7 +81,8 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object,
     private zone: NgZone,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
@@ -493,19 +497,27 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   }
 
   deleteUser(user: any): void {
-    if (confirm(`¿Está seguro de que desea eliminar al usuario ${user.usuario}?`)) {
-      const headers = this.auth.getAuthHeaders();
-      this.http.delete<any>(`/api/users/${user.id}`, { headers }).subscribe({
-        next: () => {
-          this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario eliminado' });
-          this.loadUsers();
-        },
-        error: (err: any) => {
-          console.error('Failed deleting user:', err);
-          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el usuario' });
-        }
-      });
-    }
+    this.confirmationService.confirm({
+      message: `¿Está seguro de que desea eliminar al usuario ${user.usuario}?`,
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const headers = this.auth.getAuthHeaders();
+        this.http.delete<any>(`/api/users/${user.id}`, { headers }).subscribe({
+          next: () => {
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario eliminado' });
+            this.loadUsers();
+          },
+          error: (err: any) => {
+            console.error('Failed deleting user:', err);
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el usuario' });
+          }
+        });
+      },
+      reject: () => {
+        // user cancelled
+      }
+    });
   }
 
   closeDialog(): void {

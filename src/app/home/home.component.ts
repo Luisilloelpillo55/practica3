@@ -56,6 +56,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   
   // Scroll reveal for header
   headerHidden: boolean = false;
+  private SCROLL_THRESHOLD = 12; // px - ignore tiny scrolls to avoid header flicker
   private lastScrollTop: number = 0;
 
   constructor(public authService: AuthService, private apiHttpService: ApiHttpService, private router: Router, private route: ActivatedRoute, private http: HttpClient, private cdr: ChangeDetectorRef, private messageService: MessageService, private confirmationService: ConfirmationService) {}
@@ -105,16 +106,21 @@ export class HomeComponent implements OnInit, OnDestroy {
   // Scroll reveal animation for header
   @HostListener('window:scroll', ['$event'])
   onWindowScroll(event: Event): void {
-    const scrollTop = window.scrollY;
-    
-    // Show header when scrolling down, hide when scrolling up
-    if (scrollTop > this.lastScrollTop) {
-      // Scrolling down - hide header
+    const scrollTop = (window.scrollY || window.pageYOffset || (document.documentElement && document.documentElement.scrollTop) || 0) as number;
+
+    const delta = scrollTop - this.lastScrollTop;
+    // Ignore tiny scroll movements to prevent rapid toggle (flicker)
+    if (Math.abs(delta) < this.SCROLL_THRESHOLD) {
+      return;
+    }
+
+    // Scrolling down -> hide header, Scrolling up -> show header
+    if (delta > 0) {
       this.headerHidden = true;
     } else {
-      // Scrolling up - show header
       this.headerHidden = false;
     }
+
     this.lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
   }
 

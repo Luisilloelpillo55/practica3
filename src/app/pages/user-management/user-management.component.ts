@@ -76,7 +76,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
 
   constructor(
     private http: HttpClient,
-    private auth: AuthService,
+    public auth: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -294,6 +294,91 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       error: (err: any) => {
         console.error('Failed updating user:', err);
         this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el usuario' });
+      }
+    });
+  }
+
+  // Confirm and promote a user to admin (visible only to current admins)
+  confirmMakeAdmin(user: any): void {
+    if (!this.auth.isAdmin()) {
+      this.messageService.add({ severity: 'error', summary: 'Permiso', detail: 'No tienes permiso para promover a admin' });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `¿Deseas convertir al usuario "${user.usuario || user.email || user.id}" en administrador? Esta acción otorgará todos los permisos.`,
+      header: 'Confirmar promoción a Admin',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const headers = this.auth.getAuthHeaders();
+        this.http.put<any>(`/api/users/${user.id}`, { is_admin: true }, { headers }).subscribe({
+          next: (res: any) => {
+            this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario promovido a admin' });
+            // Refresh users list to reflect is_admin change and trigger-assigned permisos
+            this.loadUsers();
+          },
+          error: (err: any) => {
+            console.error('Failed promoting user to admin:', err);
+            this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo promover al usuario' });
+          }
+        });
+      }
+    });
+  }
+
+  confirmRemoveAdmin(user: any): void {
+    if (!this.auth.isAdmin()) {
+      this.messageService.add({ severity: 'error', summary: 'Permiso', detail: 'No tienes permiso para quitar el admin' });
+      return;
+    }
+
+    const current = this.auth.getUser();
+    if (current && String(current.id) === String(user?.id)) {
+      this.messageService.add({ severity: 'error', summary: 'Permiso', detail: 'No puedes quitarte el rol de admin a ti mismo' });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `¿Deseas quitar el rol de administrador a "${user.usuario || user.email || user.id}"?`,
+      header: 'Confirmar despromoción',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const headers = this.auth.getAuthHeaders();
+
+        // 1) Intentar desactivar el flag is_admin (si la API lo soporta)
+        this.http.put<any>(`/api/users/${user.id}`, { is_admin: false }, { headers }).subscribe({
+          next: () => {
+            // 2) Restaurar permisos por defecto del sistema (coincide con el flow de registro/login)
+            const defaultPerms = ['group_view', 'ticket_view', 'user_view'];
+            this.http.put<any>(`/api/users/${user.id}/permissions`, { permissions: defaultPerms }, { headers }).subscribe({
+              next: () => {
+                this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Se ha quitado el rol de admin y se restauraron permisos por defecto' });
+                this.loadUsers();
+              },
+              error: (err2: any) => {
+                console.error('Failed restoring default permissions after demotion:', err2);
+                // Aunque falle la restauración, informar y refrescar lista
+                this.messageService.add({ severity: 'warn', summary: 'Advertencia', detail: 'El admin fue desactivado, pero no se pudieron restaurar permisos automáticamente' });
+                this.loadUsers();
+              }
+            });
+          },
+          error: (err: any) => {
+            console.error('Failed demoting user from admin:', err);
+            // Intentar al menos restaurar permisos aunque el flag no se haya actualizado
+            const defaultPerms = ['group_view', 'ticket_view', 'user_view'];
+            this.http.put<any>(`/api/users/${user.id}/permissions`, { permissions: defaultPerms }, { headers }).subscribe({
+              next: () => {
+                this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Se restauraron permisos por defecto (no se pudo actualizar is_admin)'});
+                this.loadUsers();
+              },
+              error: (err3: any) => {
+                console.error('Failed restoring default permissions after demotion fallback:', err3);
+                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo quitar el rol de admin ni restaurar permisos' });
+              }
+            });
+          }
+        });
       }
     });
   }

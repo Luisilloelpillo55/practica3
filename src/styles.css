@@ -3,186 +3,24 @@
 @import 'primeflex/primeflex.css';
 @import 'styles/buttons-global.css';
 
-/* ================== MODALES Y DIÁLOGOS ================== */
-/* Fondo oscuro del modal */
-.p-dialog-mask {
-  background: rgba(0, 0, 0, 0.5) !important;
-}
+/* ======================================================
+   CUSTOM GLOBAL THEME (REESCRITO) - Dark + purple accent
+   Designed to be simple, consistent and override conflicting rules
+   ====================================================== */
 
-/* Contenedor del modal */
-.p-dialog {
-  border-radius: 12px !important;
-  overflow: hidden !important;
-}
-
-/* Header del modal */
-.p-dialog .p-dialog-header {
-  background: linear-gradient(90deg, #7b3cff, #5b2bd6) !important;
-  color: #fff !important;
-  border: none !important;
-  padding: 1rem 1.25rem !important;
-}
-
-/* Contenido del modal */
-.p-dialog .p-dialog-content {
-  background: #ffffff !important;
-  color: #000000 !important;
-  padding: 1.5rem !important;
-}
-
-/* Footer del modal */
-.p-dialog .p-dialog-footer {
-  background: #f5f5f5 !important;
-  border-top: 1px solid #ddd !important;
-  padding: 1rem 1.25rem !important;
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-}
-
-/* Inputs dentro de modales */
-.p-dialog .p-inputtext,
-.p-dialog input[type="text"],
-.p-dialog input[type="email"],
-.p-dialog input[type="password"],
-.p-dialog input[type="date"],
-.p-dialog input[type="number"],
-.p-dialog textarea,
-.p-dialog select {
-  background: #ffffff !important;
-  border: 1px solid #cccccc !important;
-  color: #000000 !important;
-  padding: 0.6rem 0.8rem !important;
-  border-radius: 6px !important;
-}
-
-.p-dialog input::placeholder,
-.p-dialog textarea::placeholder {
-  color: #999999 !important;
-}
-
-/* Labels dentro de modales */
-.p-dialog label,
-.p-dialog .p-field label {
-  color: #000000 !important;
-  font-weight: 600 !important;
-  margin-bottom: 0.5rem !important;
-  display: block !important;
-}
-
-/* Card (estilos de tarjetas) */
-.p-card {
-  background: white !important;
-  border: 1px solid #e0e0e0 !important;
-  border-radius: 12px !important;
-  padding: 1.5rem !important;
-}
-
-:root{
-  --bg-1: #f8fafc;
-  --bg-2: #f1f5f9;
-  --surface: #ffffff;
-  --muted: #64748b;
-  --text: #0f172a;
-  --primary: #0b5cff;
+:root {
+  --bg: #07060a;
+  --nu-bg: linear-gradient(180deg,#0b0226 0%, #12042f 100%);
+  --surface: #0e0f12;
+  --card: #0b0b0d;
+  --text: #e8eefc;
+  --muted: #9aa3c7;
+  --accent: #7b3cff;
+  --accent-2: #5b2bd6;
   --success: #10b981;
   --danger: #ef4444;
-  --card-shadow: 0 10px 30px rgba(15,23,42,0.08);
-  --glass: rgba(255,255,255,0.6);
-}
-
-/* NuBank-like purple/black theme variables */
-:root {
-  --nu-bg: linear-gradient(180deg,#0b0226 0%, #12042f 100%);
-  --nu-surface: #0e0b12;
-  --nu-primary: #7b3cff; /* vibrant purple */
-  --nu-accent: #5b2bd6;
-  --nu-text: #f7f7fb;
-  --nu-muted: #b9aee0;
-}
-
-/* input variables - default (light) */
-:root {
-  --input-bg: #ffffff;
-  --input-border: #e2e8f0;
-  --input-color: var(--text);
-  --input-placeholder: #cbd5e1;
-}
-
-/* dark overrides for nubank theme */
-:root {
-  --nu-input-bg: rgba(255,255,255,0.04);
-  --nu-input-border: rgba(255,255,255,0.06);
-  --nu-input-color: var(--nu-text);
-  --nu-input-placeholder: rgba(255,255,255,0.35);
-}
-
-/* Ensure labels and inputs contrast on page-frame (dark surfaces) */
-.page-frame label {
-  color: var(--nu-text) !important;
-}
-.page-frame .p-inputtext, .page-frame .p-inputnumber, .page-frame select, .page-frame textarea {
-  background: var(--nu-input-bg) !important;
-  border: 1px solid var(--nu-input-border) !important;
-  color: var(--nu-input-color) !important;
-}
-.page-frame .p-inputtext::placeholder, .page-frame .p-inputnumber::placeholder, .page-frame textarea::placeholder {
-  color: var(--nu-input-placeholder) !important;
-}
-
-/* dialogs should also show dark inputs */
-.p-dialog .p-inputtext, .p-dialog .p-inputnumber, .p-dialog select, .p-dialog textarea {
-  background: var(--nu-input-bg) !important;
-  border: 1px solid var(--nu-input-border) !important;
-  color: var(--nu-input-color) !important;
-}
-
-/* --- Override: force form labels and inputs to be black text with black borders --- */
-/* Labels black */
-.page-frame .p-field label,
-.page-frame label {
-  color: #000 !important;
-}
-
-/* Inputs white background, black border and black typed text */
-.page-frame .p-inputtext,
-.page-frame input[type="text"],
-.page-frame input[type="password"],
-.page-frame input[type="date"],
-.page-frame input[type="number"],
-.page-frame .p-inputnumber,
-.page-frame textarea,
-.p-dialog .p-inputtext,
-.p-dialog input,
-.p-dialog textarea,
-.p-dialog .p-inputnumber,
-.p-dialog select {
-  background: #ffffff !important;
-  border: 1px solid #000 !important;
-  color: #000 !important;
-}
-
-.page-frame .p-inputtext::placeholder,
-.page-frame textarea::placeholder,
-.p-dialog .p-inputtext::placeholder {
-  color: #666 !important;
-}
-
-/* Ensure button text and other headers remain light on dark frames */
-.page-frame .page-header h3,
-.page-frame .page-footer,
-.page-frame .page-header {
-  color: var(--nu-text) !important;
-}
-
-/* helper classes for dark surfaces */
-.nubank-surface { background: var(--nu-surface); color: var(--nu-text); }
-.nubank-hero { background: var(--nu-bg); color: var(--nu-text); }
-.nubank-btn { background: linear-gradient(90deg,var(--nu-primary),var(--nu-accent)); color: var(--nu-text); border-radius: 10px; box-shadow: 0 10px 30px rgba(91,43,214,0.18); }
-.nubank-btn.outlined { background: transparent; border: 1px solid rgba(123,60,255,0.18); color: var(--nu-text); }
-
-:root {
-  --use-nu: 1;
+  --border: rgba(255,255,255,0.06);
+  --elev-1: 0 8px 30px rgba(2,6,23,0.6);
 }
 
 * { box-sizing: border-box; }
@@ -191,213 +29,147 @@ html, body {
   height: 100%;
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 100%);
+  background: var(--nu-bg);
   color: var(--text);
-  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* App layout helpers */
+.app-nav { background: linear-gradient(90deg,var(--accent),var(--accent-2)); color:var(--text); padding:12px 18px; }
+.app-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.page-frame { background: linear-gradient(180deg,var(--surface), #06060a); border-radius:12px; padding:18px; box-shadow:var(--elev-1); border:1px solid var(--border); }
+
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
-  margin-top: 0;
-  color: #0f172a;
-  font-weight: 700;
-}
+h1,h2,h3,h4 { color: var(--text); margin:0 0 .6rem 0; }
+a { color: var(--accent); }
 
-a {
-  color: #0b5cff;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-a:hover {
-  color: #0847cc;
-  text-decoration: underline;
-}
-
-/* Navigation bar */
-.app-nav {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  background: linear-gradient(90deg, var(--nu-primary), var(--nu-accent));
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 6px 24px rgba(11,43,120,0.08);
-}
-
-.app-nav, .app-nav a, .app-nav .layout-brand {
-  color: var(--nu-text) !important;
-}
-
-/* Container */
-.app-container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Global scaling: increase spacing and sizes across pages (approx 1.2x) */
-.app-container {
-  padding: 3rem !important;
-  max-width: 1400px !important;
-}
-
-/* Make page frames more spacious and centered */
-.page-frame {
-  max-width: 1400px !important;
-  margin: 2.4rem auto !important;
-  padding: 3rem !important;
-  border-radius: 14px !important;
-}
-
-/* Header and body scaling */
-.page-frame .page-header {
-  padding-bottom: 1.8rem !important;
-  margin-bottom: 2.4rem !important;
-}
-.page-frame .page-header h3 {
-  font-size: 2.4rem !important;
-  line-height: 1.05 !important;
-}
-.page-body {
-  padding: 1.2rem 0 !important;
-  line-height: 1.75 !important;
-}
-
-/* Form spacing */
-.page-frame .p-field {
-  margin-bottom: 1.8rem !important;
-}
-
-/* Cards and tables more roomy */
-.page-frame .p-card {
-  padding: 1.9rem !important;
-}
-.page-frame .p-table td,
-.page-frame .p-datatable td,
-.page-frame .p-table th {
-  padding: 1.95rem 1.6rem !important;
-  font-size: 1rem !important;
-}
-
-/* Slightly larger badges and action icons for better touch targets */
-.badge { padding: 0.6rem 1.05rem !important; font-size: 0.95rem !important; }
-.action-icon { width: 48px !important; height: 48px !important; }
-
-/* Reduce density of inline lists and groups */
-.permissions-list, .ticket-list { gap: 0.75rem !important; }
-
-@media (max-width: 900px) {
-  .app-container { padding: 1.6rem !important; }
-  .page-frame { padding: 1.6rem !important; margin: 1rem auto !important; }
-  .page-frame .page-header h3 { font-size: 1.6rem !important; }
-  .page-frame .p-table td, .page-frame .p-table th { padding: 0.9rem !important; }
-}
-
-/* Forms */
-.form {
-  max-width: 640px;
-  margin: 1.5rem auto;
-  background: var(--surface);
-  padding: 2rem;
-  border-radius: 14px;
-  box-shadow: var(--card-shadow);
-}
-
-.p-field {
-  margin-bottom: 1.5rem;
-}
-
-.p-field label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: #334155;
-  font-size: 0.95rem;
-}
-
-.p-field:last-child {
-  margin-bottom: 0;
-}
-
-.p-inputtext, .p-inputnumber, select, textarea {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid var(--input-border);
-  border-radius: 8px;
-  font-size: 1rem;
-  font-family: inherit;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  background: var(--input-bg);
-  color: var(--input-color);
-}
-
-.p-inputtext:focus, .p-inputnumber:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(11, 92, 255, 0.08);
-}
-
-.p-inputtext::placeholder, .p-inputnumber::placeholder, textarea::placeholder {
-  color: var(--input-placeholder);
-}
+/* Inputs & form elements - dark surfaces */
+.p-inputtext, .p-inputnumber, input, textarea, select { background: rgba(255,255,255,0.02); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:8px; }
+.p-inputtext::placeholder, textarea::placeholder { color: rgba(255,255,255,0.36); }
 
 /* Buttons */
-.p-button {
-  border-radius: 8px;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  transition: all 0.2s ease;
-  border: none;
-  cursor: pointer;
+.p-button { border-radius:10px; font-weight:600; }
+.p-button.p-button-info { background: linear-gradient(90deg,var(--accent),var(--accent-2)); color:#fff; border:none; }
+.p-button.p-button-danger { background: linear-gradient(90deg,#f45a5a,#d93b3b); color:#fff; border:none; }
+.p-button.p-button-success { background: linear-gradient(90deg,#10b981,#06a46a); color:#fff; border:none; }
+
+/* Dialog / modal unified theme */
+.p-dialog-mask { background: rgba(0,0,0,0.6) !important; }
+.p-dialog { border-radius:12px !important; overflow:hidden !important; }
+.p-dialog .p-dialog-header { background: linear-gradient(90deg,var(--accent),var(--accent-2)) !important; color: #fff !important; padding:12px 16px !important; }
+.p-dialog .p-dialog-content { background: var(--surface) !important; color: var(--text) !important; padding:16px !important; }
+.p-dialog .p-dialog-footer { background: transparent !important; border-top:none !important; padding:12px 16px !important; }
+
+/* Datatable styling */
+.p-datatable table { width:100%; border-collapse: collapse; }
+.p-datatable thead th { background: linear-gradient(90deg,var(--accent),var(--accent-2)); color:#fff; font-weight:700; padding:12px 14px; border:none; }
+.p-datatable tbody td { background: transparent; padding:12px 14px; color:var(--text); border-bottom:1px dashed rgba(255,255,255,0.03); }
+.p-datatable tbody tr:hover td { background: rgba(123,60,255,0.03); }
+
+/* Dropdowns & multiselect panels */
+.p-dropdown-panel, .p-multiselect-panel { background: var(--surface) !important; color:var(--text) !important; border:1px solid var(--border) !important; }
+.p-dropdown-item, .p-multiselect-item { color:var(--text) !important; }
+
+/* Member pills (global fallback) */
+.member-pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background: linear-gradient(90deg, rgba(123,60,255,0.12), rgba(91,43,214,0.06)); color:var(--text); border:1px solid rgba(123,60,255,0.08); font-size:0.95rem; }
+
+/* Small utilities */
+.muted { color:var(--muted); }
+.w-full { width:100%; }
+.ml-2 { margin-left:8px; }
+
+/* Responsive */
+@media (max-width:900px) {
+  .app-container { padding:12px; }
+  .page-frame { padding:12px; }
+  .p-datatable thead th, .p-datatable tbody td { padding:8px 10px; }
+  .member-pill { font-size:0.86rem; padding:4px 8px; }
 }
 
-/* Make labeled buttons pill-shaped and icon-only buttons circular */
-.p-button {
-  border-radius: 999px !important;
-}
-.p-button.p-button-icon-only,
-.p-button.p-button-icon-only .p-button-icon,
-.p-button .p-button-icon-only {
-  width: 44px !important;
-  height: 44px !important;
-  padding: 0 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 50% !important;
-}
-.p-button .pi,
-.p-button .p-button-icon {
-  font-size: 1.05rem;
+/* End of custom theme */
+
+/* ---------------------------------------------
+   Home dashboard: estadísticas (stat-card)
+   Estilos específicos para evitar que reglas globales
+   (por ejemplo .p-card { background: white !important })
+   rompan la apariencia del dashboard.
+   --------------------------------------------- */
+.home-dashboard .stat-card.p-card {
+  background: linear-gradient(180deg,#070707 0%, #0d0d0d 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.04) !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.6) !important;
+  padding: 1rem !important;
+  border-radius: 12px !important;
 }
 
-/* Ensure text buttons (volver etc) appear white on dark headers */
-.p-button-text {
-  color: var(--nu-text) !important;
+/* Variantes de color para cada tarjeta */
+.home-dashboard .stat-card.stat-total { background: linear-gradient(90deg,#7b3cff,#5b2bd6) !important; }
+.home-dashboard .stat-card.stat-by-state { background: linear-gradient(90deg,#0b5cff,#10b981) !important; }
+.home-dashboard .stat-card.stat-by-priority { background: linear-gradient(90deg,#ff8a65,#ff1744) !important; }
+.home-dashboard .stat-card.stat-by-group { background: linear-gradient(90deg,#f59e0b,#ef4444) !important; }
+
+.home-dashboard .stat-card.p-card div,
+.home-dashboard .stat-card.p-card strong { color: #fff !important; }
+.home-dashboard .stats-summary { display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-start; }
+
+/* Override puntual para la barra de filtros del dashboard (inputs/selects)
+   ya que hay reglas globales que fuerzan fondo blanco en .page-frame */
+.home-dashboard .dashboard-header .filters input,
+.home-dashboard .dashboard-header .filters select {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  color: #ffffff !important;
+  padding: 0.6rem 0.85rem !important;
+  border-radius: 8px !important;
+}
+.home-dashboard .dashboard-header .filters input::placeholder { color: rgba(255,255,255,0.45) !important; }
+
+/* Dark dropdowns and native select/options in Home dashboard */
+.home-dashboard .dashboard-header .filters select,
+.home-dashboard .dashboard-header .filters input,
+.home-dashboard .group-selector,
+.home-dashboard select {
+  background: #0b0b0b !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  box-shadow: none !important;
 }
 
-/* Home header title white */
-.page-frame .page-header h2,
-.page-frame .page-header h1 {
-  color: var(--nu-text) !important;
+/* Native option fallback (may be browser-limited) */
+.home-dashboard .dashboard-header .filters select option,
+.home-dashboard .group-selector option,
+.home-dashboard select option {
+  background: #0b0b0b !important;
+  color: #ffffff !important;
 }
 
-.p-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(11, 92, 255, 0.25);
+/* PrimeNG dropdown panel & items (global dark theme for dropdown panels) */
+.p-dropdown-panel.p-component,
+.p-dropdown-panel {
+  background: #0b0b0b !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6) !important;
+}
+.p-dropdown-panel.p-component .p-dropdown-items .p-dropdown-item,
+.p-dropdown-panel .p-dropdown-item,
+.p-dropdown .p-dropdown-item {
+  background: #0b0b0b !important;
+  color: #ffffff !important;
+}
+.p-dropdown-panel.p-component .p-dropdown-items .p-dropdown-item:hover,
+.p-dropdown-panel .p-dropdown-item:hover {
+  background: rgba(255,255,255,0.03) !important;
 }
 
-.p-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+/* Ensure listbox-like dropdowns keep contrast */
+.home-dashboard .p-selectbutton .p-button,
+.home-dashboard .p-listbox .p-listbox-item {
+  background: transparent !important;
+  color: #ffffff !important;
 }
 
-.p-button.p-button-success {
-  background: #10b981;
-}
 
 .p-button.p-button-success:hover:not(:disabled) {
   background: #059669;

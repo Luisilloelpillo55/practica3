@@ -3,7 +3,7 @@
     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
       <h3>Tareas / Tickets</h3>
       <div class="view-toggle">
-        <button pButton type="button" icon="pi pi-eye-slash" class="p-button-sm p-button-rounded p-button-secondary" (click)="hideKanban()" title="Ocultar Kanban"></button>
+        <button pButton type="button" [icon]="canShow ? 'pi pi-eye-slash' : 'pi pi-eye'" class="p-button-sm p-button-rounded p-button-secondary" (click)="toggleKanban()" [title]="canShow ? 'Ocultar Kanban' : 'Mostrar Kanban'"></button>
       </div>
     </div>
   </header>
@@ -127,7 +127,7 @@
   </div>
 
 <!-- Zona de eliminación: arrastra aquí para borrar una tarea -->
-<div class="delete-container">
+<div class="delete-container" *ngIf="canShow">
   <div cdkDropList id="delete-drop" [cdkDropListData]="deleteListData" [cdkDropListConnectedTo]="['backlog-list','progress-list','done-list','cancelled-list']" (cdkDropListDropped)="deleteDrop($event)" class="delete-zone">
     <div class="delete-label" aria-hidden="true"><i class="pi pi-trash"></i></div>
   </div>

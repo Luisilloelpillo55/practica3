@@ -397,6 +397,21 @@ export class KanbanComponent implements OnInit, OnDestroy {
     try { this.cdr.detectChanges(); } catch {}
   }
 
+  /** Alterna visibilidad del Kanban (muestra/oculta) */
+  toggleKanban(): void {
+    this.canShow = !this.canShow;
+    if (this.canShow) {
+      // Si volvemos a mostrar, recargar tickets si hay permisos
+      if (this.auth.hasPermission('ticket_view') || this.auth.isAdmin()) {
+        this.loadAll();
+      }
+    } else {
+      // Si ocultamos, limpiar UI para evitar elementos residuales
+      this.clearKanban();
+    }
+    try { this.cdr.detectChanges(); } catch {}
+  }
+
   onGlobalFilter(event: Event): void {
     const input = event.target as HTMLInputElement;
     const searchValue = input?.value?.toLowerCase() || '';

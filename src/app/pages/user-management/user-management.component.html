@@ -16,6 +16,7 @@
               <th>ID</th>
               <th>Usuario</th>
               <th>Email</th>
+              <th>Admin</th>
               <th>Nombre Completo</th>
               <th>Teléfono</th>
               <th>Acciones</th>
@@ -26,6 +27,10 @@
               <td>{{ u.id }}</td>
               <td>{{ u.usuario }}</td>
               <td>{{ u.email }}</td>
+              <td>
+                <span *ngIf="u?.is_admin" style="color:var(--success);font-weight:700;">Sí</span>
+                <span *ngIf="!u?.is_admin" style="opacity:.7">No</span>
+              </td>
               <td>{{ u.fullname || 'N/A' }}</td>
               <td>{{ u.phone || 'N/A' }}</td>
               <td>
@@ -35,6 +40,8 @@
                   (click)="openPermissionsModal(u)" pTooltip="Gestionar permisos" tooltipPosition="top" style="margin-left:6px"></button>
                 <button pButton type="button" icon="pi pi-trash" class="p-button-sm p-button-danger" 
                   (click)="deleteUser(u)" pTooltip="Eliminar" tooltipPosition="top" style="margin-left:6px"></button>
+                <button *ngIf="auth.isAdmin() && !u?.is_admin" pButton type="button" icon="pi pi-user-plus" class="p-button-sm p-button-warning" style="margin-left:6px" (click)="confirmMakeAdmin(u)" pTooltip="Promover a admin" tooltipPosition="top"></button>
+                <button *ngIf="auth.isAdmin() && u?.is_admin && (auth.getUser()?.id !== u?.id)" pButton type="button" icon="pi pi-user-minus" class="p-button-sm p-button-danger" style="margin-left:6px" (click)="confirmRemoveAdmin(u)" pTooltip="Quitar rol de admin" tooltipPosition="top"></button>
               </td>
             </tr>
           </ng-template>

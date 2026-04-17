@@ -1,136 +1,375 @@
-/* Tabla: separación tipo tarjetas y mejor legibilidad */
-:host ::ng-deep .p-datatable {
-  width: 100% !important;
-  background: transparent !important;
-  color: #111827 !important;
-  border: none !important;
+/* ==================== GROUP PAGE STYLES - SCOPED ==================== */
+
+/* PAGE FRAME & HEADER */
+:host ::ng-deep .group-page.page-frame {
+  max-width: 1200px !important;
+  margin: 2rem auto !important;
+  background: #1a1a1a !important;
+  padding: 2rem !important;
   border-radius: 12px !important;
-  /* crea espacio vertical entre filas */
-  border-collapse: separate !important;
-  border-spacing: 0 10px !important;
-  font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
-  font-size: 0.95rem !important;
-}
-
-/* Wrapper permite scroll horizontal en pantallas pequeñas */
-:host ::ng-deep .p-datatable-wrapper {
-  overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 6px;
-}
-
-/* Encabezado sticky y legible */
-:host ::ng-deep .p-table .p-datatable-thead > tr {
-  background: linear-gradient(180deg, #5b2bd6 0%, #7b3cff 100%) !important;
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 5 !important;
-  box-shadow: 0 6px 18px rgba(123,60,255,0.12) !important;
-}
-
-:host ::ng-deep .p-table .p-datatable-thead > tr > th {
-  background: transparent !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
   color: #ffffff !important;
-  font-weight: 700 !important;
-  border: none !important;
-  padding: 1rem 1rem !important;
-  text-align: left !important;
-  font-size: 0.98rem !important;
-  letter-spacing: 0.3px;
-  white-space: nowrap !important;
 }
 
-/* Filas: celdas con fondo, radio y sombra para efecto tarjeta */
-:host ::ng-deep .p-table .p-datatable-tbody > tr {
-  background: transparent !important;
-  border: none !important;
-  transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+:host ::ng-deep .group-page .page-header {
+  color: #ffffff !important;
+  margin-bottom: 2rem !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
 }
 
-/* Aplicar fondo y radio a cada celda para simular tarjeta por fila */
-:host ::ng-deep .p-table .p-datatable-tbody > tr > td {
-  background: #ffffff !important;
-  padding: 1.8rem 1.6rem !important;
-  color: #1f2937 !important;
-  font-size: 0.95rem !important;
-  border: none !important;
-  box-shadow: none !important;
-  vertical-align: middle !important;
-  /* para truncar texto largo */
-  max-width: 220px !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
+:host ::ng-deep .group-page .page-header h3 {
+  color: #ffffff !important;
+  margin: 0 !important;
+  font-size: 1.75rem !important;
 }
 
-/* Bordes redondeados en los extremos de la fila */
-:host ::ng-deep .p-table .p-datatable-tbody > tr > td:first-child {
-  border-top-left-radius: 10px !important;
-  border-bottom-left-radius: 10px !important;
-}
-:host ::ng-deep .p-table .p-datatable-tbody > tr > td:last-child {
-  border-top-right-radius: 10px !important;
-  border-bottom-right-radius: 10px !important;
+/* PAGE BODY */
+:host ::ng-deep .group-page .page-body {
+  color: #ffffff !important;
 }
 
-/* Zebra sutil: alternar sombra más clara para filas pares */
-:host ::ng-deep .p-table .p-datatable-tbody > tr:nth-child(even) > td {
-  background: #f9f9f9 !important;
+/* ==================== CARD CUSTOMIZATION ==================== */
+:host ::ng-deep .group-page .p-card {
+  background-color: #1a1a1a !important;
+  border: 2px solid #9c27b0 !important;
+  border-radius: 12px !important;
 }
 
-/* Hover: elevar tarjeta y resaltar */
-:host ::ng-deep .p-table .p-datatable-tbody > tr:hover > td {
-  background: #f5f5f5 !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+:host ::ng-deep .group-page .p-card .p-card-header {
+  background-color: #0d0d0d !important;
+  border-bottom: 2px solid #9c27b0 !important;
+  color: #ffffff !important;
 }
 
-/* Ajustes para celdas con contenido multilinea (ej. notas) */
-:host ::ng-deep .p-table .p-datatable-tbody > tr > td.multiline {
-  white-space: normal !important;
-  max-width: 480px !important;
+:host ::ng-deep .group-page .p-card .p-card-title {
+  color: #ffffff !important;
 }
 
-/* Paginador más integrado */
-:host ::ng-deep .p-datatable-paginator {
-  background: transparent !important;
-  border-top: 2px solid #f0f0f0 !important;
-  padding: 1.5rem 0 !important;
-  color: #374151 !important;
+:host ::ng-deep .group-page .p-card .p-card-content {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  padding: 1.25rem !important;
+}
+
+/* ==================== TABLE CUSTOMIZATION ==================== */
+:host ::ng-deep .group-page .p-datatable {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .group-page .p-datatable .p-datatable-header {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+  border: 2px solid #9c27b0 !important;
+}
+
+:host ::ng-deep .group-page .p-datatable .p-datatable-thead > tr > th {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+  border-color: #9c27b0 !important;
+  border-bottom: 2px solid #9c27b0 !important;
+  padding: 1rem !important;
+  font-weight: 600 !important;
+}
+
+:host ::ng-deep .group-page .p-datatable .p-datatable-tbody > tr {
+  background-color: #1a1a1a !important;
+  border-color: #333333 !important;
+}
+
+:host ::ng-deep .group-page .p-datatable .p-datatable-tbody > tr > td {
+  color: #ffffff !important;
+  border-color: #333333 !important;
+  border-bottom: 1px solid #9c27b0 !important;
+  padding: 1rem !important;
+}
+
+:host ::ng-deep .group-page .p-datatable .p-datatable-tbody > tr:hover {
+  background-color: #2a2a2a !important;
+}
+
+/* Paginator */
+:host ::ng-deep .group-page .p-paginator {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+  border-top: 2px solid #9c27b0 !important;
+}
+
+:host ::ng-deep .group-page .p-paginator .p-paginator-current {
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .group-page .p-paginator-pages .p-paginator-page {
+  color: #ffffff !important;
+  border-color: #9c27b0 !important;
+}
+
+:host ::ng-deep .group-page .p-paginator-pages .p-paginator-page.p-highlight {
+  background-color: #9c27b0 !important;
+  color: #ffffff !important;
+}
+
+/* ==================== DIALOG CUSTOMIZATION ==================== */
+:host ::ng-deep .group-page .p-dialog {
+  background-color: #1a1a1a !important;
+  border: 2px solid #9c27b0 !important;
+  border-radius: 12px !important;
+}
+
+:host ::ng-deep .group-page .p-dialog .p-dialog-header {
+  background: linear-gradient(135deg, #9c27b0 0%, #7b3cff 100%) !important;
+  border-bottom: 2px solid #9c27b0 !important;
+  color: #ffffff !important;
+  padding: 1.5rem !important;
+  border-radius: 10px 10px 0 0 !important;
+}
+
+:host ::ng-deep .group-page .p-dialog .p-dialog-title {
+  color: #ffffff !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+}
+
+:host ::ng-deep .group-page .p-dialog .p-dialog-content {
+  background-color: #191819 !important;
+  color: #ffffff !important;
+  padding: 2rem !important;
+  border-radius: 0 !important;
+}
+
+:host ::ng-deep .group-page .p-dialog .p-dialog-footer {
+  background-color: #0d0d0d !important;
+  border-top: 2px solid #9c27b0 !important;
+  padding: 1.5rem !important;
   display: flex !important;
   justify-content: flex-end !important;
   gap: 1rem !important;
-  margin-top: 1.5rem !important;
+  border-radius: 0 0 10px 10px !important;
 }
 
-/* Página activa */
-:host ::ng-deep .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
-  background: linear-gradient(90deg, #5b2bd6, #7b3cff) !important;
+:host ::ng-deep .group-page .p-dialog .p-dialog-close {
   color: #ffffff !important;
-  border-color: transparent !important;
-  box-shadow: 0 8px 22px rgba(123,60,255,0.14) !important;
 }
 
-/* Botones de acción más espaciados y consistentes */
-:host ::ng-deep .p-table .p-datatable-tbody .action-icon {
+/* ==================== BUTTONS ==================== */
+:host ::ng-deep .group-page .p-button {
+  padding: 0.5rem 1rem !important;
+  border-radius: 10px !important;
+}
+
+:host ::ng-deep .group-page .p-button.p-button-success {
+  background-color: #10b981 !important;
+  border-color: #10b981 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .group-page .p-button.p-button-success:hover {
+  background-color: #059669 !important;
+  border-color: #059669 !important;
+}
+
+:host ::ng-deep .group-page .p-button.p-button-secondary {
+  background-color: #6b7280 !important;
+  border-color: #6b7280 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .group-page .p-button.p-button-secondary:hover {
+  background-color: #4b5563 !important;
+  border-color: #4b5563 !important;
+}
+
+:host ::ng-deep .group-page .p-button.p-button-info {
+  background-color: #2196F3 !important;
+  border-color: #2196F3 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .group-page .p-button.p-button-danger {
+  background-color: #f44336 !important;
+  border-color: #f44336 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .group-page .p-button.p-button-text {
+  color: #9c27b0 !important;
+  background: transparent !important;
+}
+
+:host ::ng-deep .group-page .p-button.p-button-text:hover {
+  background: rgba(156, 39, 176, 0.1) !important;
+}
+
+/* Icon buttons */
+:host ::ng-deep .group-page .p-button.p-button-icon-only,
+:host ::ng-deep .group-page .action-icon {
   width: 40px !important;
   height: 40px !important;
-  margin: 0 0.25rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-/* Responsive: reducir padding en pantallas pequeñas */
-@media (max-width: 900px) {
-  :host ::ng-deep .p-table .p-datatable-thead > tr > th,
-  :host ::ng-deep .p-table .p-datatable-tbody > tr > td {
-    padding: 0.65rem 0.75rem !important;
+/* ==================== FORM INPUTS ==================== */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+}
+
+:host ::ng-deep .group-page .p-inputtext {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+  border: 2px solid #9c27b0 !important;
+  border-radius: 6px !important;
+  padding: 0.75rem !important;
+}
+
+:host ::ng-deep .group-page .p-inputtext:focus {
+  border-color: #d946ef !important;
+  box-shadow: 0 0 0 0.2rem rgba(247, 245, 248, 0.25) !important;
+}
+
+:host ::ng-deep .group-page .p-inputtext::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+:host ::ng-deep .group-page textarea {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+  border: 2px solid #9c27b0 !important;
+  border-radius: 6px !important;
+  padding: 0.75rem !important;
+  font-family: inherit !important;
+}
+
+:host ::ng-deep .group-page textarea:focus {
+  border-color: #d946ef !important;
+  box-shadow: 0 0 0 0.2rem rgba(247, 245, 248, 0.25) !important;
+}
+
+:host ::ng-deep .group-page textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Multiselect */
+:host ::ng-deep .group-page .p-multiselect {
+  background-color: #2a2a2a !important;
+  border: 2px solid #9c27b0 !important;
+  border-radius: 6px !important;
+  padding: 0.75rem !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .group-page .p-multiselect:focus {
+  border-color: #d946ef !important;
+  box-shadow: 0 0 0 0.2rem rgba(247, 245, 248, 0.25) !important;
+}
+
+:host ::ng-deep .group-page .p-multiselect .p-multiselect-label {
+  color: #ffffff !important;
+}
+
+/* Dropdown panels */
+:host ::ng-deep .group-page .p-multiselect-panel {
+  background-color: #1a1a1a !important;
+  border: 1px solid #9c27b0 !important;
+}
+
+:host ::ng-deep .group-page .p-multiselect-panel .p-multiselect-items {
+  background-color: #1a1a1a !important;
+}
+
+:host ::ng-deep .group-page .p-multiselect-panel .p-multiselect-item {
+  color: #ffffff !important;
+  background-color: #1a1a1a !important;
+}
+
+:host ::ng-deep .group-page .p-multiselect-panel .p-multiselect-item:hover {
+  background-color: rgba(156, 39, 176, 0.2) !important;
+}
+
+:host ::ng-deep .group-page .p-multiselect-panel .p-multiselect-item.p-highlight {
+  background-color: #9c27b0 !important;
+  color: #ffffff !important;
+}
+
+/* ==================== BADGES ==================== */
+:host ::ng-deep .group-page .badge {
+  display: inline-block !important;
+  padding: 6px 10px !important;
+  border-radius: 8px !important;
+  font-size: 0.92rem !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .group-page .badge.badge-primary {
+  background: linear-gradient(135deg, #9c27b0 0%, #c2185b 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+:host ::ng-deep .group-page .badge.badge-secondary {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #aaaaaa !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+:host ::ng-deep .group-page .badge.badge-info {
+  background: rgba(11, 92, 255, 0.2) !important;
+  color: #5ba3ff !important;
+  border: 1px solid rgba(11, 92, 255, 0.4) !important;
+}
+
+/* ==================== UTILITIES ==================== */
+.purple-btn {
+  background: linear-gradient(135deg, #9c27b0 0%, #c2185b 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.purple-btn:hover {
+  box-shadow: 0 8px 24px rgba(156, 39, 176, 0.3) !important;
+}
+
+.w-100 { width: 100% !important; }
+.text-muted { color: #aaaaaa !important; }
+.text-center { text-align: center !important; }
+.text-danger { color: #ef4444 !important; }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  :host ::ng-deep .group-page.page-frame {
+    padding: 1rem !important;
+    margin: 1rem !important;
+  }
+
+  :host ::ng-deep .group-page .page-header {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  :host ::ng-deep .group-page .p-dialog {
+    width: 90vw !important;
+  }
+
+  :host ::ng-deep .group-page .p-datatable-thead > tr > th,
+  :host ::ng-deep .group-page .p-datatable-tbody > tr > td {
+    padding: 0.75rem !important;
     font-size: 0.9rem !important;
   }
-  :host ::ng-deep .p-table .p-datatable-tbody > tr > td {
-    max-width: 140px !important;
-  }
-}
-
-/* Accesibilidad: foco visible en celdas interactuables */
-:host ::ng-deep .p-table .p-datatable-tbody > tr > td:focus {
-  outline: 3px solid rgba(123,60,255,0.12) !important;
-  outline-offset: 2px !important;
 }

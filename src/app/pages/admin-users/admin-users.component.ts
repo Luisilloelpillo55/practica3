@@ -33,7 +33,6 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
     'user_manage', 'user_delete'
   ];
   selectedPermissions: { [key: string]: boolean } = {};
-  selectedIsAdmin: boolean = false;
 
   private destroy$ = new Subject<void>();
 
@@ -85,8 +84,6 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
     }
 
     this.selectedUser = user;
-    // default admin flag from user record (list provides is_admin)
-    this.selectedIsAdmin = !!user?.is_admin;
     this.selectedPermissions = {};
     
     // Cargar permisos actuales del usuario
@@ -127,34 +124,43 @@ export class AdminUsersComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Permisos actualizados' });
-          // If current logged user is admin, allow toggling is_admin flag via user update
-          if (this.auth.isAdmin() && (this.selectedIsAdmin !== !!this.selectedUser?.is_admin)) {
-            // call backend to set is_admin flag
-            this.userService.update(this.selectedUser.id, { is_admin: this.selectedIsAdmin })
-              .pipe(takeUntil(this.destroy$))
-              .subscribe({
-                next: () => {
-                  this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Flag admin actualizado' });
-                  this.loadUsers();
-                  this.showPermissionsDialog = false;
-                },
-                error: (err: any) => {
-                  console.error('Error updating admin flag:', err);
-                  this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar flag admin' });
-                  this.loadUsers();
-                  this.showPermissionsDialog = false;
-                }
-              });
-          } else {
-            this.loadUsers();
-            this.showPermissionsDialog = false;
-          }
+          this.loadUsers();
+          this.showPermissionsDialog = false;
         },
         error: (err: any) => {
           console.error('Error updating permissions:', err);
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar permisos' });
         }
       });
+  }
+
+  // Confirm and promote a user to admin (visible only to current admins)
+  confirmMakeAdmin(user: any): void {
+    if (!this.auth.isAdmin()) {
+      this.messageService.add({ severity: 'error', summary: 'Permiso', detail: 'No tienes permiso para promover a admin' });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `¿Deseas convertir al usuario "${user.usuario || user.email || user.id}" en administrador? Esta acción le otorgará todos los permisos.`,
+      header: 'Confirmar promoción a Admin',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.userService.update(user.id, { is_admin: true })
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (res: any) => {
+              this.messageService.add({ severity: 'success', summary: 'Éxito', detail: 'Usuario promovido a admin' });
+              // Refresh users list to reflect is_admin change and permissions via DB trigger
+              this.loadUsers();
+            },
+            error: (err: any) => {
+              console.error('Error promoting user to admin:', err);
+              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo promover al usuario' });
+            }
+          });
+      }
+    });
   }
 
   deleteUser(user: any): void {

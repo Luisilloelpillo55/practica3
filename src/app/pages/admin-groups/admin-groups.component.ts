@@ -45,6 +45,45 @@ export class AdminGroupsComponent implements OnInit, OnDestroy {
     });
   }
 
+  isArray(value: any): boolean {
+    return Array.isArray(value);
+  }
+
+  /**
+   * Normaliza distintos formatos de `integrantes` a un array de strings
+   * Acepta: Array, JSON string, comma-separated string
+   */
+  parseIntegrantes(integrantes: any): string[] {
+    if (!integrantes && integrantes !== 0) return [];
+    try {
+      if (Array.isArray(integrantes)) {
+        return integrantes.map(i => typeof i === 'object' ? (i.usuario || i.email || i.id || JSON.stringify(i)) : String(i));
+      }
+      if (typeof integrantes === 'string') {
+        const s = integrantes.trim();
+        // Try JSON parse
+        if ((s.startsWith('[') && s.endsWith(']')) || (s.startsWith('{') && s.endsWith('}'))) {
+          try {
+            const parsed = JSON.parse(s);
+            if (Array.isArray(parsed)) return parsed.map((i: any) => (typeof i === 'object' ? (i.usuario || i.email || i.id || JSON.stringify(i)) : String(i)));
+          } catch (e) { /* fallthrough to CSV */ }
+        }
+        // CSV fallback
+        return s.split(',').map(x => x.trim()).filter(x => x);
+      }
+      // Object fallback
+      if (typeof integrantes === 'object') {
+        // If it's a map of ids->bool or similar, extract keys
+        try {
+          return Object.keys(integrantes).filter(k => !!(integrantes as any)[k]);
+        } catch (e) { return [String(integrantes)]; }
+      }
+      return [String(integrantes)];
+    } catch (e) {
+      return [String(integrantes)];
+    }
+  }
+
   ngOnInit(): void {
     this.loadGroups();
   }

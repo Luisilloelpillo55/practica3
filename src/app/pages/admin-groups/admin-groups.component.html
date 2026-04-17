@@ -23,13 +23,27 @@
           <th>Acciones</th>
         </tr>
       </ng-template>
-      <ng-template pTemplate="body" let-group>
+          <ng-template pTemplate="body" let-group>
         <tr>
           <td>{{ group.id }}</td>
           <td><strong>{{ group.nombre }}</strong></td>
           <td>{{ group.nivel || 'N/A' }}</td>
           <td>{{ group.descripcion || 'N/A' }}</td>
-          <td>{{ group.integrantes || 'N/A' }}</td>
+          <td>
+            <div *ngIf="group.integrantes; else noInts" class="members-wrapper">
+              <ng-container *ngIf="isArray(group.integrantes); else parseTextInts">
+                <span class="member-pill" *ngFor="let m of group.integrantes">{{ m }}</span>
+              </ng-container>
+              <ng-template #parseTextInts>
+                <ng-container *ngFor="let m of parseIntegrantes(group.integrantes)">
+                  <span class="member-pill">{{ m }}</span>
+                </ng-container>
+              </ng-template>
+            </div>
+            <ng-template #noInts>
+              <span class="muted">N/A</span>
+            </ng-template>
+          </td>
           <td>
             <button *ngIf="auth.hasPermission('group_edit') || auth.isAdmin()" pButton type="button" icon="pi pi-pencil" 
                     class="p-button-sm p-button-info" (click)="editGroup(group)" pTooltip="Editar" tooltipPosition="top"></button>
